@@ -1,6 +1,5 @@
 package com.epam.rd.autocode.spring.project.conf;
 
-
 import com.epam.rd.autocode.spring.project.security.JwtAuthenticationFilter;
 import com.epam.rd.autocode.spring.project.security.OAuth2LoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
@@ -36,30 +35,20 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-
                 .cors(cors -> cors.configure(http))
-
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
-
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
                 .authenticationProvider(authenticationProvider())
-
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2LoginSuccessHandler)
-                )
-
-                .requiresChannel(channel -> channel
-                        .anyRequest().requiresSecure()
                 );
 
         return http.build();
