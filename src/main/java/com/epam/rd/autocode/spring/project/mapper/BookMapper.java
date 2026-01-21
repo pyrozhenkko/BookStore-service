@@ -1,6 +1,5 @@
 package com.epam.rd.autocode.spring.project.mapper;
 
-
 import com.epam.rd.autocode.spring.project.dto.BookDTO;
 import com.epam.rd.autocode.spring.project.model.Book;
 import org.mapstruct.Mapper;
@@ -22,6 +21,9 @@ public interface BookMapper {
     @Mapping(source = "characteristics", target = "characteristics")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "language", target = "language")
+    @Mapping(source = "quantity", target = "quantity")
+    @Mapping(source = "imageUrls", target = "imageUrls")
+    @Mapping(source = "isbn", target = "isbn")
     BookDTO toDto(Book book);
 
     @Mapping(target = "id", ignore = true)
@@ -35,5 +37,8 @@ public interface BookMapper {
     @Mapping(source = "characteristics", target = "characteristics")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "language", target = "language")
+    @Mapping(source = "quantity", target = "quantity")
+    @Mapping(source = "imageUrls", target = "imageUrls")
+    @Mapping(source = "isbn", target = "isbn")
     Book toEntity(BookDTO bookDTO);
 }

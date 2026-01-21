@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -23,4 +24,7 @@ public class BookDTO {
     private String characteristics;
     private String description;
     private Language language;
+    private Integer quantity;
+    private List<String> imageUrls;
+    private String isbn;
 }
