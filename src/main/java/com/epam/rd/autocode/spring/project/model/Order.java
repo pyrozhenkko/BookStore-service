@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -35,7 +36,7 @@ public class Order {
 
     private BigDecimal price;
 
-    // Зв'язок OneToMany з BookItem
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<BookItem> bookItems;
+    private List<BookItem> bookItems = new ArrayList<>();
 }

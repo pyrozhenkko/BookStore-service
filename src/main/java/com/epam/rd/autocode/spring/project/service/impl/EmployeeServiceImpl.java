@@ -29,6 +29,13 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    public EmployeeDTO getEmployeeById(Long id) {
+        return employeeRepository.findById(id)
+                .map(employeeMapper::toDto)
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
+    }
+
+    @Override
     public EmployeeDTO getEmployeeByEmail(String email) {
         return employeeRepository.findByEmail(email)
                 .map(employeeMapper::toDto)
@@ -37,9 +44,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
-    public EmployeeDTO updateEmployeeByEmail(String email, EmployeeDTO employeeDTO) {
-        Employee employee = employeeRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Employee not found with email: " + email));
+    public EmployeeDTO updateEmployeeById(Long id, EmployeeDTO employeeDTO) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
 
         employee.setName(employeeDTO.getName());
         employee.setBirthDate(employeeDTO.getBirthDate());
@@ -48,16 +55,16 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (employeeDTO.getPassword() != null && !employeeDTO.getPassword().isBlank()) {
             employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
         }
-
         return employeeMapper.toDto(employeeRepository.save(employee));
     }
 
     @Override
     @Transactional
-    public void deleteEmployeeByEmail(String email) {
-        Employee employee = employeeRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Employee not found with email: " + email));
-        employeeRepository.delete(employee);
+    public void deleteEmployeeById(Long id) {
+        if (!employeeRepository.existsById(id)) {
+            throw new RuntimeException("Employee not found with id: " + id);
+        }
+        employeeRepository.deleteById(id);
     }
 
     @Override
@@ -66,7 +73,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (employeeRepository.findByEmail(employeeDTO.getEmail()).isPresent()) {
             throw new RuntimeException("Employee with email " + employeeDTO.getEmail() + " already exists");
         }
-
         Employee employee = employeeMapper.toEntity(employeeDTO);
         employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
         return employeeMapper.toDto(employeeRepository.save(employee));

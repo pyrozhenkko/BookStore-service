@@ -29,6 +29,13 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
+    public ClientDTO getClientById(Long id) {
+        return clientRepository.findById(id)
+                .map(clientMapper::toDto)
+                .orElseThrow(() -> new RuntimeException("Client not found with id: " + id));
+    }
+
+    @Override
     public ClientDTO getClientByEmail(String email) {
         return clientRepository.findByEmail(email)
                 .map(clientMapper::toDto)
@@ -37,9 +44,23 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional
-    public ClientDTO updateClientByEmail(String email, ClientDTO clientDTO) {
-        Client client = clientRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Client not found with email: " + email));
+    public ClientDTO addClient(ClientDTO clientDTO) {
+        // Перевірка на дублікат email
+        if (clientRepository.findByEmail(clientDTO.getEmail()).isPresent()) {
+            throw new RuntimeException("Client with email " + clientDTO.getEmail() + " already exists");
+        }
+
+        Client client = clientMapper.toEntity(clientDTO);
+        client.setPassword(passwordEncoder.encode(clientDTO.getPassword()));
+
+        return clientMapper.toDto(clientRepository.save(client));
+    }
+
+    @Override
+    @Transactional
+    public ClientDTO updateClientById(Long id, ClientDTO clientDTO) {
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Client not found with id: " + id));
 
         client.setName(clientDTO.getName());
         client.setBalance(clientDTO.getBalance());
@@ -53,21 +74,10 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional
-    public void deleteClientByEmail(String email) {
-        Client client = clientRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Client not found with email: " + email));
-        clientRepository.delete(client);
-    }
-
-    @Override
-    @Transactional
-    public ClientDTO addClient(ClientDTO clientDTO) {
-        if (clientRepository.findByEmail(clientDTO.getEmail()).isPresent()) {
-            throw new RuntimeException("Client with email " + clientDTO.getEmail() + " already exists");
+    public void deleteClientById(Long id) {
+        if (!clientRepository.existsById(id)) {
+            throw new RuntimeException("Client not found with id: " + id);
         }
-
-        Client client = clientMapper.toEntity(clientDTO);
-        client.setPassword(passwordEncoder.encode(clientDTO.getPassword()));
-        return clientMapper.toDto(clientRepository.save(client));
+        clientRepository.deleteById(id);
     }
 }

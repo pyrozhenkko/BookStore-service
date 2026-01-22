@@ -10,20 +10,22 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
+@Entity
+@Table(name = "BOOKS")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "BOOKS")
 public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     private String genre;
@@ -34,12 +36,12 @@ public class Book {
 
     private BigDecimal price;
 
-    @Column(name = "publication_year")
+    @Column(name = "publication_date")
     private LocalDate publicationDate;
 
     private String author;
 
-    @Column(name = "number_of_pages")
+    @Column(name = "pages")
     private Integer pages;
 
     private String characteristics;
@@ -49,4 +51,15 @@ public class Book {
 
     @Enumerated(EnumType.STRING)
     private Language language;
+
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity = 0;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "book_images", joinColumns = @JoinColumn(name = "book_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls = new ArrayList<>();
+
+    @Column(nullable = false, unique = true)
+    private String isbn;
 }
