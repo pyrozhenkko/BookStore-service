@@ -6,11 +6,14 @@ import java.util.List;
 
 public interface EmployeeService {
 
+
     @PreAuthorize("hasRole('ADMIN')")
     List<EmployeeDTO> getAllEmployees();
 
     @PreAuthorize("hasRole('ADMIN') or @customSecurity.isEmployeeOwner(#id)")
     EmployeeDTO getEmployeeById(Long id);
+
+    EmployeeDTO getEmployeeByEmail(String email);
 
     @PreAuthorize("hasRole('ADMIN')")
     EmployeeDTO updateEmployeeById(Long id, EmployeeDTO employee);
@@ -21,5 +24,4 @@ public interface EmployeeService {
     @PreAuthorize("hasRole('ADMIN')")
     EmployeeDTO addEmployee(EmployeeDTO employee);
 
-    EmployeeDTO getEmployeeByEmail(String email);
 }

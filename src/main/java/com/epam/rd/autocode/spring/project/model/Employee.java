@@ -19,6 +19,9 @@ public class Employee extends User {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
+    @Column(name = "is_admin", nullable = false)
+    private boolean isAdmin = false;
+
     public Employee(Long id, String name, String email, String password, String phone, LocalDate birthDate) {
         super(id, email, password, name);
         this.phone = phone;

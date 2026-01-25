@@ -30,14 +30,16 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new RuntimeException("blocked");
         }
 
-        Optional<Employee> employee = employeeRepository.findByEmail(email);
-        if (employee.isPresent()) {
-            return buildUserDetails(employee.get(), "ROLE_EMPLOYEE");
+        Optional<Employee> employeeOpt = employeeRepository.findByEmail(email);
+        if (employeeOpt.isPresent()) {
+            Employee employee = employeeOpt.get();
+            String role = employee.isAdmin() ? "ROLE_ADMIN" : "ROLE_EMPLOYEE";
+            return buildUserDetails(employee, role);
         }
 
-        Optional<Client> client = clientRepository.findByEmail(email);
-        if (client.isPresent()) {
-            return buildUserDetails(client.get(), "ROLE_CUSTOMER");
+        Optional<Client> clientOpt = clientRepository.findByEmail(email);
+        if (clientOpt.isPresent()) {
+            return buildUserDetails(clientOpt.get(), "ROLE_CUSTOMER");
         }
 
         throw new UsernameNotFoundException("User not found with email: " + email);

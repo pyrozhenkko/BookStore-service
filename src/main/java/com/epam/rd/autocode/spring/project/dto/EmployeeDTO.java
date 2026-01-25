@@ -15,4 +15,6 @@ public class EmployeeDTO {
     private String name;
     private LocalDate birthDate;
     private String phone;
+    private boolean isAdmin;
+
 }
