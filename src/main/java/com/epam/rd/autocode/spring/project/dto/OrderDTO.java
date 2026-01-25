@@ -17,4 +17,6 @@ public class OrderDTO {
     private LocalDateTime orderDate;
     private BigDecimal price;
     private List<BookItemDTO> bookItems;
+    private String deliveryCity;
+    private String deliveryBranch;
 }

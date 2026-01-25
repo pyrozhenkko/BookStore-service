@@ -2,7 +2,7 @@ package com.epam.rd.autocode.spring.project.controller;
 
 import com.epam.rd.autocode.spring.project.dto.BookDTO;
 import com.epam.rd.autocode.spring.project.service.BookService;
-import com.epam.rd.autocode.spring.project.service.FileStorageService;
+import com.epam.rd.autocode.spring.project.service.impl.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -40,6 +40,7 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
     }
 
+
     @Override
     @Transactional
     public OrderDTO addOrder(OrderDTO orderDTO) {
@@ -56,6 +57,9 @@ public class OrderServiceImpl implements OrderService {
             order.setEmployee(employee);
         }
 
+        order.setDeliveryCity(orderDTO.getDeliveryCity());
+        order.setDeliveryBranch(orderDTO.getDeliveryBranch());
+
         List<BookItem> bookItems = new ArrayList<>();
         BigDecimal totalPrice = BigDecimal.ZERO;
 
@@ -64,11 +68,16 @@ public class OrderServiceImpl implements OrderService {
                 Book book = bookRepository.findByName(itemDto.getBookName())
                         .orElseThrow(() -> new RuntimeException("Book not found: " + itemDto.getBookName()));
 
+                if (book.getQuantity() < itemDto.getQuantity()) {
+                    throw new RuntimeException("Not enough stock for: " + book.getName());
+                }
+                book.setQuantity(book.getQuantity() - itemDto.getQuantity());
+                bookRepository.save(book);
+
                 BookItem bookItem = new BookItem();
                 bookItem.setBook(book);
                 bookItem.setQuantity(itemDto.getQuantity());
                 bookItem.setOrder(order);
-
                 bookItems.add(bookItem);
 
                 BigDecimal itemCost = book.getPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity()));

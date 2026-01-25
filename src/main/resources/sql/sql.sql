@@ -1,25 +1,23 @@
-SET REFERENTIAL_INTEGRITY FALSE;
+TRUNCATE TABLE employees RESTART IDENTITY CASCADE;
+TRUNCATE TABLE clients RESTART IDENTITY CASCADE;
+TRUNCATE TABLE books RESTART IDENTITY CASCADE;
+TRUNCATE TABLE book_images RESTART IDENTITY CASCADE;
 
-TRUNCATE TABLE EMPLOYEES RESTART IDENTITY;
-TRUNCATE TABLE CLIENTS RESTART IDENTITY;
-TRUNCATE TABLE BOOKS RESTART IDENTITY;
-TRUNCATE TABLE book_images RESTART IDENTITY;
 
-SET REFERENTIAL_INTEGRITY TRUE;
 INSERT INTO EMPLOYEES (BIRTH_DATE, EMAIL, NAME, PASSWORD, PHONE, IS_ADMIN)
 VALUES ('1990-05-15', 'john.doe@email.com', 'John Doe', 'pass123', '555-123-4567', TRUE),
-       ('1985-09-20', 'jane.smith@email.com', 'Jane Smith', 'abc456', '555-987-6543',FALSE),
-       ('1978-03-08', 'bob.jones@email.com', 'Bob Jones', 'qwerty789', '555-321-6789',FALSE),
-       ('1982-11-25', 'alice.white@email.com', 'Alice White', 'secret567', '555-876-5432',FALSE),
-       ('1995-07-12', 'mike.wilson@email.com', 'Mike Wilson', 'mypassword', '555-234-5678',FALSE),
-       ('1989-01-30', 'sara.brown@email.com', 'Sara Brown', 'letmein123', '555-876-5433'),FALSE,
-       ('1975-06-18', 'tom.jenkins@email.com', 'Tom Jenkins', 'pass4321', '555-345-6789',FALSE),
-       ('1987-12-04', 'lisa.taylor@email.com', 'Lisa Taylor', 'securepwd', '555-789-0123',FALSE),
-       ('1992-08-22', 'david.wright@email.com', 'David Wright', 'access123', '555-456-7890',FALSE),
-       ('1980-04-10', 'emily.harris@email.com', 'Emily Harris', '1234abcd', '555-098-7654',FALSE);
+       ('1985-09-20', 'jane.smith@email.com', 'Jane Smith', 'abc456', '555-987-6543', FALSE),
+       ('1978-03-08', 'bob.jones@email.com', 'Bob Jones', 'qwerty789', '555-321-6789', FALSE),
+       ('1982-11-25', 'alice.white@email.com', 'Alice White', 'secret567', '555-876-5432', FALSE),
+       ('1995-07-12', 'mike.wilson@email.com', 'Mike Wilson', 'mypassword', '555-234-5678', FALSE),
+       ('1989-01-30', 'sara.brown@email.com', 'Sara Brown', 'letmein123', '555-876-5433', FALSE),
+       ('1975-06-18', 'tom.jenkins@email.com', 'Tom Jenkins', 'pass4321', '555-345-6789', FALSE),
+       ('1987-12-04', 'lisa.taylor@email.com', 'Lisa Taylor', 'securepwd', '555-789-0123', FALSE),
+       ('1992-08-22', 'david.wright@email.com', 'David Wright', 'access123', '555-456-7890', FALSE),
+       ('1980-04-10', 'emily.harris@email.com', 'Emily Harris', '1234abcd', '555-098-7654', FALSE);
 
 INSERT INTO CLIENTS (BALANCE, EMAIL, NAME, PASSWORD)
-VALUES (1000.00, 'client1@example.com', 'Medelyn Wright', 'password123'),
+VALUES (1000.00, 'pyrozhenkko@gmail.com', 'Medelyn Wright', 'password123'),
        (1500.50, 'client2@example.com', 'Landon Phillips', 'securepass'),
        (800.75, 'client3@example.com', 'Harmony Mason', 'abc123'),
        (1200.25, 'client4@example.com', 'Archer Harper', 'pass456'),
@@ -29,7 +27,6 @@ VALUES (1000.00, 'client1@example.com', 'Medelyn Wright', 'password123'),
        (950.30, 'client8@example.com', 'Quinton Saunders', 'test123'),
        (1050.90, 'client9@example.com', 'Amina Clarke', 'qwerty123'),
        (880.20, 'client10@example.com', 'Bryson Chavez', 'pass789');
-
 
 INSERT INTO BOOKS (name, genre, age_group, price, publication_date, author, pages, characteristics, description, language, quantity, isbn)
 VALUES

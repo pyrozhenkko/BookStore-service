@@ -1,5 +1,6 @@
 package com.epam.rd.autocode.spring.project.controller;
 
+import com.epam.rd.autocode.spring.project.dto.cart.CheckoutRequest;
 import com.epam.rd.autocode.spring.project.dto.cart.ShoppingCartDTO;
 import com.epam.rd.autocode.spring.project.service.impl.ShoppingCartServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,6 @@ public class ShoppingCartController {
         return ResponseEntity.ok(cartService.getMyCart());
     }
 
-    // POST /api/cart/add?bookId=5&quantity=1
     @PostMapping("/add")
     public ResponseEntity<ShoppingCartDTO> addToCart(@RequestParam Long bookId,
                                                      @RequestParam(defaultValue = "1") Integer quantity) {
@@ -32,7 +32,6 @@ public class ShoppingCartController {
         return ResponseEntity.ok(cartService.removeOneOrDelete(itemId));
     }
 
-    // DELETE /api/cart/item/10
     @DeleteMapping("/item/{itemId}")
     public ResponseEntity<ShoppingCartDTO> removeItem(@PathVariable Long itemId) {
         return ResponseEntity.ok(cartService.removeItem(itemId));
@@ -44,9 +43,10 @@ public class ShoppingCartController {
         return ResponseEntity.ok().build();
     }
 
+    // --- ОНОВЛЕНИЙ CHECKOUT ---
     @PostMapping("/checkout")
-    public ResponseEntity<String> checkout() {
-        cartService.checkout();
-        return ResponseEntity.ok("Order placed successfully!");
+    public ResponseEntity<String> checkout(@RequestBody CheckoutRequest request) {
+        cartService.checkout(request);
+        return ResponseEntity.ok("Order placed successfully with delivery to: " + request.getDeliveryCity());
     }
 }

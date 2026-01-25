@@ -1,5 +1,6 @@
 package com.epam.rd.autocode.spring.project.service.impl;
 
+import com.epam.rd.autocode.spring.project.dto.cart.CheckoutRequest;
 import com.epam.rd.autocode.spring.project.dto.cart.ShoppingCartDTO;
 import com.epam.rd.autocode.spring.project.mapper.ShoppingCartMapper;
 import com.epam.rd.autocode.spring.project.model.*;
@@ -25,11 +26,13 @@ public class ShoppingCartServiceImpl {
     private final OrderRepository orderRepository;
     private final ShoppingCartMapper cartMapper;
 
+
     @Transactional
     public ShoppingCartDTO getMyCart() {
         ShoppingCart cart = getOrCreateCart();
         return cartMapper.toDto(cart);
     }
+
 
     @Transactional
     public ShoppingCartDTO addToCart(Long bookId, Integer quantity) {
@@ -37,6 +40,7 @@ public class ShoppingCartServiceImpl {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
+        // Перевірка наявності на складі (загальна)
         if (book.getQuantity() < quantity) {
             throw new RuntimeException("Not enough books in stock!");
         }
@@ -47,6 +51,7 @@ public class ShoppingCartServiceImpl {
 
         if (existingItem.isPresent()) {
             CartItem item = existingItem.get();
+            // Перевірка наявності з урахуванням того, що вже лежить в кошику
             if (book.getQuantity() < item.getQuantity() + quantity) {
                 throw new RuntimeException("Not enough books in stock for update!");
             }
@@ -65,8 +70,9 @@ public class ShoppingCartServiceImpl {
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
 
+        // Перевірка, що товар належить саме цьому кошику
         if (!item.getShoppingCart().getId().equals(cart.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new RuntimeException("Access denied to this item");
         }
 
         if (item.getQuantity() > 1) {
@@ -79,17 +85,23 @@ public class ShoppingCartServiceImpl {
         return cartMapper.toDto(cartRepository.save(cart));
     }
 
+
     @Transactional
     public ShoppingCartDTO removeItem(Long cartItemId) {
         ShoppingCart cart = getOrCreateCart();
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
 
+        if (!item.getShoppingCart().getId().equals(cart.getId())) {
+            throw new RuntimeException("Access denied to this item");
+        }
+
         cart.getItems().remove(item);
         cartItemRepository.delete(item);
 
         return cartMapper.toDto(cartRepository.save(cart));
     }
+
 
     @Transactional
     public void clearCart() {
@@ -99,7 +111,7 @@ public class ShoppingCartServiceImpl {
     }
 
     @Transactional
-    public void checkout() {
+    public void checkout(CheckoutRequest request) {
         ShoppingCart cart = getOrCreateCart();
         if (cart.getItems().isEmpty()) {
             throw new RuntimeException("Cart is empty!");
@@ -110,6 +122,13 @@ public class ShoppingCartServiceImpl {
         order.setOrderDate(LocalDateTime.now());
         order.setBookItems(new ArrayList<>());
 
+        if (request != null) {
+            order.setDeliveryCity(request.getDeliveryCity());
+            order.setDeliveryCityRef(request.getDeliveryCityRef());
+            order.setDeliveryBranch(request.getDeliveryBranch());
+            order.setDeliveryBranchRef(request.getDeliveryBranchRef());
+        }
+
         BigDecimal calculatedTotal = BigDecimal.ZERO;
 
         for (CartItem cartItem : cart.getItems()) {
@@ -119,7 +138,6 @@ public class ShoppingCartServiceImpl {
                 throw new RuntimeException("Not enough stock for: " + book.getName());
             }
 
-            // Списання зі складу
             book.setQuantity(book.getQuantity() - cartItem.getQuantity());
             bookRepository.save(book);
 
@@ -140,6 +158,7 @@ public class ShoppingCartServiceImpl {
         cart.getItems().clear();
         cartRepository.save(cart);
     }
+
 
     private ShoppingCart getOrCreateCart() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

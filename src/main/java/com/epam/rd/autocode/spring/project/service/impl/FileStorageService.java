@@ -1,4 +1,4 @@
-package com.epam.rd.autocode.spring.project.service;
+package com.epam.rd.autocode.spring.project.service.impl;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
