@@ -39,6 +39,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
+
+                        // Stripe Webhook (Stripe не має нашого токена, тому треба permitAll)
+                        .requestMatchers("/api/payment/webhook").permitAll()
+
+                        // Сторінки повернення після оплати (браузер при редіректі може не слати токен)
+                        .requestMatchers("/api/payment/success", "/api/payment/cancel").permitAll()
+
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
