@@ -29,8 +29,7 @@ public class ShoppingCartServiceImpl {
 
     @Transactional
     public ShoppingCartDTO getMyCart() {
-        ShoppingCart cart = getOrCreateCart();
-        return cartMapper.toDto(cart);
+        return cartMapper.toDto(getOrCreateCart());
     }
 
 
@@ -40,7 +39,6 @@ public class ShoppingCartServiceImpl {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
-        // Перевірка наявності на складі (загальна)
         if (book.getQuantity() < quantity) {
             throw new RuntimeException("Not enough books in stock!");
         }
@@ -51,7 +49,6 @@ public class ShoppingCartServiceImpl {
 
         if (existingItem.isPresent()) {
             CartItem item = existingItem.get();
-            // Перевірка наявності з урахуванням того, що вже лежить в кошику
             if (book.getQuantity() < item.getQuantity() + quantity) {
                 throw new RuntimeException("Not enough books in stock for update!");
             }
@@ -64,13 +61,13 @@ public class ShoppingCartServiceImpl {
         return cartMapper.toDto(cartRepository.save(cart));
     }
 
+
     @Transactional
     public ShoppingCartDTO removeOneOrDelete(Long cartItemId) {
         ShoppingCart cart = getOrCreateCart();
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
 
-        // Перевірка, що товар належить саме цьому кошику
         if (!item.getShoppingCart().getId().equals(cart.getId())) {
             throw new RuntimeException("Access denied to this item");
         }
@@ -84,7 +81,6 @@ public class ShoppingCartServiceImpl {
 
         return cartMapper.toDto(cartRepository.save(cart));
     }
-
 
     @Transactional
     public ShoppingCartDTO removeItem(Long cartItemId) {
@@ -102,7 +98,6 @@ public class ShoppingCartServiceImpl {
         return cartMapper.toDto(cartRepository.save(cart));
     }
 
-
     @Transactional
     public void clearCart() {
         ShoppingCart cart = getOrCreateCart();
@@ -110,15 +105,22 @@ public class ShoppingCartServiceImpl {
         cartRepository.save(cart);
     }
 
+
     @Transactional
     public void checkout(CheckoutRequest request) {
+        checkout(request, BigDecimal.ZERO);
+    }
+
+    @Transactional
+    public void checkout(CheckoutRequest request, BigDecimal bonusDiscount) {
         ShoppingCart cart = getOrCreateCart();
         if (cart.getItems().isEmpty()) {
             throw new RuntimeException("Cart is empty!");
         }
 
+        Client client = cart.getClient();
         Order order = new Order();
-        order.setClient(cart.getClient());
+        order.setClient(client);
         order.setOrderDate(LocalDateTime.now());
         order.setBookItems(new ArrayList<>());
 
@@ -129,7 +131,7 @@ public class ShoppingCartServiceImpl {
             order.setDeliveryBranchRef(request.getDeliveryBranchRef());
         }
 
-        BigDecimal calculatedTotal = BigDecimal.ZERO;
+        BigDecimal itemsTotal = BigDecimal.ZERO;
 
         for (CartItem cartItem : cart.getItems()) {
             Book book = cartItem.getBook();
@@ -148,24 +150,43 @@ public class ShoppingCartServiceImpl {
 
             order.getBookItems().add(bookItem);
 
-            BigDecimal itemTotal = book.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-            calculatedTotal = calculatedTotal.add(itemTotal);
+            itemsTotal = itemsTotal.add(book.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
         }
 
-        order.setPrice(calculatedTotal);
+
+        BigDecimal finalPrice = itemsTotal.subtract(bonusDiscount);
+        if (finalPrice.compareTo(BigDecimal.ZERO) < 0) {
+            finalPrice = BigDecimal.ZERO;
+        }
+        order.setPrice(finalPrice);
+
+        if (bonusDiscount.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal currentBalance = client.getBalance() != null ? client.getBalance() : BigDecimal.ZERO;
+            BigDecimal newBalance = currentBalance.subtract(bonusDiscount).max(BigDecimal.ZERO);
+            client.setBalance(newBalance);
+        }
+
+        BigDecimal cashbackRate = new BigDecimal("0.05");
+        BigDecimal cashbackEarned = finalPrice.multiply(cashbackRate);
+
+        if (cashbackEarned.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal currentBalance = client.getBalance() != null ? client.getBalance() : BigDecimal.ZERO;
+            client.setBalance(currentBalance.add(cashbackEarned));
+        }
+
+        clientRepository.save(client);
         orderRepository.save(order);
 
         cart.getItems().clear();
         cartRepository.save(cart);
     }
 
-
     private ShoppingCart getOrCreateCart() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return cartRepository.findByClient_Email(email)
                 .orElseGet(() -> {
                     Client client = clientRepository.findByEmail(email)
-                            .orElseThrow(() -> new RuntimeException("Client not found"));
+                            .orElseThrow(() -> new RuntimeException("Client not found: " + email));
                     ShoppingCart cart = new ShoppingCart();
                     cart.setClient(client);
                     return cartRepository.save(cart);

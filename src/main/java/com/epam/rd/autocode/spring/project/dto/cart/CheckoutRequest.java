@@ -8,4 +8,5 @@ public class CheckoutRequest {
     private String deliveryCityRef;
     private String deliveryBranch;
     private String deliveryBranchRef;
+    private boolean useBonuses;
 }
