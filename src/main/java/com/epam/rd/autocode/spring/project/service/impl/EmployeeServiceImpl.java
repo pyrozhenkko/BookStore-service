@@ -4,14 +4,15 @@ import com.epam.rd.autocode.spring.project.dto.EmployeeDTO;
 import com.epam.rd.autocode.spring.project.mapper.EmployeeMapper;
 import com.epam.rd.autocode.spring.project.model.Employee;
 import com.epam.rd.autocode.spring.project.repo.EmployeeRepository;
+import com.epam.rd.autocode.spring.project.repo.specification.EmployeeSpecification;
 import com.epam.rd.autocode.spring.project.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,10 +23,17 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public List<EmployeeDTO> getAllEmployees() {
-        return employeeRepository.findAll().stream()
-                .map(employeeMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<EmployeeDTO> getAllEmployees(Pageable pageable) {
+        return employeeRepository.findAll(pageable)
+                .map(employeeMapper::toDto);
+    }
+
+    // --- РЕАЛІЗАЦІЯ ПОШУКУ ---
+    @Override
+    public Page<EmployeeDTO> searchEmployees(String keyword, Pageable pageable) {
+        Specification<Employee> spec = EmployeeSpecification.hasKeyword(keyword);
+        return employeeRepository.findAll(spec, pageable)
+                .map(employeeMapper::toDto);
     }
 
     @Override
@@ -49,12 +57,16 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
 
         employee.setName(employeeDTO.getName());
-        employee.setBirthDate(employeeDTO.getBirthDate());
         employee.setPhone(employeeDTO.getPhone());
+        employee.setBirthDate(employeeDTO.getBirthDate());
+
+        // Оновлюємо статус адміна
+        employee.setAdmin(employeeDTO.isAdmin());
 
         if (employeeDTO.getPassword() != null && !employeeDTO.getPassword().isBlank()) {
             employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
         }
+
         return employeeMapper.toDto(employeeRepository.save(employee));
     }
 
@@ -73,8 +85,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (employeeRepository.findByEmail(employeeDTO.getEmail()).isPresent()) {
             throw new RuntimeException("Employee with email " + employeeDTO.getEmail() + " already exists");
         }
+
         Employee employee = employeeMapper.toEntity(employeeDTO);
         employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
+
         return employeeMapper.toDto(employeeRepository.save(employee));
     }
 }

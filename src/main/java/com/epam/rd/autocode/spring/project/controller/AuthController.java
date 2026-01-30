@@ -32,7 +32,7 @@ public class AuthController {
     private final LoginAttemptService loginAttemptService;
     private final ClientService clientService;
     private final EmployeeService employeeService;
-    private final RefreshTokenService refreshTokenService; // Новий сервіс
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) {

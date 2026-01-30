@@ -5,8 +5,12 @@ import com.epam.rd.autocode.spring.project.dto.OrderDTO;
 import com.epam.rd.autocode.spring.project.mapper.OrderMapper;
 import com.epam.rd.autocode.spring.project.model.*;
 import com.epam.rd.autocode.spring.project.repo.*;
+import com.epam.rd.autocode.spring.project.repo.specification.OrderSpecification;
 import com.epam.rd.autocode.spring.project.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +18,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,19 +30,25 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
 
     @Override
-    public List<OrderDTO> getOrdersByClient(String clientEmail) {
-        return orderRepository.findAllByClient_Email(clientEmail).stream()
-                .map(orderMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<OrderDTO> searchOrders(String clientEmail, String city, BigDecimal minPrice, BigDecimal maxPrice, LocalDateTime dateFrom, Pageable pageable) {
+        Specification<Order> spec = Specification.where(OrderSpecification.hasClientEmail(clientEmail))
+                .and(OrderSpecification.hasDeliveryCity(city))
+                .and(OrderSpecification.priceGreaterOrEqual(minPrice))
+                .and(OrderSpecification.priceLessOrEqual(maxPrice))
+                .and(OrderSpecification.dateAfter(dateFrom));
+
+        return orderRepository.findAll(spec, pageable).map(orderMapper::toDto);
     }
 
     @Override
-    public List<OrderDTO> getOrdersByEmployee(String employeeEmail) {
-        return orderRepository.findAllByEmployee_Email(employeeEmail).stream()
-                .map(orderMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<OrderDTO> getOrdersByClient(String clientEmail, Pageable pageable) {
+        return orderRepository.findAllByClient_Email(clientEmail, pageable).map(orderMapper::toDto);
     }
 
+    @Override
+    public Page<OrderDTO> getOrdersByEmployee(String employeeEmail, Pageable pageable) {
+        return orderRepository.findAllByEmployee_Email(employeeEmail, pageable).map(orderMapper::toDto);
+    }
 
     @Override
     @Transactional

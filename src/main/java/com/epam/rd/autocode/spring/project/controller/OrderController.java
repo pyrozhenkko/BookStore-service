@@ -3,12 +3,18 @@ package com.epam.rd.autocode.spring.project.controller;
 import com.epam.rd.autocode.spring.project.dto.OrderDTO;
 import com.epam.rd.autocode.spring.project.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize; // Не забудьте про security!
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -17,6 +23,20 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    // GET /api/orders/search?city=Lviv&minPrice=100&sort=orderDate,desc
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    public ResponseEntity<Page<OrderDTO>> searchOrders(
+            @RequestParam(required = false) String clientEmail,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
+            @PageableDefault(sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(orderService.searchOrders(clientEmail, city, minPrice, maxPrice, dateFrom, pageable));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO orderDTO) {
@@ -24,14 +44,18 @@ public class OrderController {
     }
 
     @GetMapping("/client/{email}")
-    @PreAuthorize("hasRole('EMPLOYEE') or authentication.name == #email")
-    public ResponseEntity<List<OrderDTO>> getOrdersByClient(@PathVariable String email) {
-        return ResponseEntity.ok(orderService.getOrdersByClient(email));
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE') or authentication.name == #email")
+    public ResponseEntity<Page<OrderDTO>> getOrdersByClient(
+            @PathVariable String email,
+            @PageableDefault(sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(orderService.getOrdersByClient(email, pageable));
     }
 
     @GetMapping("/employee/{email}")
     @PreAuthorize("hasRole('ADMIN') or authentication.name == #email")
-    public ResponseEntity<List<OrderDTO>> getOrdersByEmployee(@PathVariable String email) {
-        return ResponseEntity.ok(orderService.getOrdersByEmployee(email));
+    public ResponseEntity<Page<OrderDTO>> getOrdersByEmployee(
+            @PathVariable String email,
+            @PageableDefault(sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(orderService.getOrdersByEmployee(email, pageable));
     }
 }
