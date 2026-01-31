@@ -1,7 +1,7 @@
 package com.epam.rd.autocode.spring.project.controller;
 
 import com.epam.rd.autocode.spring.project.dto.BookDTO;
-import com.epam.rd.autocode.spring.project.service.BookService;
+import com.epam.rd.autocode.spring.project.service.impl.BookServiceImpl;
 import com.epam.rd.autocode.spring.project.service.impl.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,11 +11,11 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,20 +24,24 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BookController {
 
-    private final BookService bookService;
+
+    private final BookServiceImpl bookService;
     private final FileStorageService fileStorageService;
 
 
-    // GET /api/books/search?keyword=Harry&minPrice=10&sort=price,asc&page=0&size=5
     @GetMapping("/search")
     public ResponseEntity<Page<BookDTO>> searchBooks(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String genre,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
-            @PageableDefault(sort = "id", direction = Sort.Direction.DESC, size = 10) Pageable pageable
-    ) {
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC, size = 10) Pageable pageable) {
         return ResponseEntity.ok(bookService.searchBooks(keyword, genre, minPrice, maxPrice, pageable));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BookDTO>> getAllBooks() {
+        return ResponseEntity.ok(bookService.getAllBooks());
     }
 
     @GetMapping("/{name}")
@@ -51,40 +55,49 @@ public class BookController {
         return ResponseEntity.ok(Map.of("quantity", qty));
     }
 
-    @PostMapping
-    public ResponseEntity<BookDTO> addBook(@RequestBody BookDTO bookDTO) {
-        return new ResponseEntity<>(bookService.addBook(bookDTO), HttpStatus.CREATED);
+    @GetMapping("/genres")
+    public ResponseEntity<List<String>> getAllGenres() {
+        return ResponseEntity.ok(bookService.getAllGenres());
     }
 
-    @PutMapping("/{name}")
-    public ResponseEntity<BookDTO> updateBook(@PathVariable String name, @RequestBody BookDTO bookDTO) {
-        return ResponseEntity.ok(bookService.updateBookByName(name, bookDTO));
-    }
-
-    @DeleteMapping("/{name}")
-    public ResponseEntity<Void> deleteBook(@PathVariable String name) {
-        bookService.deleteBookByName(name);
-        return ResponseEntity.noContent().build();
-    }
 
     @PostMapping(value = "/{name}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<BookDTO> uploadBookImage(
             @PathVariable String name,
             @RequestParam("file") MultipartFile file) {
 
         String imageUrl = fileStorageService.storeFile(file);
-        BookDTO bookDTO = bookService.getBookByName(name);
 
-        if (bookDTO.getImageUrls() == null) {
-            bookDTO.setImageUrls(new ArrayList<>());
-        }
-        bookDTO.getImageUrls().add(imageUrl);
-
-        BookDTO updatedBook = bookService.updateBookByName(name, bookDTO);
-        return ResponseEntity.ok(updatedBook);
+        return ResponseEntity.ok(bookService.addImageToBook(name, imageUrl));
     }
-    @GetMapping("/genres")
-    public ResponseEntity<List<String>> getAllGenres() {
-        return ResponseEntity.ok(bookService.getAllGenres());
+
+    @DeleteMapping("/{name}/images")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    public ResponseEntity<BookDTO> deleteBookImage(
+            @PathVariable String name,
+            @RequestParam("imageUrl") String imageUrl) {
+
+        return ResponseEntity.ok(bookService.removeImageFromBook(name, imageUrl));
+    }
+
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    public ResponseEntity<BookDTO> addBook(@RequestBody BookDTO bookDTO) {
+        return new ResponseEntity<>(bookService.addBook(bookDTO), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{name}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    public ResponseEntity<BookDTO> updateBook(@PathVariable String name, @RequestBody BookDTO bookDTO) {
+        return ResponseEntity.ok(bookService.updateBookByName(name, bookDTO));
+    }
+
+    @DeleteMapping("/{name}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    public ResponseEntity<Void> deleteBook(@PathVariable String name) {
+        bookService.deleteBookByName(name);
+        return ResponseEntity.noContent().build();
     }
 }
