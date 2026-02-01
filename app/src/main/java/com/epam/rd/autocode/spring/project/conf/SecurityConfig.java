@@ -37,15 +37,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configure(http))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll() // Це покриває /forgot-password і /reset-password
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
-
-                        // Stripe Webhook (Stripe не має нашого токена, тому треба permitAll)
                         .requestMatchers("/api/payment/webhook").permitAll()
-
-                        // Сторінки повернення після оплати (браузер при редіректі може не слати токен)
                         .requestMatchers("/api/payment/success", "/api/payment/cancel").permitAll()
-
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
