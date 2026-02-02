@@ -26,12 +26,13 @@ public class ShoppingCartServiceImpl {
     private final OrderRepository orderRepository;
     private final ShoppingCartMapper cartMapper;
 
+    private final EmailService emailService;
 
     @Transactional
     public ShoppingCartDTO getMyCart() {
-        return cartMapper.toDto(getOrCreateCart());
+        ShoppingCart cart = getOrCreateCart();
+        return cartMapper.toDto(cart);
     }
-
 
     @Transactional
     public ShoppingCartDTO addToCart(Long bookId, Integer quantity) {
@@ -60,7 +61,6 @@ public class ShoppingCartServiceImpl {
 
         return cartMapper.toDto(cartRepository.save(cart));
     }
-
 
     @Transactional
     public ShoppingCartDTO removeOneOrDelete(Long cartItemId) {
@@ -104,7 +104,6 @@ public class ShoppingCartServiceImpl {
         cart.getItems().clear();
         cartRepository.save(cart);
     }
-
 
     @Transactional
     public void checkout(CheckoutRequest request) {
@@ -153,7 +152,6 @@ public class ShoppingCartServiceImpl {
             itemsTotal = itemsTotal.add(book.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
         }
 
-
         BigDecimal finalPrice = itemsTotal.subtract(bonusDiscount);
         if (finalPrice.compareTo(BigDecimal.ZERO) < 0) {
             finalPrice = BigDecimal.ZERO;
@@ -164,6 +162,7 @@ public class ShoppingCartServiceImpl {
             BigDecimal currentBalance = client.getBalance() != null ? client.getBalance() : BigDecimal.ZERO;
             BigDecimal newBalance = currentBalance.subtract(bonusDiscount).max(BigDecimal.ZERO);
             client.setBalance(newBalance);
+            System.out.println("🔥 Bonuses used: " + bonusDiscount + ". New Balance: " + newBalance);
         }
 
         BigDecimal cashbackRate = new BigDecimal("0.05");
@@ -172,6 +171,7 @@ public class ShoppingCartServiceImpl {
         if (cashbackEarned.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal currentBalance = client.getBalance() != null ? client.getBalance() : BigDecimal.ZERO;
             client.setBalance(currentBalance.add(cashbackEarned));
+            System.out.println("💰 Cashback earned: " + cashbackEarned);
         }
 
         clientRepository.save(client);
@@ -179,6 +179,13 @@ public class ShoppingCartServiceImpl {
 
         cart.getItems().clear();
         cartRepository.save(cart);
+
+        try {
+            System.out.println("📧 Sending confirmation email to " + client.getEmail());
+            emailService.sendOrderConfirmationEmail(client.getEmail(), order);
+        } catch (Exception e) {
+            System.err.println(" Failed to send order confirmation email: " + e.getMessage());
+        }
     }
 
     private ShoppingCart getOrCreateCart() {
