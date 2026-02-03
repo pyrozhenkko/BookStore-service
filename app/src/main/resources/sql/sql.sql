@@ -1,10 +1,13 @@
 TRUNCATE TABLE employees RESTART IDENTITY CASCADE;
 TRUNCATE TABLE clients RESTART IDENTITY CASCADE;
+TRUNCATE TABLE book_items RESTART IDENTITY CASCADE;
+TRUNCATE TABLE cart_items RESTART IDENTITY CASCADE;
+TRUNCATE TABLE shopping_carts RESTART IDENTITY CASCADE;
+TRUNCATE TABLE orders RESTART IDENTITY CASCADE;
+TRUNCATE TABLE book_ratings RESTART IDENTITY CASCADE;
+TRUNCATE TABLE book_comments RESTART IDENTITY CASCADE;
 TRUNCATE TABLE books RESTART IDENTITY CASCADE;
 TRUNCATE TABLE book_images RESTART IDENTITY CASCADE;
-TRUNCATE TABLE password_reset_tokens RESTART IDENTITY CASCADE;
-
-
 
 
 INSERT INTO EMPLOYEES (BIRTH_DATE, EMAIL, NAME, PASSWORD, PHONE, IS_ADMIN)
@@ -44,19 +47,3 @@ VALUES
     ('Silent Whispers', 'Mystery', 'ADULT', 27.50, '2021-05-15', 'Benjamin Hall', 420, 'Intricate detective work','A mystery', 'ENGLISH', 25, '978-0-38-550420-1'),
     ('Whirlwind Romance', 'Romance', 'OTHER', 23.25, '2022-05-15', 'Emma Turner', 360, 'Passionate love affair','A romance', 'ENGLISH', 45, '978-1-25-008040-0');
 
--- Таблиця відгуків
-CREATE TABLE book_reviews (
-                              id BIGSERIAL PRIMARY KEY,
-                              book_id BIGINT NOT NULL,
-                              client_id BIGINT NOT NULL,
-                              rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-                              comment TEXT,
-                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                              CONSTRAINT fk_review_book FOREIGN KEY (book_id) REFERENCES BOOKS (id) ON DELETE CASCADE,
-                              CONSTRAINT fk_review_client FOREIGN KEY (client_id) REFERENCES CLIENTS (id) ON DELETE CASCADE,
-                              CONSTRAINT uq_review_client_book UNIQUE (client_id, book_id)
-);
-
--- Додамо поле середнього рейтингу до книг для швидкодії (кешування рейтингу)
-ALTER TABLE BOOKS ADD COLUMN average_rating DOUBLE PRECISION DEFAULT 0.0;
-ALTER TABLE BOOKS ADD COLUMN total_reviews INTEGER DEFAULT 0;

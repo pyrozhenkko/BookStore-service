@@ -27,4 +27,6 @@ public class BookDTO {
     private Integer quantity;
     private List<String> imageUrls;
     private String isbn;
+    private Double averageRating;
+    private Integer totalReviews;
 }

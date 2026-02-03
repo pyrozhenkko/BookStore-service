@@ -28,6 +28,9 @@ public class Book {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(nullable = false, unique = true)
+    private String isbn;
+
     private String genre;
 
     @Enumerated(EnumType.STRING)
@@ -60,6 +63,9 @@ public class Book {
     @Column(name = "image_url")
     private List<String> imageUrls = new ArrayList<>();
 
-    @Column(nullable = false, unique = true)
-    private String isbn;
+    @Column(name = "average_rating")
+    private Double averageRating = 0.0;
+
+    @Column(name = "total_reviews")
+    private Integer totalReviews = 0;
 }

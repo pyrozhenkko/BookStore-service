@@ -24,6 +24,8 @@ public interface BookMapper {
     @Mapping(source = "quantity", target = "quantity")
     @Mapping(source = "imageUrls", target = "imageUrls")
     @Mapping(source = "isbn", target = "isbn")
+    @Mapping(source = "averageRating", target = "averageRating")
+    @Mapping(source = "totalReviews", target = "totalReviews")
     BookDTO toDto(Book book);
 
     @Mapping(target = "id", ignore = true)
@@ -40,5 +42,7 @@ public interface BookMapper {
     @Mapping(source = "quantity", target = "quantity")
     @Mapping(source = "imageUrls", target = "imageUrls")
     @Mapping(source = "isbn", target = "isbn")
+    @Mapping(target = "averageRating", ignore = true)
+    @Mapping(target = "totalReviews", ignore = true)
     Book toEntity(BookDTO bookDTO);
 }
