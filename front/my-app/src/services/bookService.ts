@@ -124,7 +124,7 @@ class BookServiceClass {
   // Utility methods
   private generateBookId(): string {
     const maxId = this.books.reduce((max, book) => {
-      const numId = parseInt(book.id);
+      const numId = parseInt(String(book.id), 10);
       return isNaN(numId) ? max : Math.max(max, numId);
     }, 0);
     return String(maxId + 1);

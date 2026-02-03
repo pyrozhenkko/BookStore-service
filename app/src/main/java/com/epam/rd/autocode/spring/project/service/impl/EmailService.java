@@ -28,7 +28,7 @@ public class EmailService {
         message.setTo(toEmail);
         message.setSubject("Відновлення пароля - Book Store");
 
-        String resetUrl = clientUrl + "/reset-password?token=" + token;
+        String resetUrl = clientUrl + "/#/reset-password?token=" + token;
 
         String text = String.format(
                 "Вітаємо!\n\n" +

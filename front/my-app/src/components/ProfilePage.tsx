@@ -10,7 +10,7 @@ import { User, Mail, Shield, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 export function ProfilePage() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, isCustomer, balance } = useAuth();
   const [name, setName] = useState(currentUser?.name || '');
   const [email, setEmail] = useState(currentUser?.email || '');
   const [isSaved, setIsSaved] = useState(false);
@@ -78,6 +78,19 @@ export function ProfilePage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Cashback for Customers */}
+      {isCustomer && balance !== null && balance !== undefined && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">Кешбек</CardTitle>
+            <CardDescription>Ваш поточний баланс кешбеку</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold text-green-600">{balance.toFixed(2)} ₴</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Account Info Card */}
       <Card>

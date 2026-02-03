@@ -2,9 +2,10 @@ import type { Book } from '../types';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { ShoppingCart, Eye } from 'lucide-react';
+import { ShoppingCart, Eye, Heart } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useFavorites } from '../contexts/FavoritesContext';
 
 interface BookCardProps {
   book: Book;
@@ -14,20 +15,42 @@ interface BookCardProps {
 export function BookCard({ book, onViewDetails }: BookCardProps) {
   const { addToCart } = useCart();
   const { isCustomer } = useAuth();
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+
+  const bookIdNum = typeof book.id === 'number' ? book.id : parseInt(String(book.id), 10);
+  const hasNumericId = !isNaN(bookIdNum);
+  const isFav = hasNumericId && isFavorite(bookIdNum);
 
   const handleAddToCart = () => {
     addToCart(book);
   };
 
+  const handleFavorite = async () => {
+    if (!hasNumericId) return;
+    try {
+      if (isFav) await removeFavorite(bookIdNum);
+      else await addFavorite(bookIdNum);
+    } catch {}
+  };
+
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="aspect-[2/3] overflow-hidden rounded-md bg-gray-100 mb-3">
+      <CardHeader className="pb-3 relative">
+        <div className="aspect-[2/3] overflow-hidden rounded-md bg-gray-100 mb-3 relative">
           <img 
             src={book.imageUrl} 
             alt={book.name}
             className="w-full h-full object-cover"
           />
+          {isCustomer && hasNumericId && (
+            <button
+              type="button"
+              onClick={handleFavorite}
+              className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white shadow"
+            >
+              <Heart className={`size-5 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
+            </button>
+          )}
         </div>
         <CardTitle className="line-clamp-2">{book.name}</CardTitle>
         <CardDescription>{book.author}</CardDescription>

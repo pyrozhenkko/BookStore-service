@@ -11,6 +11,7 @@ import org.mapstruct.ReportingPolicy;
         unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface BookMapper {
 
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "name", target = "name")
     @Mapping(source = "genre", target = "genre")
     @Mapping(source = "ageGroup", target = "ageGroup")

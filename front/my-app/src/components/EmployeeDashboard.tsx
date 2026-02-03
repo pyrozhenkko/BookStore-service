@@ -207,8 +207,8 @@ export function EmployeeDashboard() {
 
   const handleAddBook = () => {
     const book: Book = {
-      id: String(books.length + 1),
-      ...newBook as Book
+      ...newBook as Book,
+      id: String(books.length + 1)
     };
     setBooks([...books, book]);
     setIsAddBookOpen(false);
@@ -566,7 +566,7 @@ export function EmployeeDashboard() {
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => handleDeleteBook(book.id)}
+                            onClick={() => handleDeleteBook(String(book.id))}
                           >
                             <Trash2 className="size-4 text-red-600" />
                           </Button>

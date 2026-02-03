@@ -22,7 +22,7 @@ export interface PaymentResult {
 // Declined: 4000 0000 0000 0002
 
 export class StripeService {
-  private static readonly STRIPE_PUBLISHABLE_KEY = 'pk_test_51234567890'; // Demo key
+  private static readonly _STRIPE_PUBLISHABLE_KEY = 'pk_test_51234567890'; // Demo key
   
   // Симуляція створення Payment Intent
   static async createPaymentIntent(amount: number, currency: string = 'UAH'): Promise<StripePaymentIntent> {
@@ -46,8 +46,8 @@ export class StripeService {
     cardNumber: string,
     cardExpiry: string,
     cardCvc: string,
-    cardName: string,
-    amount: number
+    _cardName: string,
+    _amount: number
   ): Promise<PaymentResult> {
     // Валідація номера картки (базова перевірка)
     const cleanCardNumber = cardNumber.replace(/\s/g, '');

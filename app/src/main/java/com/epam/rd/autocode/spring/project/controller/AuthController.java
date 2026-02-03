@@ -4,7 +4,12 @@ import com.epam.rd.autocode.spring.project.dto.ClientDTO;
 import com.epam.rd.autocode.spring.project.dto.EmployeeDTO;
 import com.epam.rd.autocode.spring.project.dto.auth.AuthenticationRequest;
 import com.epam.rd.autocode.spring.project.dto.auth.AuthenticationResponse;
+import com.epam.rd.autocode.spring.project.dto.auth.CurrentUserResponse;
 import com.epam.rd.autocode.spring.project.dto.auth.TokenRefreshRequest;
+import com.epam.rd.autocode.spring.project.model.Client;
+import com.epam.rd.autocode.spring.project.model.Employee;
+import com.epam.rd.autocode.spring.project.repo.ClientRepository;
+import com.epam.rd.autocode.spring.project.repo.EmployeeRepository;
 import com.epam.rd.autocode.spring.project.model.RefreshToken;
 import com.epam.rd.autocode.spring.project.security.JwtService;
 import com.epam.rd.autocode.spring.project.security.LoginAttemptService;
@@ -33,6 +38,8 @@ public class AuthController {
     private final ClientService clientService;
     private final EmployeeService employeeService;
     private final RefreshTokenService refreshTokenService;
+    private final ClientRepository clientRepository;
+    private final EmployeeRepository employeeRepository;
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) {
@@ -96,5 +103,23 @@ public class AuthController {
     public ResponseEntity<EmployeeDTO> registerEmployee(@RequestBody EmployeeDTO employeeDTO) {
         EmployeeDTO newEmployee = employeeService.addEmployee(employeeDTO);
         return new ResponseEntity<>(newEmployee, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<CurrentUserResponse> getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        var employeeOpt = employeeRepository.findByEmail(email);
+        if (employeeOpt.isPresent()) {
+            Employee e = employeeOpt.get();
+            return ResponseEntity.ok(new CurrentUserResponse(e.getEmail(), e.getName(),
+                    e.isAdmin() ? "ADMIN" : "EMPLOYEE", null));
+        }
+        var clientOpt = clientRepository.findByEmail(email);
+        if (clientOpt.isPresent()) {
+            Client c = clientOpt.get();
+            return ResponseEntity.ok(new CurrentUserResponse(c.getEmail(), c.getName(),
+                    "CUSTOMER", c.getBalance()));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }

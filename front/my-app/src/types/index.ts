@@ -1,5 +1,5 @@
 export interface Book {
-  id: string;
+  id: string | number;
   name: string;
   author: string;
   price: number;
@@ -7,8 +7,11 @@ export interface Book {
   category: string;
   stock: number;
   imageUrl: string;
+  imageUrls?: string[];
   isbn: string;
   publishedYear: number;
+  averageRating?: number;
+  totalReviews?: number;
 }
 
 export interface User {

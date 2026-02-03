@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { Book } from '../types';
 import { mockBooks } from '../services/mockData';
+import { bookApiService } from '../services/bookApiService';
 import { BookCard } from './BookCard';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -19,31 +20,46 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [currentPage, setCurrentPage] = useState(1);
+  const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = useMemo(() => {
-    const cats = Array.from(new Set(mockBooks.map(book => book.category)));
-    return ['all', ...cats];
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    bookApiService
+      .getAllBooks()
+      .then((list) => {
+        if (!cancelled) setAllBooks(list);
+      })
+      .catch(() => {
+        if (!cancelled) setAllBooks(mockBooks);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, []);
 
-  const filteredAndSortedBooks = useMemo(() => {
-    let books = [...mockBooks];
+  const categories = useMemo(() => {
+    const cats = Array.from(new Set(allBooks.map((book) => book.category)));
+    return ['all', ...cats];
+  }, [allBooks]);
 
-    // Filter by search query
+  const filteredAndSortedBooks = useMemo(() => {
+    let list = [...allBooks];
     if (searchQuery) {
-      books = books.filter(book =>
-        book.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.description.toLowerCase().includes(searchQuery.toLowerCase())
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (book) =>
+          book.name.toLowerCase().includes(q) ||
+          book.author.toLowerCase().includes(q) ||
+          book.description.toLowerCase().includes(q)
       );
     }
-
-    // Filter by category
     if (categoryFilter !== 'all') {
-      books = books.filter(book => book.category === categoryFilter);
+      list = list.filter((book) => book.category === categoryFilter);
     }
-
-    // Sort
-    books.sort((a, b) => {
+    list.sort((a, b) => {
       switch (sortBy) {
         case 'price-asc':
           return a.price - b.price;
@@ -51,23 +67,19 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
           return b.price - a.price;
         case 'author':
           return a.author.localeCompare(b.author);
-        case 'name':
         default:
           return a.name.localeCompare(b.name);
       }
     });
+    return list;
+  }, [allBooks, searchQuery, categoryFilter, sortBy]);
 
-    return books;
-  }, [searchQuery, categoryFilter, sortBy]);
-
-  // Пагінація
-  const totalPages = Math.ceil(filteredAndSortedBooks.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredAndSortedBooks.length / ITEMS_PER_PAGE) || 1;
   const paginatedBooks = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedBooks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedBooks.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredAndSortedBooks, currentPage]);
 
-  // Скидання сторінки при зміні фільтрів
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, categoryFilter, sortBy]);
@@ -141,13 +153,17 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
           )}
         </div>
         
-        {paginatedBooks.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12 text-gray-500">
+            <p className="text-lg">Завантаження...</p>
+          </div>
+        ) : paginatedBooks.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <p className="text-lg">Нічого не знайдено</p>
             <p className="text-sm mt-2">Спробуйте змінити фільтри пошуку</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedBooks.map(book => (
               <BookCard
                 key={book.id}

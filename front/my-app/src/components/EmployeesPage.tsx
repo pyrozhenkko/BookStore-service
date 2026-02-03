@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Pencil, Trash2, Plus, UserCheck, UserX, Search, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, Plus, UserCheck, UserX, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 

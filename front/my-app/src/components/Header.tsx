@@ -1,4 +1,4 @@
-import { ShoppingCart, User, LogOut, BookOpen, LayoutDashboard, Users, ShoppingBag, Package } from 'lucide-react';
+import { ShoppingCart, User, LogOut, BookOpen, Users, ShoppingBag, Package, ScrollText } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { Button } from './ui/button';
@@ -64,6 +64,13 @@ export function Header({ currentView, onViewChange }: HeaderProps) {
                   >
                     <ShoppingBag className="size-4 mr-2" />
                     Клієнти
+                  </Button>
+                  <Button
+                    variant={currentView === 'admin-logs' ? 'default' : 'ghost'}
+                    onClick={() => onViewChange('admin-logs')}
+                  >
+                    <ScrollText className="size-4 mr-2" />
+                    Логи
                   </Button>
                 </>
               )}

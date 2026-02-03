@@ -1,5 +1,18 @@
 
 services:
+  # фронтенд (React + nginx)
+  frontend:
+    build:
+      context: ../front/my-app
+      dockerfile: Dockerfile
+    container_name: bookstore-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - app
+    networks:
+      - bookstore-network
+
   # постгрес
   db:
     image: postgres:15-alpine
@@ -32,6 +45,7 @@ services:
       db:
         condition: service_healthy
     environment:
+      CLIENT_URL: http://localhost:5173
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/bookstore
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: root
