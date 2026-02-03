@@ -18,6 +18,7 @@ public interface ClientMapper {
     ClientDTO toDto(Client client);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "favorites", ignore = true)
     @Mapping(source = "email", target = "email")
     @Mapping(source = "password", target = "password")
     @Mapping(source = "name", target = "name")

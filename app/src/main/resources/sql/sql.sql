@@ -6,6 +6,7 @@ TRUNCATE TABLE password_reset_tokens RESTART IDENTITY CASCADE;
 
 
 
+
 INSERT INTO EMPLOYEES (BIRTH_DATE, EMAIL, NAME, PASSWORD, PHONE, IS_ADMIN)
 VALUES ('1990-05-15', 'john.doe@email.com', 'John Doe', 'pass123', '555-123-4567', TRUE),
        ('1985-09-20', 'jane.smith@email.com', 'Jane Smith', 'abc456', '555-987-6543', FALSE),
@@ -42,3 +43,20 @@ VALUES
     ('Serenade of Souls', 'Fantasy', 'TEEN', 15.99, '2013-05-15', 'Isabella Reed', 330, 'Enchanting realms','A magical fantasy', 'ENGLISH', 60, '978-0-55-338168-9'),
     ('Silent Whispers', 'Mystery', 'ADULT', 27.50, '2021-05-15', 'Benjamin Hall', 420, 'Intricate detective work','A mystery', 'ENGLISH', 25, '978-0-38-550420-1'),
     ('Whirlwind Romance', 'Romance', 'OTHER', 23.25, '2022-05-15', 'Emma Turner', 360, 'Passionate love affair','A romance', 'ENGLISH', 45, '978-1-25-008040-0');
+
+-- Таблиця відгуків
+CREATE TABLE book_reviews (
+                              id BIGSERIAL PRIMARY KEY,
+                              book_id BIGINT NOT NULL,
+                              client_id BIGINT NOT NULL,
+                              rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+                              comment TEXT,
+                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                              CONSTRAINT fk_review_book FOREIGN KEY (book_id) REFERENCES BOOKS (id) ON DELETE CASCADE,
+                              CONSTRAINT fk_review_client FOREIGN KEY (client_id) REFERENCES CLIENTS (id) ON DELETE CASCADE,
+                              CONSTRAINT uq_review_client_book UNIQUE (client_id, book_id)
+);
+
+-- Додамо поле середнього рейтингу до книг для швидкодії (кешування рейтингу)
+ALTER TABLE BOOKS ADD COLUMN average_rating DOUBLE PRECISION DEFAULT 0.0;
+ALTER TABLE BOOKS ADD COLUMN total_reviews INTEGER DEFAULT 0;

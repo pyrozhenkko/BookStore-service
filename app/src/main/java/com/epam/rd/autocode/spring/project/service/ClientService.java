@@ -1,9 +1,12 @@
 package com.epam.rd.autocode.spring.project.service;
 
 import com.epam.rd.autocode.spring.project.dto.ClientDTO;
+import com.epam.rd.autocode.spring.project.dto.favorite.FavoriteDTOs.*; // Імпорт DTO
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+
+import java.util.List;
 
 public interface ClientService {
 
@@ -26,4 +29,13 @@ public interface ClientService {
 
     @PreAuthorize("hasRole('ADMIN') or @customSecurity.isClientOwner(#id)")
     void deleteClientById(Long id);
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    void addBookToFavorites(FavoriteRequest request);
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    void removeBookFromFavorites(Long bookId);
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    List<FavoriteItemDTO> getMyFavorites();
 }
