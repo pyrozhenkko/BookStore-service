@@ -27,7 +27,7 @@ public interface ClientService {
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE') or @customSecurity.isClientOwner(#id)")
     ClientDTO updateClientById(Long id, ClientDTO client);
 
-    @PreAuthorize("hasRole('ADMIN') or @customSecurity.isClientOwner(#id)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE') or @customSecurity.isClientOwner(#id)")
     void deleteClientById(Long id);
 
     @PreAuthorize("hasRole('CUSTOMER')")

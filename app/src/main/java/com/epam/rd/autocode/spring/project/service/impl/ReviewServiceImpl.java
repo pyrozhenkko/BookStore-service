@@ -57,6 +57,8 @@ public class ReviewServiceImpl {
 
         BookComment comment = new BookComment(book, client, text, rating);
         commentRepository.save(comment);
+
+        updateBookAverageStats(book);
     }
 
     @Transactional(readOnly = true)
@@ -78,11 +80,31 @@ public class ReviewServiceImpl {
     }
 
     private void updateBookAverageStats(Book book) {
-        Double avg = ratingRepository.getAverageRating(book.getId());
-        Integer count = ratingRepository.countByBookId(book.getId());
+        // Отримуємо статистику з явної таблиці рейтингів
+        Double ratingAvg = ratingRepository.getAverageRating(book.getId());
+        Integer ratingCount = ratingRepository.countByBookId(book.getId());
 
-        book.setAverageRating(avg != null ? Math.round(avg * 10.0) / 10.0 : 0.0);
-        book.setTotalReviews(count != null ? count : 0);
+        // Отримуємо статистику з коментарів
+        Double commentAvg = commentRepository.getAverageRating(book.getId());
+        Integer commentCount = commentRepository.countWithRating(book.getId());
+
+        double totalScore = 0;
+        int totalCount = 0;
+
+        if (ratingAvg != null && ratingCount != null && ratingCount > 0) {
+            totalScore += ratingAvg * ratingCount;
+            totalCount += ratingCount;
+        }
+
+        if (commentAvg != null && commentCount != null && commentCount > 0) {
+            totalScore += commentAvg * commentCount;
+            totalCount += commentCount;
+        }
+
+        double finalAvg = totalCount > 0 ? totalScore / totalCount : 0.0;
+
+        book.setAverageRating(Math.round(finalAvg * 10.0) / 10.0);
+        book.setTotalReviews(totalCount);
         bookRepository.save(book);
     }
 }

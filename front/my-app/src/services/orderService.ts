@@ -13,20 +13,21 @@ export const orderService = {
 
   // Get orders by customer email
   async getOrdersByCustomer(customerEmail: string): Promise<Order[]> {
-    return apiRequest<Order[]>(`/api/orders/client/${customerEmail}`, {
+    const data = await apiRequest<{ content: Order[] }>(`/api/orders/client/${customerEmail}`, {
       method: 'GET',
     });
+    return data.content || [];
   },
 
   // Confirm order
-  async confirmOrder(orderId: string): Promise<Order> {
+  async confirmOrder(orderId: number | string): Promise<Order> {
     return apiRequest<Order>(`/api/orders/${orderId}/confirm`, {
       method: 'POST',
     });
   },
 
   // Cancel order
-  async cancelOrder(orderId: string): Promise<Order> {
+  async cancelOrder(orderId: number | string): Promise<Order> {
     return apiRequest<Order>(`/api/orders/${orderId}/cancel`, {
       method: 'POST',
     });

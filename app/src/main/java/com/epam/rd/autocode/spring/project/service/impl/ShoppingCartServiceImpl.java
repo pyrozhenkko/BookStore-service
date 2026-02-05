@@ -1,5 +1,6 @@
 package com.epam.rd.autocode.spring.project.service.impl;
 
+import com.epam.rd.autocode.spring.project.dto.cart.CartItemDTO;
 import com.epam.rd.autocode.spring.project.dto.cart.CheckoutRequest;
 import com.epam.rd.autocode.spring.project.dto.cart.ShoppingCartDTO;
 import com.epam.rd.autocode.spring.project.mapper.ShoppingCartMapper;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -117,7 +119,26 @@ public class ShoppingCartServiceImpl {
             throw new RuntimeException("Cart is empty!");
         }
 
-        Client client = cart.getClient();
+        List<CartItemDTO> items = cart.getItems().stream()
+                .map(item -> {
+                    CartItemDTO dto = new CartItemDTO();
+                    dto.setBookId(item.getBook().getId());
+                    dto.setQuantity(item.getQuantity());
+                    return dto;
+                }).toList();
+
+        checkout(request, items, bonusDiscount);
+
+        cart.getItems().clear();
+        cartRepository.save(cart);
+    }
+
+    @Transactional
+    public void checkout(CheckoutRequest request, java.util.List<CartItemDTO> items, BigDecimal bonusDiscount) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Client client = clientRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Client not found: " + email));
+
         Order order = new Order();
         order.setClient(client);
         order.setOrderDate(LocalDateTime.now());
@@ -132,24 +153,25 @@ public class ShoppingCartServiceImpl {
 
         BigDecimal itemsTotal = BigDecimal.ZERO;
 
-        for (CartItem cartItem : cart.getItems()) {
-            Book book = cartItem.getBook();
+        for (CartItemDTO itemDTO : items) {
+            Book book = bookRepository.findById(itemDTO.getBookId())
+                    .orElseThrow(() -> new RuntimeException("Book not found: " + itemDTO.getBookId()));
 
-            if (book.getQuantity() < cartItem.getQuantity()) {
+            if (book.getQuantity() < itemDTO.getQuantity()) {
                 throw new RuntimeException("Not enough stock for: " + book.getName());
             }
 
-            book.setQuantity(book.getQuantity() - cartItem.getQuantity());
+            book.setQuantity(book.getQuantity() - itemDTO.getQuantity());
             bookRepository.save(book);
 
             BookItem bookItem = new BookItem();
             bookItem.setBook(book);
-            bookItem.setQuantity(cartItem.getQuantity());
+            bookItem.setQuantity(itemDTO.getQuantity());
             bookItem.setOrder(order);
 
             order.getBookItems().add(bookItem);
 
-            itemsTotal = itemsTotal.add(book.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
+            itemsTotal = itemsTotal.add(book.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
         }
 
         BigDecimal finalPrice = itemsTotal.subtract(bonusDiscount);
@@ -176,9 +198,6 @@ public class ShoppingCartServiceImpl {
 
         clientRepository.save(client);
         orderRepository.save(order);
-
-        cart.getItems().clear();
-        cartRepository.save(cart);
 
         try {
             System.out.println("📧 Sending confirmation email to " + client.getEmail());

@@ -1,5 +1,5 @@
 import type { Book } from '../types';
-import { apiRequest } from './api';
+import { apiRequest, getApiBaseUrl } from './api';
 
 interface BackendBookDTO {
   id: number;
@@ -16,8 +16,27 @@ interface BackendBookDTO {
   totalReviews?: number;
 }
 
+function resolveImageUrl(url: string | undefined): string {
+  if (!url) return 'https://placehold.co/300x450?text=Book';
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/uploads/')) {
+    return `${getApiBaseUrl()}${url}`;
+  }
+  return url;
+}
+
+function stripApiBaseUrl(url: string): string {
+  const baseUrl = getApiBaseUrl();
+  if (url.startsWith(baseUrl)) {
+    return url.replace(baseUrl, '');
+  }
+  return url;
+}
+
 function mapBackendToBook(dto: BackendBookDTO): Book {
-  const imageUrls = dto.imageUrls?.length ? dto.imageUrls : ['https://placehold.co/300x450?text=Book'];
+  const rawImageUrls = dto.imageUrls?.length ? dto.imageUrls : ['https://placehold.co/300x450?text=Book'];
+  const imageUrls = rawImageUrls.map(resolveImageUrl);
+
   return {
     id: dto.id,
     name: dto.name,
@@ -29,7 +48,7 @@ function mapBackendToBook(dto: BackendBookDTO): Book {
     imageUrl: imageUrls[0],
     imageUrls,
     isbn: dto.isbn ?? '',
-    publishedYear: dto.publicationDate ? new Date(dto.publicationDate).getFullYear() : 0,
+    publishedYear: dto.publicationDate ? parseInt(dto.publicationDate.split('-')[0]) : 0,
     averageRating: dto.averageRating ?? 0,
     totalReviews: dto.totalReviews ?? 0,
   };
@@ -38,7 +57,6 @@ function mapBackendToBook(dto: BackendBookDTO): Book {
 export const bookApiService = {
   async getAllBooks(): Promise<Book[]> {
     const res = await apiRequest<{ content: BackendBookDTO[]; totalPages: number }>('/api/books?size=1000');
-    // Handle both Page response and direct Array response (just in case)
     const list = (res as any).content || (Array.isArray(res) ? res : []);
     return list.map(mapBackendToBook);
   },
@@ -79,4 +97,68 @@ export const bookApiService = {
       return [];
     }
   },
+
+  async addBook(book: Partial<Book>): Promise<Book> {
+    const dto = {
+      name: book.name,
+      author: book.author,
+      price: book.price,
+      description: book.description,
+      genre: book.category,
+      quantity: book.stock,
+      isbn: book.isbn,
+      publicationDate: `${book.publishedYear}-01-01`,
+      imageUrls: book.imageUrls?.map(stripApiBaseUrl)
+    };
+    const response = await apiRequest<BackendBookDTO>('/api/books', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+    return mapBackendToBook(response);
+  },
+
+  async updateBook(oldName: string, book: Partial<Book>): Promise<Book> {
+    const dto = {
+      name: book.name,
+      author: book.author,
+      price: book.price,
+      description: book.description,
+      genre: book.category,
+      quantity: book.stock,
+      isbn: book.isbn,
+      publicationDate: `${book.publishedYear}-01-01`,
+      imageUrls: book.imageUrls?.map(stripApiBaseUrl)
+    };
+    const response = await apiRequest<BackendBookDTO>(`/api/books/${encodeURIComponent(oldName)}`, {
+      method: 'PUT',
+      body: JSON.stringify(dto),
+    });
+    return mapBackendToBook(response);
+  },
+
+  async deleteBook(name: string): Promise<void> {
+    await apiRequest(`/api/books/${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async uploadImage(name: string, file: File): Promise<Book> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiRequest<BackendBookDTO>(`/api/books/${encodeURIComponent(name)}/images`, {
+      method: 'POST',
+      body: formData,
+      headers: {}
+    });
+    return mapBackendToBook(response);
+  },
+
+  async deleteImage(name: string, imageUrl: string): Promise<Book> {
+    const response = await apiRequest<BackendBookDTO>(
+      `/api/books/${encodeURIComponent(name)}/images?imageUrl=${encodeURIComponent(imageUrl)}`,
+      { method: 'DELETE' }
+    );
+    return mapBackendToBook(response);
+  }
 };

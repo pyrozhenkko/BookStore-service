@@ -38,5 +38,6 @@ public interface OrderMapper {
 
     @Mapping(source = "book.name", target = "bookName")
     @Mapping(source = "quantity", target = "quantity")
+    @Mapping(source = "book.price", target = "price")
     BookItemDTO toBookItemDto(BookItem bookItem);
 }

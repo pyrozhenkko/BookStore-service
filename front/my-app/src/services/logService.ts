@@ -17,6 +17,15 @@ export interface PageResponse<T> {
   number: number;
 }
 
+export interface LogStats {
+  categoryDistribution: Record<string, number>;
+  levelDistribution: Record<string, number>;
+  timeline: Array<{
+    date: string;
+    count: number;
+  }>;
+}
+
 export const logService = {
   async getLogs(params: {
     page?: number;
@@ -33,4 +42,8 @@ export const logService = {
     if (params.level) search.set('level', params.level);
     return apiRequest(`/api/admin/logs?${search}`);
   },
+
+  async getStats(): Promise<LogStats> {
+    return apiRequest<LogStats>('/api/admin/logs/stats');
+  }
 };

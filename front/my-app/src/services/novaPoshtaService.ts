@@ -1,66 +1,21 @@
-// Real Nova Poshta API Integration
-// API Documentation: https://developers.novaposhta.ua/
-
-const NOVA_POSHTA_API_KEY = '44a0a81c97d4eadc5d8360d95023c5ac'; // Demo API key
-const NOVA_POSHTA_API_URL = 'https://api.novaposhta.ua/v2.0/json/';
+// Backend-proxied Nova Poshta Service
+// This service calls our local backend which acts as a proxy to Nova Poshta API
 
 export interface NovaPoshtaCity {
   Ref: string;
   Description: string;
-  DescriptionRu: string;
   Area: string;
-  DeliveryCity: string;
+  DeliveryCity: string; // Used for ref in warehouse search
 }
 
 export interface NovaPoshtaWarehouse {
   Ref: string;
   Description: string;
-  DescriptionRu: string;
   Number: string;
-  CityRef: string;
-  CityDescription: string;
-}
-
-interface NovaPoshtaResponse<T> {
-  success: boolean;
-  data: T[];
-  errors: string[];
-  warnings: string[];
-  info: {
-    totalCount: number;
-  };
 }
 
 export class NovaPoshtaService {
-  private static async makeRequest<T>(
-    modelName: string,
-    calledMethod: string,
-    methodProperties: Record<string, any> = {}
-  ): Promise<NovaPoshtaResponse<T>> {
-    try {
-      const response = await fetch(NOVA_POSHTA_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          apiKey: NOVA_POSHTA_API_KEY,
-          modelName,
-          calledMethod,
-          methodProperties,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Nova Poshta API Error:', error);
-      throw error;
-    }
-  }
+  private static BASE_URL = '/api/delivery';
 
   // Пошук міст
   static async searchCities(query: string): Promise<NovaPoshtaCity[]> {
@@ -68,59 +23,61 @@ export class NovaPoshtaService {
       return [];
     }
 
-    const response = await this.makeRequest<NovaPoshtaCity>(
-      'Address',
-      'searchSettlements',
-      {
-        CityName: query,
-        Limit: 20,
-      }
-    );
+    try {
+      const response = await fetch(`${this.BASE_URL}/cities?name=${encodeURIComponent(query)}`);
+      if (!response.ok) throw new Error('Failed to fetch cities');
 
-    if (response.success && response.data.length > 0) {
-      // API повертає масив з одним об'єктом, який містить масив Addresses
-      const firstResult = response.data[0] as any;
-      return firstResult.Addresses || [];
+      const data = await response.json();
+      // Map backend CityDTO to frontend NovaPoshtaCity
+      const mapped = data.map((city: any) => ({
+        Ref: city.ref, // Backend 'ref' is NP's 'DeliveryCity'
+        Description: city.description, // Backend 'description' is NP's 'Present'
+        Area: city.area || '',
+        DeliveryCity: city.ref
+      }));
+
+      // Filter duplicates by Ref to avoid React key warnings
+      return mapped.filter((city: any, index: number, self: any[]) =>
+        index === self.findIndex((t) => t.Ref === city.Ref)
+      );
+    } catch (error) {
+      console.error('Error searching cities:', error);
+      return [];
     }
-
-    return [];
   }
 
   // Отримання відділень за містом
   static async getWarehouses(cityRef: string): Promise<NovaPoshtaWarehouse[]> {
-    const response = await this.makeRequest<NovaPoshtaWarehouse>(
-      'Address',
-      'getWarehouses',
-      {
-        CityRef: cityRef,
-        Limit: 100,
-      }
-    );
+    if (!cityRef) return [];
 
-    return response.success ? response.data : [];
+    try {
+      const response = await fetch(`${this.BASE_URL}/branches?cityRef=${encodeURIComponent(cityRef)}`);
+      if (!response.ok) throw new Error('Failed to fetch warehouses');
+
+      const data = await response.json();
+      // Map backend BranchDTO to frontend NovaPoshtaWarehouse
+      const mapped = data.map((branch: any) => ({
+        Ref: branch.ref,
+        Description: branch.description,
+        Number: branch.number
+      }));
+
+      // Filter duplicates by Ref
+      return mapped.filter((branch: any, index: number, self: any[]) =>
+        index === self.findIndex((t) => t.Ref === branch.Ref)
+      );
+    } catch (error) {
+      console.error('Error loading warehouses:', error);
+      return [];
+    }
   }
 
-  // Отримання всіх міст (для випадаючого списку)
+  // Unused in checkout but kept for structure compatibility
   static async getCities(): Promise<NovaPoshtaCity[]> {
-    const response = await this.makeRequest<NovaPoshtaCity>(
-      'Address',
-      'getCities',
-      {
-        Limit: 100,
-      }
-    );
-
-    return response.success ? response.data : [];
+    return [];
   }
 
-  // Отримання областей
   static async getAreas(): Promise<{ Ref: string; Description: string }[]> {
-    const response = await this.makeRequest<{ Ref: string; Description: string }>(
-      'Address',
-      'getAreas',
-      {}
-    );
-
-    return response.success ? response.data : [];
+    return [];
   }
 }

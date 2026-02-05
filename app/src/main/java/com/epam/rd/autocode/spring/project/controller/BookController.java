@@ -91,8 +91,11 @@ public class BookController {
 
     @PutMapping("/{name}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    public ResponseEntity<BookDTO> updateBook(@PathVariable String name, @RequestBody BookDTO bookDTO) {
-        return ResponseEntity.ok(bookService.updateBookByName(name, bookDTO));
+    public ResponseEntity<BookDTO> updateBook(
+            @PathVariable String name,
+            @RequestBody BookDTO bookDTO,
+            @RequestHeader(value = "Accept-Language", defaultValue = "uk") String locale) {
+        return ResponseEntity.ok(bookService.updateBookByName(name, bookDTO, locale));
     }
 
     @DeleteMapping("/{name}")

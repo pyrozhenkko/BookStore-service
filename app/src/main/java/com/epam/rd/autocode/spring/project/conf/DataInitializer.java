@@ -23,10 +23,8 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        log.info("Checking if initial data needs password hashing...");
         hashClientPasswords();
         hashEmployeePasswords();
-        log.info("Data initialization check finished.");
     }
 
     private void hashClientPasswords() {

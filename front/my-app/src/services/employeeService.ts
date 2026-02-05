@@ -29,8 +29,8 @@ export const employeeService = {
     });
   },
 
-  // Звільнити працівника (деактивувати)
-  async terminateEmployee(id: string): Promise<void> {
+  // Видалити працівника назавжди
+  async deleteEmployee(id: string): Promise<void> {
     return apiRequest<void>(`/api/employees/${id}`, {
       method: 'DELETE',
     });

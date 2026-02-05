@@ -27,7 +27,7 @@ export function BookDetails({ book, onBack }: BookDetailsProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loadingComments, setLoadingComments] = useState(false);
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
   const { isCustomer } = useAuth();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { t } = useLanguage();
@@ -38,6 +38,7 @@ export function BookDetails({ book, onBack }: BookDetailsProps) {
   const isFav = hasNumericId && isFavorite(bookIdNum);
   const avgRating = book.averageRating ?? 0;
   const totalReviews = book.totalReviews ?? 0;
+  const isInCart = cart.some(item => String(item.book.id) === String(book.id));
 
   const handleAddToCart = () => {
     addToCart(book, quantity);
@@ -248,9 +249,14 @@ export function BookDetails({ book, onBack }: BookDetailsProps) {
                         </Button>
                       </div>
                     </div>
-                    <Button className="w-full" size="lg" onClick={handleAddToCart}>
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      onClick={handleAddToCart}
+                      disabled={isInCart}
+                    >
                       <ShoppingCart className="size-5 mr-2" />
-                      {t('book.addToCart')}
+                      {isInCart ? t('book.inCart') : t('book.addToCart')}
                     </Button>
                   </>
                 )}

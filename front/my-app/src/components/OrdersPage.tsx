@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import type { Order } from '../types';
+import { orderService } from '../services/orderService';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -23,10 +24,17 @@ export function OrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    // Load orders from localStorage
-    const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    const userOrders = savedOrders.filter((order: Order) => order.customerEmail === currentUser?.email);
-    setOrders(userOrders);
+    const loadOrders = async () => {
+      if (currentUser?.email) {
+        try {
+          const data = await orderService.getOrdersByCustomer(currentUser.email);
+          setOrders(data);
+        } catch (error) {
+          console.error('Error loading orders:', error);
+        }
+      }
+    };
+    loadOrders();
   }, [currentUser]);
 
   const formatDate = (dateString: string) => {
@@ -58,8 +66,8 @@ export function OrdersPage() {
     // Пошук
     if (searchQuery) {
       result = result.filter(order =>
-        order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.items.some(item => item.bookName.toLowerCase().includes(searchQuery.toLowerCase()))
+        order.id.toString().includes(searchQuery.toLowerCase()) ||
+        order.bookItems.some(item => item.bookName.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
@@ -73,9 +81,9 @@ export function OrdersPage() {
       let compareValue = 0;
 
       if (sortBy === 'date') {
-        compareValue = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        compareValue = new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime();
       } else {
-        compareValue = a.totalPrice - b.totalPrice;
+        compareValue = a.price - b.price;
       }
 
       return sortOrder === 'asc' ? compareValue : -compareValue;
@@ -108,9 +116,11 @@ export function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold mb-2">{t('orders.title')}</h1>
-        <p className="text-gray-600">{t('orders.empty.description')}</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight mb-1">{t('orders.title')}</h1>
+          <p className="text-muted-foreground">{t('orders.empty.description')}</p>
+        </div>
       </div>
 
       {/* Пошук та фільтри */}
@@ -173,19 +183,29 @@ export function OrdersPage() {
               <Card key={order.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {t('orders.orderNumber')}{order.id}
-                        {getStatusBadge(order.status)}
-                      </CardTitle>
-                      <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                        <Calendar className="size-4" />
-                        {formatDate(order.createdAt)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">{t('orders.total')}</p>
-                      <p className="text-2xl font-semibold">{order.totalPrice} ₴</p>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <CardTitle className="text-xl flex items-center gap-3">
+                          <span className="bg-primary/10 text-primary px-2 py-1 rounded text-sm font-mono">#{order.id}</span>
+                          {getStatusBadge(order.status)}
+                        </CardTitle>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="size-4" />
+                            {formatDate(order.orderDate)}
+                          </span>
+                          {order.clientEmail && (
+                            <span className="flex items-center gap-1">
+                              <Package className="size-4" />
+                              {order.bookItems.length} {t('cart.item')}{order.bookItems.length !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground mb-1">{t('orders.total')}</p>
+                        <p className="text-3xl font-bold text-primary">{order.price.toLocaleString()} ₴</p>
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
@@ -193,36 +213,49 @@ export function OrdersPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('allOrders.searchPlaceholder')}</TableHead>
+                        <TableHead>{t('manageBooks.form.name')}</TableHead>
                         <TableHead className="text-center">{t('book.quantity')}</TableHead>
                         <TableHead className="text-right">{t('book.price')}</TableHead>
                         <TableHead className="text-right">{t('orders.total')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {order.items.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{item.bookName}</TableCell>
+                      {order.bookItems.map((item, index) => (
+                        <TableRow key={index} className="hover:bg-transparent">
+                          <TableCell className="font-medium pl-0">{item.bookName}</TableCell>
                           <TableCell className="text-center">{item.quantity}</TableCell>
-                          <TableCell className="text-right">{item.price} ₴</TableCell>
-                          <TableCell className="text-right font-semibold">
-                            {item.quantity * item.price} ₴
+                          <TableCell className="text-right text-muted-foreground">
+                            {item.price ? `${item.price.toLocaleString()} ₴` : '-'}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold pr-0">
+                            {item.price ? `${(item.price * item.quantity).toLocaleString()} ₴` : '-'}
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
-                  {(order as any).delivery && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                  {order.deliveryCity && (
+                    <div className="mt-6 p-4 bg-muted/30 rounded-xl border border-border/50">
+                      <div className="flex items-center gap-2 text-sm font-semibold mb-3 text-primary uppercase tracking-wider">
                         <MapPin className="size-4" />
                         {t('checkout.delivery')}
                       </div>
-                      <p className="text-sm text-gray-600">{(order as any).delivery.city}</p>
-                      <p className="text-sm text-gray-600">{(order as any).delivery.warehouse}</p>
-                      {(order as any).phone && (
-                        <p className="text-sm text-gray-600 mt-1">{t('auth.phone')}: {(order as any).phone}</p>
-                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground text-xs">{t('checkout.city')}</p>
+                          <p className="font-medium">{order.deliveryCity}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground text-xs">{t('checkout.warehouse')}</p>
+                          <p className="font-medium">{order.deliveryBranch}</p>
+                        </div>
+                        {order.clientPhone && (
+                          <div className="space-y-1">
+                            <p className="text-muted-foreground text-xs">{t('auth.phone')}</p>
+                            <p className="font-medium">{order.clientPhone}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                   {order.employeeEmail && (

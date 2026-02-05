@@ -4,7 +4,7 @@ import type { Book } from '../types';
 import { bookApiService } from '../services/bookApiService';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Pencil, Trash2, Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
 const ITEMS_PER_PAGE = 12;
 
 export function ManageBooksPage() {
@@ -38,6 +38,8 @@ export function ManageBooksPage() {
     isbn: '',
     publishedYear: '',
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadBooks();
@@ -69,6 +71,8 @@ export function ManageBooksPage() {
       isbn: '',
       publishedYear: '',
     });
+    setSelectedFile(null);
+    setPreviewUrl(null);
     setIsDialogOpen(true);
   };
 
@@ -85,57 +89,63 @@ export function ManageBooksPage() {
       isbn: book.isbn,
       publishedYear: book.publishedYear.toString(),
     });
+    setSelectedFile(null);
+    setPreviewUrl(null);
     setIsDialogOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const price = parseFloat(formData.price);
+    const stock = parseInt(formData.stock);
+    const publishedYear = parseInt(formData.publishedYear);
+
+    if (isNaN(price) || isNaN(stock) || isNaN(publishedYear)) {
+      toast.error(t('manageBooks.toasts.validationError') || 'Please enter valid numbers for price, stock, and year');
+      return;
+    }
+
     const bookData = {
       name: formData.name,
       author: formData.author,
-      price: parseFloat(formData.price),
+      price: price,
       description: formData.description,
       category: formData.category,
-      stock: parseInt(formData.stock),
+      stock: stock,
       imageUrl: formData.imageUrl,
       isbn: formData.isbn,
-      publishedYear: parseInt(formData.publishedYear),
+      publishedYear: publishedYear,
+      imageUrls: editingBook?.imageUrls || [],
     };
 
     try {
       if (editingBook) {
-        // Оновлення книги
-        const response = await fetch(`${API_BASE_URL}/books/${editingBook.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(bookData),
-        });
-
-        if (!response.ok) throw new Error('Failed to update book');
+        await bookApiService.updateBook(editingBook.name, bookData);
         toast.success(t('manageBooks.toasts.updateSuccess'));
       } else {
-        // Додавання нової книги
-        const response = await fetch(`${API_BASE_URL}/books`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(bookData),
-        });
-
-        if (!response.ok) throw new Error('Failed to create book');
+        const newBook = await bookApiService.addBook(bookData);
+        if (selectedFile) {
+          try {
+            await bookApiService.uploadImage(newBook.name, selectedFile);
+          } catch (uploadError) {
+            console.error('Error uploading image for new book:', uploadError);
+            toast.error(t('manageBooks.toasts.imageUploadError'));
+          }
+        }
         toast.success(t('manageBooks.toasts.createSuccess'));
       }
 
       setIsDialogOpen(false);
+      setSelectedFile(null);
+      setPreviewUrl(null);
       loadBooks();
-    } catch (error) {
-      toast.error(t('manageBooks.toasts.saveError'));
+    } catch (error: any) {
+      const errorMsg = error.message || t('manageBooks.toasts.saveError');
+      toast.error(errorMsg);
       console.error('Error saving book:', error);
     }
+
   };
 
   const handleDelete = async (book: Book) => {
@@ -144,16 +154,35 @@ export function ManageBooksPage() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/books/${book.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete book');
+      await bookApiService.deleteBook(book.name);
       toast.success(t('manageBooks.toasts.deleteSuccess'));
       loadBooks();
     } catch (error) {
       toast.error(t('manageBooks.toasts.deleteError'));
       console.error('Error deleting book:', error);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Create local preview
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    setSelectedFile(file);
+
+    if (editingBook) {
+      try {
+        const updatedBook = await bookApiService.uploadImage(editingBook.name, file);
+        setEditingBook(updatedBook);
+        setFormData(prev => ({ ...prev, imageUrl: updatedBook.imageUrl }));
+        setBooks(prev => prev.map(b => b.id === updatedBook.id ? updatedBook : b));
+        toast.success(t('manageBooks.toasts.imageUploadSuccess') || 'Image uploaded successfully');
+      } catch (error) {
+        toast.error(t('manageBooks.toasts.imageUploadError') || 'Failed to upload image');
+        console.error('Error uploading image:', error);
+      }
     }
   };
 
@@ -390,6 +419,9 @@ export function ManageBooksPage() {
             <DialogTitle>
               {editingBook ? t('manageBooks.form.editTitle') : t('manageBooks.form.addTitle')}
             </DialogTitle>
+            <DialogDescription>
+              {editingBook ? t('manageBooks.form.editDescription') : t('manageBooks.form.addDescription') || 'Please fill in the book details below.'}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -480,15 +512,31 @@ export function ManageBooksPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="imageUrl">{t('manageBooks.form.imageUrl')} *</Label>
-              <Input
-                id="imageUrl"
-                type="url"
-                value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                required
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="imageFile">{t('manageBooks.form.uploadImage') || 'Upload Image from Device'}</Label>
+
+                {(previewUrl || formData.imageUrl) && (
+                  <div className="mt-2 relative group w-32 aspect-[3/4] mx-auto overflow-hidden rounded-md border">
+                    <img
+                      src={previewUrl || formData.imageUrl}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                <Input
+                  id="imageFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="cursor-pointer"
+                />
+                <p className="text-xs text-gray-500">
+                  {t('manageBooks.form.uploadHint') || 'Selecting a file will automatically upload it (for existing books) or prepare it for upload (for new books).'}
+                </p>
+              </div>
             </div>
 
             <DialogFooter>

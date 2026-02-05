@@ -9,5 +9,5 @@ import java.util.Optional;
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByToken(String token);
-    void deleteByUserEmail(String userEmail); // Для logout (видалення всіх сесій)
+    void deleteByUserEmail(String userEmail); // Для logout (видалення всіх с
 }

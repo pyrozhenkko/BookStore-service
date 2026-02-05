@@ -258,6 +258,8 @@
             "year": "Published Year",
             "isbn": "ISBN",
             "imageUrl": "Image URL",
+            "uploadImage": "Upload Image from Device",
+            "uploadHint": "Selecting a file will automatically upload it and update the book info.",
             "cancel": "Cancel",
             "save": "Save",
             "add": "Add"
@@ -268,7 +270,9 @@
             "createSuccess": "Book created",
             "saveError": "Error saving book",
             "deleteSuccess": "Book deleted",
-            "deleteError": "Error deleting book"
+            "deleteError": "Error deleting book",
+            "imageUploadSuccess": "Image uploaded successfully",
+            "imageUploadError": "Failed to upload image"
         }
     },
     "allOrders": {
@@ -356,12 +360,21 @@
         },
         "badges": {
             "active": "Active",
+            "inactive": "Inactive",
             "terminated": "Blocked"
         },
         "actions": {
             "edit": "Edit",
+            "block": "Block",
+            "unblock": "Unblock",
+            "delete": "Delete",
+            "deleteConfirm": "Are you sure you want to permanently delete {{name}}?",
             "terminate": "Block",
             "terminateConfirm": "Are you sure you want to block {{name}}?"
+        },
+        "positions": {
+            "ADMIN": "Administrator",
+            "EMPLOYEE": "Employee"
         },
         "form": {
             "editTitle": "Edit Employee",
@@ -381,7 +394,11 @@
             "createSuccess": "Employee added",
             "saveError": "Error saving employee",
             "terminateSuccess": "Employee blocked",
-            "terminateError": "Error blocking employee"
+            "terminateError": "Error blocking employee",
+            "deleteSuccess": "Employee deleted",
+            "deleteError": "Error deleting employee",
+            "blockSuccess": "Employee blocked",
+            "unblockSuccess": "Employee unblocked"
         }
     },
     "clients": {
@@ -421,14 +438,30 @@
             "blocked": "Blocked",
             "active": "Active"
         },
+        "addClient": "Add Client",
+        "editClient": "Edit Client",
+        "form": {
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone",
+            "password": "Password",
+            "passwordHint": "(leave blank to keep unchanged)"
+        },
         "actions": {
             "block": "Block",
             "unblock": "Unblock",
+            "edit": "Edit",
+            "delete": "Delete",
+            "confirmDelete": "Are you sure you want to delete client {{name}}?",
             "confirmBlock": "Are you sure you want to block {{name}}?",
             "confirmUnblock": "Are you sure you want to unblock {{name}}?"
         },
         "toasts": {
             "loadError": "Error loading clients",
+            "createSuccess": "Client created successfully",
+            "updateSuccess": "Client updated successfully",
+            "deleteSuccess": "Client deleted successfully",
+            "saveError": "Error saving client",
             "blockSuccess": "Client blocked",
             "unblockSuccess": "Client unblocked",
             "actionError": "Error: failed to update client status"
@@ -487,5 +520,38 @@
             "manageClients": "Block/unblock clients",
             "viewAllClients": "View all clients list"
         }
+    },
+    "logs": {
+        "title": "Admin Dashboard",
+        "description": "System monitoring and activity logs",
+        "refresh": "Refresh",
+        "totalEvents": "Total Events",
+        "totalEventsSub": "all logged actions",
+        "errors": "Errors",
+        "errorsSub": "critical system issues",
+        "security": "Security",
+        "securitySub": "authentication & access",
+        "updates": "Updates",
+        "updatesSub": "business transactions",
+        "activityOverTime": "Activity Over Time",
+        "activitySub": "Event frequency in the last days",
+        "categoryDistribution": "Category Distribution",
+        "categorySub": "Volume by event type",
+        "logLevels": "Log Levels",
+        "levelsSub": "Severity distribution",
+        "recentActivity": "Recent Activity",
+        "recentSub": "Live feed of system events",
+        "searchPlaceholder": "Search logs...",
+        "allLevels": "All Levels",
+        "filter": "Filter",
+        "time": "Time",
+        "level": "Level",
+        "category": "Category",
+        "message": "Message",
+        "noLogs": "No logs found",
+        "loading": "Loading...",
+        "page": "Page",
+        "of": "of",
+        "refreshed": "Data refreshed"
     }
 }

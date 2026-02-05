@@ -22,16 +22,6 @@ public class I18nConfig implements WebMvcConfigurer {
             new Locale("en"));
 
     @Bean
-    public MessageSource messageSource() {
-        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-        messageSource.setBasename("i18n/messages");
-        messageSource.setDefaultEncoding("UTF-8");
-        messageSource.setUseCodeAsDefaultMessage(true);
-        messageSource.setFallbackToSystemLocale(false);
-        return messageSource;
-    }
-
-    @Bean
     public LocaleResolver localeResolver() {
         AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
         resolver.setDefaultLocale(new Locale("uk"));

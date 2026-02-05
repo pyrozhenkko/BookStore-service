@@ -28,7 +28,6 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .map(employeeMapper::toDto);
     }
 
-    // --- РЕАЛІЗАЦІЯ ПОШУКУ ---
     @Override
     public Page<EmployeeDTO> searchEmployees(String keyword, Pageable pageable) {
         Specification<Employee> spec = EmployeeSpecification.hasKeyword(keyword);
@@ -59,9 +58,18 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setName(employeeDTO.getName());
         employee.setPhone(employeeDTO.getPhone());
         employee.setBirthDate(employeeDTO.getBirthDate());
+        employee.setPosition(employeeDTO.getPosition());
 
-        // Оновлюємо статус адміна
-        employee.setAdmin(employeeDTO.isAdmin());
+        employee.setAdmin(checkPositionForAdmin(employeeDTO.getPosition()));
+
+        if (!employeeDTO.isActive()) {
+            String currentEmail = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                    .getAuthentication().getName();
+            if (employee.getEmail().equals(currentEmail)) {
+                throw new RuntimeException("You cannot block yourself");
+            }
+        }
+        employee.setBlocked(!employeeDTO.isActive());
 
         if (employeeDTO.getPassword() != null && !employeeDTO.getPassword().isBlank()) {
             employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
@@ -89,6 +97,19 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeMapper.toEntity(employeeDTO);
         employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
 
+        // Автоматично визначаємо статус адміна на основі посади
+        employee.setAdmin(checkPositionForAdmin(employeeDTO.getPosition()));
+
         return employeeMapper.toDto(employeeRepository.save(employee));
+    }
+
+    private boolean checkPositionForAdmin(String position) {
+        if (position == null)
+            return false;
+        String pos = position.trim().toUpperCase();
+        return pos.equals("ADMIN") ||
+                pos.equals("ADMINISTRATOR") ||
+                pos.equals("АДМІНІСТРАТОР") ||
+                pos.equals("АДМІН");
     }
 }

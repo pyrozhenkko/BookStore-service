@@ -18,10 +18,16 @@ export async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const isFormData = options.body instanceof FormData;
+  const authHeaders = getAuthHeaders();
+  if (isFormData) {
+    delete (authHeaders as any)['Content-Type'];
+  }
+
   const response = await fetch(url, {
     ...options,
     headers: {
-      ...getAuthHeaders(),
+      ...authHeaders,
       ...(options.headers as Record<string, string>),
     },
   });

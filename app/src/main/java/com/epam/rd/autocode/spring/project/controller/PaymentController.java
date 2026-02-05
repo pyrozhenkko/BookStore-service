@@ -1,5 +1,6 @@
 package com.epam.rd.autocode.spring.project.controller;
 
+import com.epam.rd.autocode.spring.project.dto.cart.CartItemDTO;
 import com.epam.rd.autocode.spring.project.dto.cart.CheckoutRequest;
 import com.epam.rd.autocode.spring.project.dto.payment.PaymentResponse;
 import com.epam.rd.autocode.spring.project.service.impl.ShoppingCartServiceImpl;
@@ -16,7 +17,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -33,43 +36,58 @@ public class PaymentController {
     @PostMapping("/checkout")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<PaymentResponse> checkout(@RequestBody CheckoutRequest deliveryRequest) {
-        return ResponseEntity.ok(stripeService.createPaymentSession(deliveryRequest));
+        try {
+            System.out.println(" Checkout initiated for user: "
+                    + SecurityContextHolder.getContext().getAuthentication().getName());
+            System.out.println(" Delivery Request: " + deliveryRequest);
+            PaymentResponse response = stripeService.createPaymentIntent(deliveryRequest);
+            System.out.println(" Stripe PaymentIntent Created: " + response.getClientSecret());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(" ERROR in /api/payment/checkout: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    // 2. WEBHOOK
     @PostMapping("/webhook")
     public ResponseEntity<String> handleStripeWebhook(@RequestBody String payload,
-                                                      @RequestHeader(value = "Stripe-Signature", required = false) String sigHeader) {
+            @RequestHeader(value = "Stripe-Signature", required = false) String sigHeader) {
         try {
             JsonNode root = objectMapper.readTree(payload);
             String type = root.path("type").asText();
 
-
             if ("checkout.session.completed".equals(type)) {
                 JsonNode sessionNode = root.path("data").path("object");
 
-                String customerEmail = null;
-                if (sessionNode.path("customer_details").hasNonNull("email")) {
-                    customerEmail = sessionNode.path("customer_details").path("email").asText();
-                } else if (sessionNode.hasNonNull("customer_email")) {
+                String customerEmail = sessionNode.path("customer_details").path("email").asText();
+
+                if (customerEmail == null || customerEmail.isEmpty()) {
                     customerEmail = sessionNode.path("customer_email").asText();
                 }
 
-                if (customerEmail == null) {
+                if (customerEmail == null || customerEmail.isEmpty()) {
+                    customerEmail = sessionNode.path("metadata").path("customer_email").asText();
+                }
+
+                if (customerEmail == null || customerEmail.isEmpty()) {
                     System.out.println("⚠️ No email found in webhook.");
                     return ResponseEntity.ok("Received (No Email)");
                 }
-
 
                 CheckoutRequest checkoutRequest = new CheckoutRequest();
                 BigDecimal usedBonuses = BigDecimal.ZERO;
 
                 JsonNode metadata = sessionNode.path("metadata");
                 if (!metadata.isMissingNode()) {
-                    if (metadata.hasNonNull("deliveryCity")) checkoutRequest.setDeliveryCity(metadata.path("deliveryCity").asText());
-                    if (metadata.hasNonNull("deliveryCityRef")) checkoutRequest.setDeliveryCityRef(metadata.path("deliveryCityRef").asText());
-                    if (metadata.hasNonNull("deliveryBranch")) checkoutRequest.setDeliveryBranch(metadata.path("deliveryBranch").asText());
-                    if (metadata.hasNonNull("deliveryBranchRef")) checkoutRequest.setDeliveryBranchRef(metadata.path("deliveryBranchRef").asText());
+                    if (metadata.hasNonNull("deliveryCity"))
+                        checkoutRequest.setDeliveryCity(metadata.path("deliveryCity").asText());
+                    if (metadata.hasNonNull("deliveryCityRef"))
+                        checkoutRequest.setDeliveryCityRef(metadata.path("deliveryCityRef").asText());
+                    if (metadata.hasNonNull("deliveryBranch"))
+                        checkoutRequest.setDeliveryBranch(metadata.path("deliveryBranch").asText());
+                    if (metadata.hasNonNull("deliveryBranchRef"))
+                        checkoutRequest.setDeliveryBranchRef(metadata.path("deliveryBranchRef").asText());
 
                     if (metadata.hasNonNull("usedBonuses")) {
                         String bonusesStr = metadata.path("usedBonuses").asText();
@@ -79,12 +97,32 @@ public class PaymentController {
                             System.err.println(" Webhook: Error parsing usedBonuses: " + bonusesStr);
                         }
                     }
+
+                    if (metadata.hasNonNull("cart_items")) {
+                        String itemsStr = metadata.path("cart_items").asText();
+                        String[] itemsParts = itemsStr.split(",");
+                        List<CartItemDTO> items = new ArrayList<>();
+                        for (String part : itemsParts) {
+                            String[] pair = part.split(":");
+                            if (pair.length == 2) {
+                                CartItemDTO item = new CartItemDTO();
+                                item.setBookId(Long.parseLong(pair[0]));
+                                item.setQuantity(Integer.parseInt(pair[1]));
+                                items.add(item);
+                            }
+                        }
+                        checkoutRequest.setItems(items);
+                    }
                 }
 
                 manualAuthentication(customerEmail);
 
                 try {
-                    shoppingCartService.checkout(checkoutRequest, usedBonuses);
+                    if (checkoutRequest.getItems() != null && !checkoutRequest.getItems().isEmpty()) {
+                        shoppingCartService.checkout(checkoutRequest, checkoutRequest.getItems(), usedBonuses);
+                    } else {
+                        shoppingCartService.checkout(checkoutRequest, usedBonuses);
+                    }
                     System.out.println(" ORDER SAVED SUCCESSFULLY!");
                 } catch (Exception e) {
                     System.err.println(" Checkout Logic Failed: " + e.getMessage());
@@ -102,8 +140,7 @@ public class PaymentController {
         return ResponseEntity.ok("Received");
     }
 
-    private void manualAuthentication
-    (String email) {
+    private void manualAuthentication(String email) {
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                 email, null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(auth);

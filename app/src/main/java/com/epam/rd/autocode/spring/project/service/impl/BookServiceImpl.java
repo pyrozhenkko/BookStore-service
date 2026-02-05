@@ -4,8 +4,7 @@ import com.epam.rd.autocode.spring.project.dto.BookDTO;
 import com.epam.rd.autocode.spring.project.mapper.BookMapper;
 import com.epam.rd.autocode.spring.project.model.Book;
 import com.epam.rd.autocode.spring.project.model.BookTranslation;
-import com.epam.rd.autocode.spring.project.repo.BookRepository;
-import com.epam.rd.autocode.spring.project.repo.BookTranslationRepository;
+import com.epam.rd.autocode.spring.project.repo.*;
 import com.epam.rd.autocode.spring.project.repo.specification.BookSpecification;
 import com.epam.rd.autocode.spring.project.service.BookService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,11 @@ public class BookServiceImpl implements BookService {
     private final GoogleBooksService googleBooksService;
     private final FileStorageService fileStorageService;
     private final BookTranslationRepository bookTranslationRepository;
+    private final CartItemRepository cartItemRepository;
+    private final FavoriteItemRepository favoriteItemRepository;
+    private final BookRatingRepository bookRatingRepository;
+    private final BookCommentRepository bookCommentRepository;
+    private final BookItemRepository bookItemRepository;
 
     private static final String DEFAULT_LOCALE = "en";
 
@@ -58,8 +62,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public BookDTO getBookByName(String name, String locale) {
         String effectiveLocale = normalizeLocale(locale);
-        Book book = bookRepository.findByName(name)
-                .orElseThrow(() -> new RuntimeException("Book not found: " + name));
+        Book book = findBookByNameAnyLocale(name);
 
         enrichWithGoogleImagesIfNeeded(book);
 
@@ -68,17 +71,15 @@ public class BookServiceImpl implements BookService {
 
     @Transactional
     public BookDTO addImageToBook(String name, String imageUrl) {
-        Book book = bookRepository.findByName(name)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+        Book book = findBookByNameAnyLocale(name);
 
-        book.getImageUrls().add(imageUrl);
+        book.getImageUrls().add(0, imageUrl);
         return bookMapper.toDto(bookRepository.save(book));
     }
 
     @Transactional
     public BookDTO removeImageFromBook(String name, String imageUrlToRemove) {
-        Book book = bookRepository.findByName(name)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+        Book book = findBookByNameAnyLocale(name);
 
         boolean removed = book.getImageUrls().remove(imageUrlToRemove);
 
@@ -91,42 +92,95 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Integer getBookQuantity(String name) {
-        return bookRepository.findByName(name)
-                .map(Book::getQuantity)
-                .orElseThrow(() -> new RuntimeException("Book not found with name: " + name));
+        return findBookByNameAnyLocale(name).getQuantity();
     }
 
     @Override
     @Transactional
-    public BookDTO updateBookByName(String name, BookDTO bookDTO) {
-        Book existingBook = bookRepository.findByName(name)
-                .orElseThrow(() -> new RuntimeException("Book not found with name: " + name));
+    public BookDTO updateBookByName(String name, BookDTO bookDTO, String locale) {
+        String effectiveLocale = normalizeLocale(locale);
+        Book existingBook = findBookByNameAnyLocale(name);
 
-        existingBook.setName(bookDTO.getName());
-        existingBook.setGenre(bookDTO.getGenre());
-        existingBook.setAgeGroup(bookDTO.getAgeGroup());
-        existingBook.setPrice(bookDTO.getPrice());
-        existingBook.setPublicationDate(bookDTO.getPublicationDate());
+        // Update global fields in the main Book entity
         existingBook.setAuthor(bookDTO.getAuthor());
-        existingBook.setPages(bookDTO.getPages());
-        existingBook.setCharacteristics(bookDTO.getCharacteristics());
-        existingBook.setDescription(bookDTO.getDescription());
-        existingBook.setLanguage(bookDTO.getLanguage());
+        existingBook.setPrice(bookDTO.getPrice());
         existingBook.setQuantity(bookDTO.getQuantity());
+        existingBook.setIsbn(bookDTO.getIsbn());
+        existingBook.setPublicationDate(bookDTO.getPublicationDate());
+        existingBook.setPages(bookDTO.getPages());
+        existingBook.setLanguage(bookDTO.getLanguage());
+        existingBook.setAgeGroup(bookDTO.getAgeGroup());
 
-        return bookMapper.toDto(bookRepository.save(existingBook));
+        if (bookDTO.getImageUrls() != null) {
+            existingBook.getImageUrls().clear();
+            existingBook.getImageUrls().addAll(bookDTO.getImageUrls());
+        }
+
+        if (DEFAULT_LOCALE.equals(effectiveLocale)) {
+            // Update localized fields in the main table if locale is default (en)
+            existingBook.setName(bookDTO.getName());
+            existingBook.setGenre(bookDTO.getGenre());
+            existingBook.setDescription(bookDTO.getDescription());
+            existingBook.setCharacteristics(bookDTO.getCharacteristics());
+        } else {
+            // Update/Create translation if locale is non-default
+            BookTranslation translation = bookTranslationRepository.findByBookAndLocale(existingBook, effectiveLocale)
+                    .orElse(new BookTranslation());
+            translation.setBook(existingBook);
+            translation.setLocale(effectiveLocale);
+            translation.setName(bookDTO.getName());
+            translation.setDescription(bookDTO.getDescription());
+            translation.setGenre(bookDTO.getGenre());
+            translation.setCharacteristics(bookDTO.getCharacteristics());
+            bookTranslationRepository.save(translation);
+        }
+
+        Book savedBook = bookRepository.save(existingBook);
+        return applyTranslation(bookMapper.toDto(savedBook), savedBook, effectiveLocale);
     }
 
     @Override
     @Transactional
     public void deleteBookByName(String name) {
-        Book book = bookRepository.findByName(name).orElseThrow();
+        Book book = findBookByNameAnyLocale(name);
+        Long bookId = book.getId();
+
+        if (bookItemRepository.existsByBookId(bookId)) {
+            throw new RuntimeException("Cannot delete book that has been purchased");
+        }
+
+        //  Delete uploaded physical files
         book.getImageUrls().forEach(url -> {
-            if (url.startsWith("/uploads/"))
+            if (url != null && url.startsWith("/uploads/")) {
                 fileStorageService.deleteFile(url);
+            }
         });
-        bookTranslationRepository.deleteByBook(book);
+
+        // clean
+        book.getImageUrls().clear();
+        bookRepository.saveAndFlush(book);
+
+        cartItemRepository.deleteByBookId(bookId);
+        favoriteItemRepository.deleteByBookId(bookId);
+        bookRatingRepository.deleteByBookId(bookId);
+        bookCommentRepository.deleteByBookId(bookId);
+        bookItemRepository.deleteByBookId(bookId);
+        bookTranslationRepository.deleteByBookId(bookId);
+
+        //  Finally, delete the book itself
         bookRepository.delete(book);
+    }
+
+    private Book findBookByNameAnyLocale(String name) {
+        Optional<Book> bookOpt = bookRepository.findByName(name);
+        if (bookOpt.isPresent()) {
+            return bookOpt.get();
+        }
+
+        return bookTranslationRepository.findByName(name)
+                .map(BookTranslation::getBook)
+                .orElseThrow(() -> new com.epam.rd.autocode.spring.project.exception.NotFoundException(
+                        "Book not found: " + name));
     }
 
     @Override

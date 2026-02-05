@@ -3,7 +3,6 @@ package com.epam.rd.autocode.spring.project.service.impl;
 import com.epam.rd.autocode.spring.project.dto.delivery.NovaPoshtaDTOs.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,44 +17,49 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class NovaPoshtaService {
 
-    @Value("${novaposhta.api.url}")
-    private String apiUrl;
-
-    @Value("${novaposhta.api.key}")
-    private String apiKey;
-
+    private final String apiUrl;
+    private final String apiKey;
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    public NovaPoshtaService(@Value("${novaposhta.api.url}") String apiUrl,
+            @Value("${novaposhta.api.key}") String apiKey) {
+        this.apiUrl = apiUrl;
+        this.apiKey = apiKey;
+        System.out.println("--- NP INIT: URL=" + apiUrl + ", Key=" + (apiKey != null ? "PRESENT" : "MISSING") + " ---");
+    }
+
     public List<CityDTO> searchCities(String cityName) {
+        System.out.println("--- NP DEBUG: Searching cities for: '" + cityName + "' ---");
         Map<String, Object> properties = new HashMap<>();
         properties.put("CityName", cityName);
         properties.put("Limit", 20);
+        properties.put("Language", "UA");
 
         NpRequest request = new NpRequest(apiKey, "Address", "searchSettlements", properties);
         return sendRequestAndParseCities(request);
     }
 
     public List<BranchDTO> getBranches(String cityRef) {
-        System.out.println("--- NP DEBUG: Requesting branches for CityRef: '" + cityRef + "' ---");
-
-        String cleanUrl = apiUrl.trim();
-        if (!cleanUrl.endsWith("/")) {
-            cleanUrl += "/";
-        }
-        System.out.println("--- NP DEBUG: Final Target URL: '" + cleanUrl + "'");
+        System.out.println("--- NP DEBUG: Requesting branches for cityRef: '" + cityRef + "' ---");
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("CityRef", cityRef);
         properties.put("Language", "UA");
 
         NpRequest request = new NpRequest(apiKey, "Address", "getWarehouses", properties);
-        return sendRequestAndParseBranches(request, cleanUrl);
+        return sendRequestAndParseBranches(request, getCleanUrl());
     }
 
+    private String getCleanUrl() {
+        String cleanUrl = apiUrl.trim();
+        if (!cleanUrl.endsWith("/")) {
+            cleanUrl += "/";
+        }
+        return cleanUrl;
+    }
 
     private List<CityDTO> sendRequestAndParseCities(NpRequest request) {
         String cleanUrl = apiUrl.trim();
@@ -71,7 +75,11 @@ public class NovaPoshtaService {
             ResponseEntity<String> responseEntity = restTemplate.postForEntity(cleanUrl, entity, String.class);
             String rawJson = responseEntity.getBody();
 
-            if (rawJson == null) return result;
+            if (rawJson == null)
+                return result;
+
+            System.out.println(
+                    "--- NP RESPONSE: " + (rawJson.length() > 300 ? rawJson.substring(0, 300) + "..." : rawJson));
 
             if (rawJson.trim().startsWith("<")) {
                 System.err.println("--- NP ERROR: Received HTML instead of JSON. URL might be wrong.");
@@ -116,6 +124,9 @@ public class NovaPoshtaService {
                 return result;
             }
 
+            System.out.println("--- NP RESPONSE (Branches): "
+                    + (rawJson.length() > 300 ? rawJson.substring(0, 300) + "..." : rawJson));
+
             if (rawJson.trim().startsWith("<")) {
                 System.err.println("--- NP ERROR: Received HTML response (Redirect or Error Page).");
                 System.err.println("--- NP HTML BODY: " + rawJson);
@@ -133,8 +144,7 @@ public class NovaPoshtaService {
                         result.add(new BranchDTO(
                                 node.get("Ref").asText(),
                                 node.get("Description").asText(),
-                                node.get("Number").asText()
-                        ));
+                                node.get("Number").asText()));
                     }
                 }
             } else {

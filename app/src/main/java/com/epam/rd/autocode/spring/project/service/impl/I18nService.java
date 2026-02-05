@@ -18,16 +18,13 @@ public class I18nService {
 
     private final MessageSource messageSource;
 
-
     public String getMessage(String key) {
         return messageSource.getMessage(key, null, key, LocaleContextHolder.getLocale());
     }
 
-
     public String getMessage(String key, Object... args) {
         return messageSource.getMessage(key, args, key, LocaleContextHolder.getLocale());
     }
-
 
     public String getMessage(String key, Locale locale) {
         return messageSource.getMessage(key, null, key, locale);
@@ -37,28 +34,16 @@ public class I18nService {
         return getAllMessages(LocaleContextHolder.getLocale());
     }
 
-
     public Map<String, String> getAllMessages(Locale locale) {
-        Map<String, String> messages = new LinkedHashMap<>();
-        String bundleName = locale.getLanguage().equals("en")
-                ? "i18n/messages_en.properties"
-                : "i18n/messages_uk.properties";
-
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(bundleName)) {
-            if (is != null) {
-                Properties props = new Properties();
-                props.load(new InputStreamReader(is, StandardCharsets.UTF_8));
-                for (String key : props.stringPropertyNames()) {
-                    messages.put(key, props.getProperty(key));
-                }
-            }
-        } catch (IOException e) {
-            // Fall back to default
+        ResourceBundle bundle = ResourceBundle.getBundle("i18n/messages", locale);
+        Map<String, String> messages = new HashMap<>();
+        Enumeration<String> keys = bundle.getKeys();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            messages.put(key, bundle.getString(key));
         }
-
-        return new TreeMap<>(messages);
+        return messages;
     }
-
 
     public List<Map<String, String>> getSupportedLanguages() {
         List<Map<String, String>> languages = new ArrayList<>();
@@ -72,7 +57,6 @@ public class I18nService {
 
         return languages;
     }
-
 
     public Locale getCurrentLocale() {
         return LocaleContextHolder.getLocale();

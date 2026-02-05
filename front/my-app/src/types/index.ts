@@ -30,6 +30,8 @@ export interface Employee {
   hiredDate: string;
   phone?: string;
   active: boolean;
+  isAdmin?: boolean;
+  password?: string;
 }
 
 export interface Client {
@@ -43,29 +45,23 @@ export interface Client {
 }
 
 export interface OrderItem {
-  bookId: string;
   bookName: string;
   quantity: number;
-  price: number;
-}
-
-export interface DeliveryInfo {
-  city?: string;
-  warehouse?: string;
+  price?: number;
 }
 
 export interface Order {
-  id: string;
-  customerEmail: string;
-  customerName?: string;
-  phone?: string;
+  id: number;
+  clientEmail: string;
+  clientName?: string;
+  clientPhone?: string;
   employeeEmail?: string;
-  items: OrderItem[];
-  totalPrice: number;
+  orderDate: string;
+  price: number;
   status: 'pending' | 'confirmed' | 'cancelled';
-  createdAt: string;
-  delivery?: DeliveryInfo;
-  paymentTransactionId?: string;
+  bookItems: OrderItem[];
+  deliveryCity?: string;
+  deliveryBranch?: string;
 }
 
 export interface CartItem {

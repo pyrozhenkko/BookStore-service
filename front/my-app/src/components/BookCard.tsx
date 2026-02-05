@@ -2,7 +2,7 @@ import type { Book } from '../types';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { ShoppingCart, Eye, Heart } from 'lucide-react';
+import { ShoppingCart, Eye, Heart, Star } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../contexts/FavoritesContext';
@@ -14,7 +14,7 @@ interface BookCardProps {
 }
 
 export function BookCard({ book, onViewDetails }: BookCardProps) {
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
   const { isCustomer } = useAuth();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { t } = useLanguage();
@@ -22,6 +22,7 @@ export function BookCard({ book, onViewDetails }: BookCardProps) {
   const bookIdNum = typeof book.id === 'number' ? book.id : parseInt(String(book.id), 10);
   const hasNumericId = !isNaN(bookIdNum);
   const isFav = hasNumericId && isFavorite(bookIdNum);
+  const isInCart = cart.some(item => String(item.book.id) === String(book.id));
 
   const handleAddToCart = () => {
     addToCart(book);
@@ -59,7 +60,15 @@ export function BookCard({ book, onViewDetails }: BookCardProps) {
       </CardHeader>
       <CardContent className="flex-1">
         <div className="space-y-2">
-          <Badge variant="secondary">{book.category}</Badge>
+          <div className="flex items-center justify-between">
+            <Badge variant="secondary">{book.category}</Badge>
+            <div className="flex items-center gap-1">
+              <Star className={`size-4 ${book.averageRating && book.averageRating > 0 ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+              <span className="text-xs font-medium text-gray-600">
+                {book.averageRating && book.averageRating > 0 ? book.averageRating.toFixed(1) : '-'}
+              </span>
+            </div>
+          </div>
           <p className="text-sm text-gray-600 line-clamp-2">{book.description}</p>
           <div className="flex items-center justify-between pt-2">
             <span className="text-2xl font-semibold">{book.price} ₴</span>
@@ -86,9 +95,10 @@ export function BookCard({ book, onViewDetails }: BookCardProps) {
           <Button
             className="flex-1"
             onClick={handleAddToCart}
+            disabled={isInCart}
           >
             <ShoppingCart className="size-4 mr-2" />
-            {t('book.toCart')}
+            {isInCart ? t('book.inCart') : t('book.toCart')}
           </Button>
         )}
       </CardFooter>

@@ -1,5 +1,6 @@
 package com.epam.rd.autocode.spring.project.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,5 +19,7 @@ public class ClientDTO {
     private String phone;
     private java.time.LocalDate registeredDate;
     private int totalOrders;
+
+    @JsonProperty("isBlocked")
     private boolean isBlocked;
 }

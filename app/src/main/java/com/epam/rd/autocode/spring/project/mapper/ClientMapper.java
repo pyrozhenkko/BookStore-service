@@ -10,15 +10,7 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface ClientMapper {
 
-    @Mapping(source = "id", target = "id")
-    @Mapping(source = "email", target = "email")
-    @Mapping(source = "password", target = "password")
-    @Mapping(source = "name", target = "name")
-    @Mapping(source = "balance", target = "balance")
-    @Mapping(source = "phone", target = "phone")
-    @Mapping(source = "registeredDate", target = "registeredDate")
     @Mapping(source = "blocked", target = "blocked")
-    @Mapping(source = "totalOrders", target = "totalOrders")
     ClientDTO toDto(Client client);
 
     @Mapping(target = "favorites", ignore = true)

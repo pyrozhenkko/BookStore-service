@@ -1,36 +1,30 @@
-import { useState, useEffect } from 'react';
-import { useCart } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Alert, AlertDescription } from './ui/alert';
-import { 
-  CreditCard, 
-  MapPin, 
-  Package, 
-  CheckCircle, 
-  AlertCircle,
+import {
+  MapPin,
+  Package,
   Loader2,
   ArrowLeft
 } from 'lucide-react';
-import { NovaPoshtaService,type NovaPoshtaCity, type NovaPoshtaWarehouse } from '../services/novaPoshtaService';
-import { StripeService, type PaymentResult } from '../services/stripeService';
+import { NovaPoshtaService, type NovaPoshtaCity, type NovaPoshtaWarehouse } from '../services/novaPoshtaService';
+import { useState, useEffect } from 'react';
+import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
+import { Button } from './ui/button';
+import { apiRequest } from '../services/api';
 import { toast } from 'sonner';
-import { StripeTestCards } from './StripeTestCards';
 import { NovaPoshtaInfo } from './NovaPoshtaInfo';
-import { PaymentHelper } from './PaymentHelper';
 
 interface CheckoutPageProps {
   onBack: () => void;
   onSuccess: () => void;
 }
 
-export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
-  const { cart, totalPrice, clearCart } = useCart();
+export function CheckoutPage({ onBack }: CheckoutPageProps) {
+  const { cart, totalPrice } = useCart();
   const { currentUser } = useAuth();
 
   // Delivery state
@@ -42,22 +36,13 @@ export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
   const [loadingCities, setLoadingCities] = useState(false);
   const [loadingWarehouses, setLoadingWarehouses] = useState(false);
 
-  // Payment state
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvc, setCardCvc] = useState('');
-  const [cardName, setCardName] = useState(currentUser?.name || '');
-
   // Contact info
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState(currentUser?.email || '');
   const [recipientName, setRecipientName] = useState(currentUser?.name || '');
 
   // Process state
-  const [step, setStep] = useState<'delivery' | 'payment' | 'success'>('delivery');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
-  const [orderId, setOrderId] = useState<string>('');
 
   // Search cities with debounce
   useEffect(() => {
@@ -105,8 +90,8 @@ export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
     loadWarehouses();
   }, [selectedCity]);
 
-  const handleCitySelect = (cityDescription: string) => {
-    const city = cities.find(c => c.Description === cityDescription);
+  const handleCitySelect = (cityName: string) => {
+    const city = cities.find(c => c.Description === cityName);
     if (city) {
       setSelectedCity(city);
       setCityQuery(city.Description);
@@ -114,76 +99,39 @@ export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
     }
   };
 
-  const handleDeliverySubmit = (e: React.FormEvent) => {
+  const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCity || !selectedWarehouse || !phone || !recipientName) {
-      toast.error('Будь ласка, заповніть всі поля');
-      return;
-    }
-    setStep('payment');
-  };
 
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!cardNumber || !cardExpiry || !cardCvc || !cardName) {
-      toast.error('Будь ласка, заповніть всі дані картки');
+    if (!selectedCity || !selectedWarehouse || !phone || !recipientName) {
+      toast.error('Будь ласка, заповніть всі обовʼязкові поля');
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Process payment
-      const result = await StripeService.processPayment(
-        cardNumber,
-        cardExpiry,
-        cardCvc,
-        cardName,
-        totalPrice
-      );
+      const checkoutRequest = {
+        deliveryCity: selectedCity?.Description,
+        deliveryCityRef: selectedCity?.Ref,
+        deliveryBranch: warehouses.find(w => w.Ref === selectedWarehouse)?.Description,
+        deliveryBranchRef: selectedWarehouse,
+        useBonuses: false,
+        items: cart.map(item => ({
+          bookId: item.book.id,
+          quantity: item.quantity,
+          price: item.book.price
+        }))
+      };
 
-      setPaymentResult(result);
+      const result = await apiRequest<{ paymentUrl: string }>('/api/payment/checkout', {
+        method: 'POST',
+        body: JSON.stringify(checkoutRequest),
+      });
 
-      if (result.success) {
-        // Generate order ID
-        const newOrderId = `ORD-${Date.now()}`;
-        setOrderId(newOrderId);
-
-        // Save order to localStorage (in production, save to backend)
-        const order = {
-          id: newOrderId,
-          customerEmail: email,
-          customerName: recipientName,
-          phone,
-          delivery: {
-            city: selectedCity?.Description,
-            warehouse: warehouses.find(w => w.Ref === selectedWarehouse)?.Description,
-          },
-          items: cart.map(item => ({
-            bookId: item.book.id,
-            bookName: item.book.name,
-            quantity: item.quantity,
-            price: item.book.price,
-          })),
-          totalPrice,
-          paymentTransactionId: result.transactionId,
-          status: 'confirmed',
-          createdAt: new Date().toISOString(),
-        };
-
-        const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-        localStorage.setItem('orders', JSON.stringify([...existingOrders, order]));
-
-        toast.success('Оплата успішна! Замовлення оформлено');
-        setStep('success');
-        
-        setTimeout(() => {
-          clearCart();
-          onSuccess();
-        }, 3000);
+      if (result.paymentUrl) {
+        window.location.href = result.paymentUrl;
       } else {
-        toast.error(result.message);
+        toast.error('Не вдалося створити платіжну сесію');
       }
     } catch (error) {
       console.error('Payment error:', error);
@@ -193,37 +141,6 @@ export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
     }
   };
 
-  const cardType = StripeService.getCardType(cardNumber);
-
-  if (step === 'success') {
-    return (
-      <div className="max-w-2xl mx-auto py-12">
-        <Card>
-          <CardContent className="pt-12 pb-8 text-center space-y-6">
-            <div className="flex justify-center">
-              <CheckCircle className="size-24 text-green-500" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-semibold mb-2">Замовлення оформлено!</h2>
-              <p className="text-gray-600">
-                Номер замовлення: <span className="font-semibold">{orderId}</span>
-              </p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              <p className="text-sm text-gray-600">Інформація про доставку надіслана на:</p>
-              <p className="font-semibold">{email}</p>
-              <p className="font-semibold">{phone}</p>
-            </div>
-            <div className="text-sm text-gray-500">
-              <p>Очікуйте дзвінок від курʼєра для підтвердження</p>
-              <p>Відстежити замовлення можна в розділі "Мої замовлення"</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -231,44 +148,44 @@ export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
           <ArrowLeft className="size-4 mr-2" />
           Назад до кошика
         </Button>
-        <PaymentHelper />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Main Form */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Delivery Information */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="size-5" />
-                Інформація про доставку
+                Оформлення замовлення
               </CardTitle>
-              <CardDescription>Виберіть відділення Нової Пошти</CardDescription>
+              <CardDescription>Вкажіть дані для доставки та перейдіть до оплати</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleDeliverySubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="recipientName">Прізвище та імʼя отримувача *</Label>
-                  <Input
-                    id="recipientName"
-                    value={recipientName}
-                    onChange={(e) => setRecipientName(e.target.value)}
-                    placeholder="Іванов Іван"
-                    required
-                  />
-                </div>
+              <form id="checkout-form" onSubmit={handleCheckout} className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="recipientName">Прізвище та імʼя отримувача *</Label>
+                    <Input
+                      id="recipientName"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      placeholder="Іванов Іван"
+                      required
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Телефон *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+380XXXXXXXXX"
-                    required
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Телефон *</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+380XXXXXXXXX"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -285,22 +202,22 @@ export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
                 <Separator />
 
                 <div className="space-y-2">
-                  <Label htmlFor="city">Місто *</Label>
+                  <Label htmlFor="city">Місто доставки *</Label>
                   <div className="relative">
                     <Input
                       id="city"
                       value={cityQuery}
                       onChange={(e) => setCityQuery(e.target.value)}
-                      placeholder="Почніть вводити назву міста..."
+                      placeholder="Введіть місто..."
                       required
                     />
                     {loadingCities && (
                       <Loader2 className="size-4 animate-spin absolute right-3 top-3 text-gray-400" />
                     )}
                   </div>
-                  
+
                   {cities.length > 0 && (
-                    <div className="border rounded-md max-h-48 overflow-y-auto">
+                    <div className="border rounded-md max-h-48 overflow-y-auto bg-white shadow-sm">
                       {cities.map((city) => (
                         <button
                           key={city.Ref}
@@ -318,23 +235,24 @@ export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
                   {selectedCity && (
                     <div className="flex items-center gap-2 text-sm text-green-600">
                       <MapPin className="size-4" />
-                      Обрано: {selectedCity.Description}
+                      Місто вибрано: {selectedCity.Description}
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="warehouse">Відділення *</Label>
+                  <Label htmlFor="warehouse">Відділення Нової Пошти *</Label>
                   <Select
                     value={selectedWarehouse}
                     onValueChange={setSelectedWarehouse}
                     disabled={!selectedCity || loadingWarehouses}
+                    required
                   >
                     <SelectTrigger>
                       <SelectValue placeholder={
-                        loadingWarehouses ? 'Завантаження...' : 
-                        !selectedCity ? 'Спочатку оберіть місто' : 
-                        'Оберіть відділення'
+                        loadingWarehouses ? 'Завантаження...' :
+                          !selectedCity ? 'Спочатку оберіть місто' :
+                            'Оберіть відділення'
                       } />
                     </SelectTrigger>
                     <SelectContent>
@@ -346,129 +264,16 @@ export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {step === 'delivery' && (
-                  <Button type="submit" className="w-full">
-                    Продовжити до оплати
-                  </Button>
-                )}
               </form>
             </CardContent>
           </Card>
-
-          {/* Payment Information */}
-          {step === 'payment' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="size-5" />
-                  Оплата карткою
-                </CardTitle>
-                <CardDescription>Безпечна оплата через Stripe (Тестовий режим)</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePaymentSubmit} className="space-y-4">
-
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Номер картки *</Label>
-                    <div className="relative">
-                      <Input
-                        id="cardNumber"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(StripeService.formatCardNumber(e.target.value))}
-                        placeholder="1234 5678 9012 3456"
-                        maxLength={19}
-                        required
-                      />
-                      {cardType !== 'unknown' && (
-                        <span className="absolute right-3 top-3 text-xs font-semibold text-gray-500 uppercase">
-                          {cardType}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cardExpiry">Термін дії *</Label>
-                      <Input
-                        id="cardExpiry"
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(StripeService.formatExpiry(e.target.value))}
-                        placeholder="MM/YY"
-                        maxLength={5}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="cardCvc">CVV/CVC *</Label>
-                      <Input
-                        id="cardCvc"
-                        type="password"
-                        value={cardCvc}
-                        onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, ''))}
-                        placeholder="123"
-                        maxLength={4}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="cardName">Імʼя власника картки *</Label>
-                    <Input
-                      id="cardName"
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value)}
-                      placeholder="IVAN IVANOV"
-                      required
-                    />
-                  </div>
-
-                  {paymentResult && !paymentResult.success && (
-                    <Alert variant="destructive">
-                      <AlertCircle className="size-4" />
-                      <AlertDescription>{paymentResult.message}</AlertDescription>
-                    </Alert>
-                  )}
-
-                  <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setStep('delivery')}
-                      className="flex-1"
-                    >
-                      Назад
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isProcessing}
-                      className="flex-1"
-                    >
-                      {isProcessing ? (
-                        <>
-                          <Loader2 className="size-4 mr-2 animate-spin" />
-                          Обробка...
-                        </>
-                      ) : (
-                        `Оплатити ${totalPrice} ₴`
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         {/* Order Summary */}
         <div className="lg:col-span-1 space-y-4">
-          {step === 'delivery' && <NovaPoshtaInfo />}
-          {step === 'payment' && <StripeTestCards />}
-          
-          <Card className={step === 'success' ? '' : 'sticky top-24'}>
+          <NovaPoshtaInfo />
+
+          <Card className="sticky top-24">
             <CardHeader>
               <CardTitle>Ваше замовлення</CardTitle>
             </CardHeader>
@@ -476,10 +281,10 @@ export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
               <div className="space-y-3">
                 {cart.map((item) => (
                   <div key={item.book.id} className="flex justify-between text-sm">
-                    <span className="text-gray-600">
+                    <span className="text-gray-600 truncate mr-2">
                       {item.book.name} × {item.quantity}
                     </span>
-                    <span className="font-medium">{item.book.price * item.quantity} ₴</span>
+                    <span className="font-medium whitespace-nowrap">{item.book.price * item.quantity} ₴</span>
                   </div>
                 ))}
               </div>
@@ -488,31 +293,42 @@ export function CheckoutPage({ onBack, onSuccess }: CheckoutPageProps) {
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Проміжний підсумок</span>
+                  <span className="text-gray-600">Сума</span>
                   <span>{totalPrice} ₴</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Доставка Нова Пошта</span>
-                  <span className="text-green-600">За тарифами перевізника</span>
+                  <span className="text-gray-600">Доставка</span>
+                  <span className="text-green-600 font-medium">За тарифами НП</span>
                 </div>
               </div>
 
               <Separator />
 
-              <div className="flex justify-between">
-                <span className="font-semibold">До сплати</span>
-                <span className="text-2xl font-semibold">{totalPrice} ₴</span>
+              <div className="flex justify-between items-baseline">
+                <span className="font-semibold text-lg">Всього</span>
+                <span className="text-2xl font-bold text-primary">{totalPrice} ₴</span>
               </div>
 
-              {selectedCity && selectedWarehouse && (
-                <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
-                  <div className="font-medium">Доставка:</div>
-                  <div className="text-gray-600">{selectedCity.Description}</div>
-                  <div className="text-gray-600">
-                    {warehouses.find(w => w.Ref === selectedWarehouse)?.Description}
-                  </div>
-                </div>
-              )}
+              <Button
+                form="checkout-form"
+                type="submit"
+                className="w-full h-12 text-lg font-semibold"
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="size-5 mr-2 animate-spin" />
+                    Обробка...
+                  </>
+                ) : (
+                  'Оплатити замовлення'
+                )}
+              </Button>
+
+              <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-4">
+                <Package className="size-3" />
+                Безпечна оплата через Stripe
+              </div>
             </CardContent>
           </Card>
         </div>

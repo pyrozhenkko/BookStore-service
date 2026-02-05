@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Pencil, Ban, Plus, UserCheck, UserX, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Ban, Plus, UserCheck, UserX, Search, ChevronLeft, ChevronRight, Trash2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 
@@ -31,6 +31,7 @@ export function EmployeesPage() {
     name: '',
     position: '',
     phone: '',
+    password: '',
     hiredDate: new Date().toISOString().split('T')[0],
   });
 
@@ -114,6 +115,7 @@ export function EmployeesPage() {
       name: '',
       position: '',
       phone: '',
+      password: '',
       hiredDate: new Date().toISOString().split('T')[0],
     });
     setIsDialogOpen(true);
@@ -126,6 +128,7 @@ export function EmployeesPage() {
       name: employee.name,
       position: employee.position,
       phone: employee.phone || '',
+      password: '', // Пароль не відображаємо
       hiredDate: employee.hiredDate,
     });
     setIsDialogOpen(true);
@@ -157,17 +160,37 @@ export function EmployeesPage() {
     }
   };
 
-  const handleTerminate = async (employee: Employee) => {
-    if (!confirm(t('employees.actions.terminateConfirm', { name: employee.name }))) {
+  const handleBlockToggle = async (employee: Employee) => {
+    const newStatus = !employee.active;
+    const confirmMsg = newStatus
+      ? "Розблокувати працівника?"
+      : t('employees.actions.terminateConfirm', { name: employee.name });
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      await employeeService.updateEmployee(employee.id, {
+        ...employee,
+        active: newStatus
+      });
+      toast.success(newStatus ? t('employees.toasts.unblockSuccess') : t('employees.toasts.blockSuccess'));
+      loadEmployees();
+    } catch (error) {
+      toast.error(t('employees.toasts.saveError'));
+    }
+  };
+
+  const handleDelete = async (employee: Employee) => {
+    if (!confirm(t('employees.actions.deleteConfirm', { name: employee.name }))) {
       return;
     }
 
     try {
-      await employeeService.terminateEmployee(employee.id);
-      toast.success(t('employees.toasts.terminateSuccess'));
+      await employeeService.deleteEmployee(employee.id);
+      toast.success(t('employees.toasts.deleteSuccess'));
       loadEmployees();
     } catch (error) {
-      toast.error(t('employees.toasts.terminateError'));
+      toast.error(t('employees.toasts.deleteError'));
     }
   };
 
@@ -262,8 +285,17 @@ export function EmployeesPage() {
               </TableHeader>
               <TableBody>
                 {paginatedEmployees.map((employee) => (
-                  <TableRow key={employee.id}>
-                    <TableCell className="font-medium">{employee.name}</TableCell>
+                  <TableRow key={employee.id} className={!employee.active ? "opacity-60 bg-gray-50/50" : ""}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {employee.name}
+                        {employee.isAdmin && (
+                          <span title="Admin">
+                            <ShieldCheck className="size-4 text-blue-600" />
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{employee.email}</TableCell>
                     <TableCell>{employee.position}</TableCell>
                     <TableCell>{employee.phone || '—'}</TableCell>
@@ -277,7 +309,7 @@ export function EmployeesPage() {
                       ) : (
                         <Badge variant="secondary">
                           <UserX className="size-3 mr-1" />
-                          {t('employees.badges.terminated')}
+                          {t('employees.badges.inactive')}
                         </Badge>
                       )}
                     </TableCell>
@@ -287,21 +319,28 @@ export function EmployeesPage() {
                           variant="outline"
                           size="icon"
                           onClick={() => handleEdit(employee)}
-                          title="Редагувати"
+                          title={t('employees.actions.edit')}
                         >
                           <Pencil className="size-4" />
                         </Button>
-                        {employee.active && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleTerminate(employee)}
-                            className="text-red-600 hover:text-red-700"
-                            title={t('employees.actions.terminate')}
-                          >
-                            <Ban className="size-4" />
-                          </Button>
-                        )}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleBlockToggle(employee)}
+                          className={employee.active ? "text-amber-600 hover:text-amber-700" : "text-green-600 hover:text-green-700"}
+                          title={employee.active ? t('employees.actions.block') : t('employees.actions.unblock')}
+                        >
+                          {employee.active ? <Ban className="size-4" /> : <UserCheck className="size-4" />}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDelete(employee)}
+                          className="text-red-600 hover:text-red-700"
+                          title={t('employees.actions.delete')}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -342,61 +381,92 @@ export function EmployeesPage() {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editingEmployee ? t('employees.form.editTitle') : t('employees.form.addTitle')}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">{t('employees.form.name')} *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
+          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">{t('employees.form.name')} *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">{t('employees.form.email')} *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                  disabled={!!editingEmployee}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('employees.form.email')} *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="position">{t('employees.form.position')} *</Label>
+                <Select
+                  value={formData.position}
+                  onValueChange={(v) => setFormData({ ...formData, position: v })}
+                >
+                  <SelectTrigger id="position">
+                    <SelectValue placeholder={t('employees.form.position')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['ADMIN', 'EMPLOYEE'].map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {t(`employees.positions.${key}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">{t('employees.form.phone')}</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="position">{t('employees.form.position')} *</Label>
-              <Input
-                id="position"
-                value={formData.position}
-                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                required
-              />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">
+                  {t('auth.password')} {editingEmployee ? '(залиште порожнім, щоб не змінювати)' : '*'}
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required={!editingEmployee}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="hiredDate">{t('employees.form.hiredDate')} *</Label>
+                <Input
+                  id="hiredDate"
+                  type="date"
+                  value={formData.hiredDate}
+                  onChange={(e) => setFormData({ ...formData, hiredDate: e.target.value })}
+                  required
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">{t('employees.form.phone')}</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="hiredDate">{t('employees.form.hiredDate')} *</Label>
-              <Input
-                id="hiredDate"
-                type="date"
-                value={formData.hiredDate}
-                onChange={(e) => setFormData({ ...formData, hiredDate: e.target.value })}
-                required
-              />
-            </div>
-            <DialogFooter>
+
+            <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 {t('employees.form.cancel')}
               </Button>

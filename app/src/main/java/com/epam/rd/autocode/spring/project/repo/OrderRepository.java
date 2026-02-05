@@ -19,7 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     Page<Order> findAllByEmployee_Email(String email, Pageable pageable);
 
     @Override
-    // Removed EntityGraph to avoid potential conflicts/errors during debugging
     Page<Order> findAll(Specification<Order> spec, Pageable pageable);
 
     @Query("SELECT COUNT(o) > 0 FROM Order o JOIN o.bookItems i WHERE o.client.id = :clientId AND i.book.id = :bookId")

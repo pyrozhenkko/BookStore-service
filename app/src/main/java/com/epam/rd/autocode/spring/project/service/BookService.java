@@ -17,20 +17,19 @@ public interface BookService {
     Page<BookDTO> searchBooks(String keyword, String genre, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable,
             String locale);
 
-
     @PreAuthorize("permitAll()")
     BookDTO getBookByName(String name, String locale);
 
     @PreAuthorize("permitAll()")
     Integer getBookQuantity(String name);
 
-    @PreAuthorize("hasRole('EMPLOYEE')")
-    BookDTO updateBookByName(String name, BookDTO book);
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    BookDTO updateBookByName(String name, BookDTO book, String locale);
 
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     void deleteBookByName(String name);
 
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     BookDTO addBook(BookDTO book);
 
     @PreAuthorize("permitAll()")

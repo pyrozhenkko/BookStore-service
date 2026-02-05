@@ -2,6 +2,14 @@ import type { Client } from '../types';
 import { apiRequest } from './api';
 
 export const clientService = {
+  // Create client
+  async createClient(data: Partial<Client>): Promise<Client> {
+    return apiRequest<Client>('/api/clients', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   // Get all clients
   async getAllClients(): Promise<Client[]> {
     const data = await apiRequest<{ content: Client[] }>('/api/clients?size=1000', {

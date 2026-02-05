@@ -9,4 +9,7 @@ public interface LogService {
 
     @PreAuthorize("hasRole('ADMIN')")
     Page<LogRecordDTO> searchLogs(String keyword, String category, String level, Pageable pageable);
+
+    @PreAuthorize("hasRole('ADMIN')")
+    com.epam.rd.autocode.spring.project.dto.LogStatsDTO getStats();
 }

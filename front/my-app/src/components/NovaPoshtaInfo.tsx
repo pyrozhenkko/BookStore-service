@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Package, MapPin, TruckIcon, Info } from 'lucide-react';
-import { Alert, AlertDescription } from './ui/alert';
+import { Package, MapPin, TruckIcon } from 'lucide-react';
 
 export function NovaPoshtaInfo() {
   return (
@@ -12,13 +11,6 @@ export function NovaPoshtaInfo() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Alert>
-          <Info className="size-4" />
-          <AlertDescription className="text-xs">
-            Використовується <strong>реальний API Нової Пошти</strong> для пошуку міст та відділень
-          </AlertDescription>
-        </Alert>
-
         <div className="space-y-2 text-xs">
           <div className="flex items-start gap-2">
             <MapPin className="size-4 text-blue-600 mt-0.5 flex-shrink-0" />

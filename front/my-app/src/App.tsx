@@ -31,66 +31,83 @@ type ViewType = 'login' | 'catalog' | 'details' | 'cart' | 'checkout' | 'orders'
 
 function getViewFromHash(): ViewType | null {
   const hash = window.location.hash.replace('#', '').split('?')[0].replace(/^\/+/, '');
-  if (hash === 'login') return 'login';
-  if (hash === 'admin-logs') return 'admin-logs';
-  if (hash === 'forgot-password') return 'forgot-password';
-  if (hash === 'reset-password') return 'reset-password';
-  if (hash === 'register') return 'register';
-  return null;
+  if (!hash) return 'catalog';
+
+  const validViews: ViewType[] = [
+    'login', 'catalog', 'details', 'cart', 'checkout', 'orders',
+    'profile', 'employees', 'clients', 'all-orders', 'manage-books',
+    'admin-logs', 'access-denied', 'forgot-password', 'reset-password',
+    'register', 'favorites'
+  ];
+
+  return validViews.includes(hash as ViewType) ? (hash as ViewType) : 'catalog';
 }
 
 function AppContent() {
   const { currentUser, isEmployee, isAdmin, isCustomer } = useAuth();
-  const [currentView, setCurrentView] = useState<ViewType>('catalog');
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+
+  const [currentView, setCurrentView] = useState<ViewType>(() => {
+    return getViewFromHash() || 'catalog';
+  });
+
+  const [selectedBook, setSelectedBook] = useState<Book | null>(() => {
+    const saved = sessionStorage.getItem('selected-book');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   useEffect(() => {
-    const hashView = getViewFromHash();
-    if (hashView) setCurrentView(hashView);
     const onHashChange = () => {
       const v = getViewFromHash();
-      if (v) setCurrentView(v);
+      if (v && v !== currentView) setCurrentView(v);
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
+  }, [currentView]);
 
   const handleViewDetails = (book: Book) => {
     setSelectedBook(book);
+    sessionStorage.setItem('selected-book', JSON.stringify(book));
     setCurrentView('details');
+    window.location.hash = 'details';
   };
 
   const handleBackToCatalog = () => {
     setSelectedBook(null);
+    sessionStorage.removeItem('selected-book');
     setCurrentView('catalog');
+    window.location.hash = 'catalog';
   };
 
   const handleCheckout = () => {
     setCurrentView('checkout');
+    window.location.hash = 'checkout';
   };
 
   const handleCheckoutSuccess = () => {
     setCurrentView('orders');
+    window.location.hash = 'orders';
   };
 
   const handleBackToCart = () => {
     setCurrentView('cart');
+    window.location.hash = 'cart';
   };
 
   const handleLoginSuccess = () => {
     setCurrentView('catalog');
-    window.location.hash = '';
+    window.location.hash = 'catalog';
   };
 
   const handleRegisterSuccess = () => {
     setCurrentView('catalog');
-    window.location.hash = '';
+    window.location.hash = 'catalog';
   };
 
   const handleViewChangeWithAuth = (view: string) => {
     // Перевірка доступу до сторінки працівників (тільки для адмінів)
     if ((view === 'employees' || view === 'admin-logs') && !isAdmin) {
       setCurrentView('access-denied');
+      window.location.hash = 'access-denied';
       return;
     }
 
@@ -98,10 +115,12 @@ function AppContent() {
     if ((view === 'manage-books' || view === 'all-orders' || view === 'clients') &&
       !isEmployee && !isAdmin) {
       setCurrentView('access-denied');
+      window.location.hash = 'access-denied';
       return;
     }
 
     setCurrentView(view as ViewType);
+    window.location.hash = view;
   };
 
   if (currentView === 'forgot-password') {
@@ -143,15 +162,10 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {currentView !== 'login' && (
-        <Header currentView={currentView} onViewChange={handleViewChangeWithAuth} />
-      )}
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header currentView={currentView} onViewChange={handleViewChangeWithAuth} />
 
-      <main className="container mx-auto px-4 py-8">
-        {currentView === 'login' && (
-          <LoginPage onLoginSuccess={handleLoginSuccess} />
-        )}
+      <main className="flex-1 container mx-auto px-4 py-8">
 
         {currentView === 'catalog' && (
           <BookCatalog onViewDetails={handleViewDetails} />
@@ -191,6 +205,10 @@ function AppContent() {
 
         {currentView === 'manage-books' && (isEmployee || isAdmin) && (
           <ManageBooksPage />
+        )}
+
+        {currentView === 'admin-logs' && isAdmin && (
+          <AdminLogsPage />
         )}
 
         {currentView === 'favorites' && isCustomer && (

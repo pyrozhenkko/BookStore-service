@@ -60,9 +60,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/deactivate").authenticated()
-                        .requestMatchers("/api/auth/**").permitAll() // Це покриває /forgot-password і /reset-password
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/i18n/**").permitAll()
+                        .requestMatchers("/api/delivery/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/payment/webhook").permitAll()
                         .requestMatchers("/api/payment/success", "/api/payment/cancel").permitAll()
                         .requestMatchers("/error").permitAll()

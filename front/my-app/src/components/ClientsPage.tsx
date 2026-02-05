@@ -7,9 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Input } from './ui/input';
-import { Ban, ShieldCheck, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Label } from './ui/label';
+import { Ban, ShieldCheck, Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "./ui/dialog";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -22,6 +30,16 @@ export function ClientsPage() {
   const [sortBy, setSortBy] = useState<'name' | 'email' | 'totalOrders' | 'registeredDate'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Form state
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: ''
+  });
 
   useEffect(() => {
     loadClients();
@@ -36,6 +54,59 @@ export function ClientsPage() {
       toast.error(t('clients.toasts.loadError'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAdd = () => {
+    setEditingClient(null);
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      password: ''
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (client: Client) => {
+    setEditingClient(client);
+    setFormData({
+      name: client.name,
+      email: client.email,
+      phone: client.phone || '',
+      password: ''
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingClient) {
+        await clientService.updateClient(editingClient.id, formData);
+        toast.success(t('clients.toasts.updateSuccess'));
+      } else {
+        await clientService.createClient(formData);
+        toast.success(t('clients.toasts.createSuccess'));
+      }
+      setIsDialogOpen(false);
+      loadClients();
+    } catch (error) {
+      toast.error(t('clients.toasts.saveError'));
+    }
+  };
+
+  const handleDelete = async (client: Client) => {
+    if (!confirm(t('clients.actions.confirmDelete', { name: client.name }))) {
+      return;
+    }
+
+    try {
+      await clientService.deleteClient(client.id);
+      toast.success(t('clients.toasts.deleteSuccess'));
+      loadClients();
+    } catch (error) {
+      toast.error(t('clients.toasts.actionError'));
     }
   };
 
@@ -91,13 +162,13 @@ export function ClientsPage() {
 
       switch (sortBy) {
         case 'name':
-          compareValue = a.name.localeCompare(b.name);
+          compareValue = (a.name || '').localeCompare(b.name || '');
           break;
         case 'email':
-          compareValue = a.email.localeCompare(b.email);
+          compareValue = (a.email || '').localeCompare(b.email || '');
           break;
         case 'totalOrders':
-          compareValue = a.totalOrders - b.totalOrders;
+          compareValue = (a.totalOrders || 0) - (b.totalOrders || 0);
           break;
         case 'registeredDate':
           compareValue = new Date(a.registeredDate).getTime() - new Date(b.registeredDate).getTime();
@@ -126,6 +197,10 @@ export function ClientsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">{t('clients.title')}</h1>
+        <Button onClick={handleAdd}>
+          <Plus className="size-4 mr-2" />
+          {t('clients.addClient')}
+        </Button>
       </div>
 
       {/* Пошук та фільтри */}
@@ -205,7 +280,7 @@ export function ClientsPage() {
               </TableHeader>
               <TableBody>
                 {paginatedClients.map((client) => (
-                  <TableRow key={client.id}>
+                  <TableRow key={client.id} className={client.isBlocked ? "opacity-60 bg-gray-50/50" : ""}>
                     <TableCell className="font-medium">{client.name}</TableCell>
                     <TableCell>{client.email}</TableCell>
                     <TableCell>{client.phone || '—'}</TableCell>
@@ -225,23 +300,34 @@ export function ClientsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant={client.isBlocked ? "outline" : "destructive"}
-                        size="sm"
-                        onClick={() => handleBlockToggle(client)}
-                      >
-                        {client.isBlocked ? (
-                          <>
-                            <ShieldCheck className="size-4 mr-2" />
-                            {t('clients.actions.unblock')}
-                          </>
-                        ) : (
-                          <>
-                            <Ban className="size-4 mr-2" />
-                            {t('clients.actions.block')}
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleEdit(client)}
+                          title={t('clients.actions.edit')}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleBlockToggle(client)}
+                          className={client.isBlocked ? "text-green-600 hover:text-green-700" : "text-amber-600 hover:text-amber-700"}
+                          title={client.isBlocked ? t('clients.actions.unblock') : t('clients.actions.block')}
+                        >
+                          {client.isBlocked ? <UserCheck className="size-4" /> : <Ban className="size-4" />}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDelete(client)}
+                          className="text-red-600 hover:text-red-700"
+                          title={t('clients.actions.delete')}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -279,6 +365,66 @@ export function ClientsPage() {
           </div>
         </div>
       )}
+
+      {/* Dialog for Add/Edit Client */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingClient ? t('clients.editClient') : t('clients.addClient')}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">{t('clients.form.name')} *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">{t('clients.form.email')} *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">{t('clients.form.phone')}</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                {t('clients.form.password')} {editingClient ? t('clients.form.passwordHint') : '*'}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required={!editingClient}
+              />
+            </div>
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit">
+                {t('common.save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -33,6 +33,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         Optional<Employee> employeeOpt = employeeRepository.findByEmail(email);
         if (employeeOpt.isPresent()) {
             Employee employee = employeeOpt.get();
+            if (employee.isBlocked()) {
+                throw new RuntimeException("blocked");
+            }
             String role = employee.isAdmin() ? "ROLE_ADMIN" : "ROLE_EMPLOYEE";
             return buildUserDetails(employee, role);
         }

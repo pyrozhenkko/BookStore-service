@@ -1,11 +1,11 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { Book, CartItem } from '../types';
 
 interface CartContextType {
   cart: CartItem[];
   addToCart: (book: Book, quantity?: number) => void;
-  removeFromCart: (bookId: string) => void;
-  updateQuantity: (bookId: string, quantity: number) => void;
+  removeFromCart: (bookId: string | number) => void;
+  updateQuantity: (bookId: string | number, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -14,37 +14,44 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    const saved = localStorage.getItem('shopping-cart');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('shopping-cart', JSON.stringify(cart));
+  }, [cart]);
 
   const addToCart = (book: Book, quantity: number = 1) => {
     setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.book.id === book.id);
-      
+      const existingItem = prevCart.find(item => String(item.book.id) === String(book.id));
+
       if (existingItem) {
         return prevCart.map(item =>
-          item.book.id === book.id
+          String(item.book.id) === String(book.id)
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      
+
       return [...prevCart, { book, quantity }];
     });
   };
 
-  const removeFromCart = (bookId: string) => {
-    setCart(prevCart => prevCart.filter(item => item.book.id !== bookId));
+  const removeFromCart = (bookId: string | number) => {
+    setCart(prevCart => prevCart.filter(item => String(item.book.id) !== String(bookId)));
   };
 
-  const updateQuantity = (bookId: string, quantity: number) => {
+  const updateQuantity = (bookId: string | number, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(bookId);
       return;
     }
-    
+
     setCart(prevCart =>
       prevCart.map(item =>
-        item.book.id === bookId ? { ...item, quantity } : item
+        String(item.book.id) === String(bookId) ? { ...item, quantity } : item
       )
     );
   };
