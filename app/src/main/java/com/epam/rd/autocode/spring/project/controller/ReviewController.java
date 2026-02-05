@@ -28,7 +28,7 @@ public class ReviewController {
     @PostMapping("/book/{bookId}/comment")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<String> commentBook(@PathVariable Long bookId, @RequestBody CommentRequest request) {
-        reviewService.addComment(bookId, request.getComment());
+        reviewService.addComment(bookId, request.getComment(), request.getRating());
         return ResponseEntity.ok("Comment added");
     }
 

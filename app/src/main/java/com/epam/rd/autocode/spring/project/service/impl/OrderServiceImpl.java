@@ -30,7 +30,8 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
 
     @Override
-    public Page<OrderDTO> searchOrders(String clientEmail, String city, BigDecimal minPrice, BigDecimal maxPrice, LocalDateTime dateFrom, Pageable pageable) {
+    public Page<OrderDTO> searchOrders(String clientEmail, String city, BigDecimal minPrice, BigDecimal maxPrice,
+            LocalDateTime dateFrom, Pageable pageable) {
         Specification<Order> spec = Specification.where(OrderSpecification.hasClientEmail(clientEmail))
                 .and(OrderSpecification.hasDeliveryCity(city))
                 .and(OrderSpecification.priceGreaterOrEqual(minPrice))
@@ -97,6 +98,23 @@ public class OrderServiceImpl implements OrderService {
         order.setBookItems(bookItems);
         order.setPrice(totalPrice);
 
+        return orderMapper.toDto(orderRepository.save(order));
+    }
+
+    @Override
+    @Transactional
+    public OrderDTO confirmOrder(Long id) {
+        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+        order.setStatus("confirmed");
+        return orderMapper.toDto(orderRepository.save(order));
+    }
+
+    @Override
+    @Transactional
+    public OrderDTO cancelOrder(Long id) {
+        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+        order.setStatus("cancelled");
+        // Optional: Restore stock? For now just cancel.
         return orderMapper.toDto(orderRepository.save(order));
     }
 }

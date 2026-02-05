@@ -29,13 +29,17 @@ public class BookComment {
     @Column(nullable = false, length = 2000)
     private String comment;
 
+    @Column(name = "rating")
+    private Integer rating; // 1-5, може бути null якщо користувач не поставив оцінку
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public BookComment(Book book, Client client, String comment) {
+    public BookComment(Book book, Client client, String comment, Integer rating) {
         this.book = book;
         this.client = client;
         this.comment = comment;
+        this.rating = rating;
         this.createdAt = LocalDateTime.now();
     }
 }

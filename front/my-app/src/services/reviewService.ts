@@ -23,9 +23,9 @@ export const reviewService = {
       method: 'POST',
       body: JSON.stringify({ rating }),
     }),
-  addComment: (bookId: number, comment: string) =>
+  addComment: (bookId: number, comment: string, rating?: number) =>
     apiRequest(`/api/reviews/book/${bookId}/comment`, {
       method: 'POST',
-      body: JSON.stringify({ comment }),
+      body: JSON.stringify({ comment, rating: rating || null }),
     }),
 };

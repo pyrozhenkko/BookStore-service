@@ -6,6 +6,7 @@ import { ShoppingCart, Eye, Heart } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface BookCardProps {
   book: Book;
@@ -16,6 +17,7 @@ export function BookCard({ book, onViewDetails }: BookCardProps) {
   const { addToCart } = useCart();
   const { isCustomer } = useAuth();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const { t } = useLanguage();
 
   const bookIdNum = typeof book.id === 'number' ? book.id : parseInt(String(book.id), 10);
   const hasNumericId = !isNaN(bookIdNum);
@@ -30,15 +32,15 @@ export function BookCard({ book, onViewDetails }: BookCardProps) {
     try {
       if (isFav) await removeFavorite(bookIdNum);
       else await addFavorite(bookIdNum);
-    } catch {}
+    } catch { }
   };
 
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3 relative">
         <div className="aspect-[2/3] overflow-hidden rounded-md bg-gray-100 mb-3 relative">
-          <img 
-            src={book.imageUrl} 
+          <img
+            src={book.imageUrl}
             alt={book.name}
             className="w-full h-full object-cover"
           />
@@ -63,10 +65,10 @@ export function BookCard({ book, onViewDetails }: BookCardProps) {
             <span className="text-2xl font-semibold">{book.price} ₴</span>
             {book.stock > 0 ? (
               <Badge variant="outline" className="text-green-600">
-                В наявності: {book.stock}
+                {t('stockStatus.inStockWithCount', { count: book.stock })}
               </Badge>
             ) : (
-              <Badge variant="destructive">Немає в наявності</Badge>
+              <Badge variant="destructive">{t('stockStatus.outOfStock')}</Badge>
             )}
           </div>
         </div>
@@ -78,7 +80,7 @@ export function BookCard({ book, onViewDetails }: BookCardProps) {
           onClick={() => onViewDetails(book)}
         >
           <Eye className="size-4 mr-2" />
-          Деталі
+          {t('common.details')}
         </Button>
         {isCustomer && book.stock > 0 && (
           <Button
@@ -86,7 +88,7 @@ export function BookCard({ book, onViewDetails }: BookCardProps) {
             onClick={handleAddToCart}
           >
             <ShoppingCart className="size-4 mr-2" />
-            В кошик
+            {t('book.toCart')}
           </Button>
         )}
       </CardFooter>

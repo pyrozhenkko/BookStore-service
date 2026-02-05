@@ -3,7 +3,9 @@ package com.epam.rd.autocode.spring.project.service.impl;
 import com.epam.rd.autocode.spring.project.dto.BookDTO;
 import com.epam.rd.autocode.spring.project.mapper.BookMapper;
 import com.epam.rd.autocode.spring.project.model.Book;
+import com.epam.rd.autocode.spring.project.model.BookTranslation;
 import com.epam.rd.autocode.spring.project.repo.BookRepository;
+import com.epam.rd.autocode.spring.project.repo.BookTranslationRepository;
 import com.epam.rd.autocode.spring.project.repo.specification.BookSpecification;
 import com.epam.rd.autocode.spring.project.service.BookService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,16 +28,23 @@ public class BookServiceImpl implements BookService {
     private final BookMapper bookMapper;
     private final GoogleBooksService googleBooksService;
     private final FileStorageService fileStorageService;
+    private final BookTranslationRepository bookTranslationRepository;
+
+    private static final String DEFAULT_LOCALE = "en";
 
     @Override
-    public List<BookDTO> getAllBooks() {
+    @Transactional(readOnly = true)
+    public List<BookDTO> getAllBooks(String locale) {
+        String effectiveLocale = normalizeLocale(locale);
         return bookRepository.findAll().stream()
-                .map(bookMapper::toDto)
+                .map(book -> applyTranslation(bookMapper.toDto(book), book, effectiveLocale))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Page<BookDTO> searchBooks(String keyword, String genre, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+    public Page<BookDTO> searchBooks(String keyword, String genre, BigDecimal minPrice, BigDecimal maxPrice,
+            Pageable pageable, String locale) {
+        String effectiveLocale = normalizeLocale(locale);
         Specification<Book> spec = Specification.where(BookSpecification.hasKeyword(keyword))
                 .and(BookSpecification.hasGenre(genre))
                 .and(BookSpecification.priceGreaterOrEqual(minPrice))
@@ -42,26 +52,29 @@ public class BookServiceImpl implements BookService {
 
         return bookRepository
                 .findAll(spec, pageable)
-                .map(bookMapper::toDto);
+                .map(book -> applyTranslation(bookMapper.toDto(book), book, effectiveLocale));
     }
 
     @Override
-    public BookDTO getBookByName(String name) {
+    public BookDTO getBookByName(String name, String locale) {
+        String effectiveLocale = normalizeLocale(locale);
         Book book = bookRepository.findByName(name)
                 .orElseThrow(() -> new RuntimeException("Book not found: " + name));
 
         enrichWithGoogleImagesIfNeeded(book);
 
-        return bookMapper.toDto(book);
+        return applyTranslation(bookMapper.toDto(book), book, effectiveLocale);
     }
+
     @Transactional
     public BookDTO addImageToBook(String name, String imageUrl) {
         Book book = bookRepository.findByName(name)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
-        book.getImageUrls().add(imageUrl); // Додаємо нове фото в кінець списку
+        book.getImageUrls().add(imageUrl);
         return bookMapper.toDto(bookRepository.save(book));
     }
+
     @Transactional
     public BookDTO removeImageFromBook(String name, String imageUrlToRemove) {
         Book book = bookRepository.findByName(name)
@@ -69,7 +82,6 @@ public class BookServiceImpl implements BookService {
 
         boolean removed = book.getImageUrls().remove(imageUrlToRemove);
 
-        // Якщо це був локальний файл, видаляємо його і з диска
         if (removed && imageUrlToRemove.startsWith("/uploads/")) {
             fileStorageService.deleteFile(imageUrlToRemove);
         }
@@ -109,39 +121,86 @@ public class BookServiceImpl implements BookService {
     @Transactional
     public void deleteBookByName(String name) {
         Book book = bookRepository.findByName(name).orElseThrow();
-        // При видаленні книги можна видалити і її фото з диска (опціонально)
         book.getImageUrls().forEach(url -> {
-            if (url.startsWith("/uploads/")) fileStorageService.deleteFile(url);
+            if (url.startsWith("/uploads/"))
+                fileStorageService.deleteFile(url);
         });
+        bookTranslationRepository.deleteByBook(book);
         bookRepository.delete(book);
     }
 
     @Override
     @Transactional
     public BookDTO addBook(BookDTO bookDTO) {
-        if (bookRepository.findByName(bookDTO.getName()).isPresent()) throw new RuntimeException("Exists");
+        if (bookRepository.findByName(bookDTO.getName()).isPresent())
+            throw new RuntimeException("Exists");
         Book book = bookMapper.toEntity(bookDTO);
-        if (book.getQuantity() == null) book.setQuantity(0);
+        if (book.getQuantity() == null)
+            book.setQuantity(0);
 
-        // Спробуємо знайти фото одразу при створенні
         enrichWithGoogleImagesIfNeeded(book);
 
         return bookMapper.toDto(bookRepository.save(book));
     }
 
     @Override
-    public List<String> getAllGenres() {
-        return bookRepository.findAllGenres();
+    public List<String> getAllGenres(String locale) {
+        String effectiveLocale = normalizeLocale(locale);
+        if (DEFAULT_LOCALE.equals(effectiveLocale)) {
+            return bookRepository.findAllGenres();
+        }
+        List<String> translatedGenres = bookTranslationRepository.findAllByLocale(effectiveLocale)
+                .stream()
+                .map(BookTranslation::getGenre)
+                .filter(g -> g != null && !g.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+
+        return translatedGenres.isEmpty() ? bookRepository.findAllGenres() : translatedGenres;
     }
 
     private void enrichWithGoogleImagesIfNeeded(Book book) {
         if (book.getImageUrls() == null || book.getImageUrls().isEmpty()) {
             List<String> googleImages = googleBooksService.findImagesByTitle(book.getName());
             if (!googleImages.isEmpty()) {
-                if (book.getImageUrls() == null) book.setImageUrls(new java.util.ArrayList<>());
+                if (book.getImageUrls() == null)
+                    book.setImageUrls(new java.util.ArrayList<>());
                 book.getImageUrls().addAll(googleImages);
                 bookRepository.save(book);
             }
+        }
+    }
+
+    private String normalizeLocale(String locale) {
+        if (locale == null || locale.isEmpty()) {
+            return DEFAULT_LOCALE;
+        }
+        String normalized = locale.split("[_-]")[0].toLowerCase();
+        return normalized.isEmpty() ? DEFAULT_LOCALE : normalized;
+    }
+
+    private BookDTO applyTranslation(BookDTO dto, Book book, String locale) {
+        if (DEFAULT_LOCALE.equals(locale)) {
+            return dto;
+        }
+
+        Optional<BookTranslation> translation = bookTranslationRepository.findByBookIdAndLocale(book.getId(), locale);
+        translation.ifPresent(t -> applyTranslationData(dto, t));
+        return dto;
+    }
+
+    private void applyTranslationData(BookDTO dto, BookTranslation t) {
+        if (t.getName() != null && !t.getName().isEmpty()) {
+            dto.setName(t.getName());
+        }
+        if (t.getDescription() != null && !t.getDescription().isEmpty()) {
+            dto.setDescription(t.getDescription());
+        }
+        if (t.getCharacteristics() != null && !t.getCharacteristics().isEmpty()) {
+            dto.setCharacteristics(t.getCharacteristics());
+        }
+        if (t.getGenre() != null && !t.getGenre().isEmpty()) {
+            dto.setGenre(t.getGenre());
         }
     }
 }

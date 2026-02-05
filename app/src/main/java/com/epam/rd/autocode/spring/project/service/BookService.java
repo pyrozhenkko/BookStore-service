@@ -10,16 +10,18 @@ import java.util.List;
 
 public interface BookService {
 
-    @PreAuthorize("isAuthenticated()")
-    List<BookDTO> getAllBooks();
+    @PreAuthorize("permitAll()")
+    List<BookDTO> getAllBooks(String locale);
 
-    @PreAuthorize("permitAll()") // Пошук зазвичай доступний всім
-    Page<BookDTO> searchBooks(String keyword, String genre, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
+    @PreAuthorize("permitAll()")
+    Page<BookDTO> searchBooks(String keyword, String genre, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable,
+            String locale);
 
-    @PreAuthorize("isAuthenticated()")
-    BookDTO getBookByName(String name);
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("permitAll()")
+    BookDTO getBookByName(String name, String locale);
+
+    @PreAuthorize("permitAll()")
     Integer getBookQuantity(String name);
 
     @PreAuthorize("hasRole('EMPLOYEE')")
@@ -32,5 +34,5 @@ public interface BookService {
     BookDTO addBook(BookDTO book);
 
     @PreAuthorize("permitAll()")
-    List<String> getAllGenres();
+    List<String> getAllGenres(String locale);
 }

@@ -2,8 +2,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? '' :
 
 function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem('access_token');
+  const language = localStorage.getItem('bookstore_language') || 'uk';
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Accept-Language': language,
   };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -51,7 +53,13 @@ export async function apiRequest<T>(
     return {} as T;
   }
 
-  return response.json();
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  // Handle plain text responses (e.g., "Rating saved", "Comment added")
+  return {} as T;
 }
 
 async function refreshToken(): Promise<boolean> {

@@ -27,6 +27,9 @@ public class Order {
     @JoinColumn(name = "client_id")
     private Client client;
 
+    @Column(nullable = false)
+    private String status = "pending";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id")
     private Employee employee;
@@ -38,7 +41,6 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<BookItem> bookItems = new ArrayList<>();
-
 
     // Назва міста (щоб зберегти історію, навіть якщо Ref зміниться)
     @Column(name = "delivery_city")

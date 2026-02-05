@@ -6,59 +6,22 @@ export const clientService = {
   // Отримати всіх клієнтів
   async getAllClients(): Promise<Client[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/clients`, {
+      const response = await fetch(`${API_BASE_URL}/clients?size=1000`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch clients');
       }
-      
-      return await response.json();
+
+      const data = await response.json();
+      return data.content || [];
     } catch (error) {
       console.error('Error fetching clients:', error);
-      // Mock data для тестування frontend без бекенду
-      return [
-        {
-          id: '1',
-          email: 'customer@example.com',
-          name: 'John Customer',
-          phone: '+380501111111',
-          registeredDate: '2025-01-05',
-          totalOrders: 5,
-          isBlocked: false,
-        },
-        {
-          id: '2',
-          email: 'alice@example.com',
-          name: 'Alice Smith',
-          phone: '+380502222222',
-          registeredDate: '2025-03-10',
-          totalOrders: 3,
-          isBlocked: false,
-        },
-        {
-          id: '3',
-          email: 'bob@example.com',
-          name: 'Bob Johnson',
-          phone: '+380503333333',
-          registeredDate: '2025-06-15',
-          totalOrders: 8,
-          isBlocked: false,
-        },
-        {
-          id: '4',
-          email: 'blocked@example.com',
-          name: 'Blocked User',
-          phone: '+380504444444',
-          registeredDate: '2024-12-01',
-          totalOrders: 1,
-          isBlocked: true,
-        },
-      ];
+      throw error;
     }
   },
 
@@ -71,7 +34,7 @@ export const clientService = {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to block client');
       }
@@ -90,7 +53,7 @@ export const clientService = {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to unblock client');
       }
@@ -109,11 +72,11 @@ export const clientService = {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch client');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error fetching client:', error);

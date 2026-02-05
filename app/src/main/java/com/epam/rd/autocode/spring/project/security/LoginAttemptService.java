@@ -31,18 +31,19 @@ public class LoginAttemptService {
     }
 
     public void loginSucceeded(String key) {
-        attemptsCache.invalidate(key);
+        attemptsCache.invalidate(getClientIP());
     }
 
     public void loginFailed(String key) {
+        String ip = getClientIP();
         int attempts = 0;
         try {
-            attempts = attemptsCache.get(key);
+            attempts = attemptsCache.get(ip);
         } catch (ExecutionException e) {
             attempts = 0;
         }
         attempts++;
-        attemptsCache.put(key, attempts);
+        attemptsCache.put(ip, attempts);
     }
 
     public boolean isBlocked() {

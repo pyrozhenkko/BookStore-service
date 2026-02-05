@@ -28,7 +28,8 @@ public class ReviewServiceImpl {
 
     @Transactional
     public void setRating(Long bookId, Integer ratingValue) {
-        if (ratingValue < 1 || ratingValue > 5) throw new RuntimeException("Rating must be 1-5");
+        if (ratingValue < 1 || ratingValue > 5)
+            throw new RuntimeException("Rating must be 1-5");
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Client client = clientRepository.findByEmail(email).orElseThrow();
@@ -49,12 +50,12 @@ public class ReviewServiceImpl {
     }
 
     @Transactional
-    public void addComment(Long bookId, String text) {
+    public void addComment(Long bookId, String text, Integer rating) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Client client = clientRepository.findByEmail(email).orElseThrow();
         Book book = bookRepository.findById(bookId).orElseThrow();
 
-        BookComment comment = new BookComment(book, client, text);
+        BookComment comment = new BookComment(book, client, text, rating);
         commentRepository.save(comment);
     }
 
@@ -64,10 +65,6 @@ public class ReviewServiceImpl {
                 .map(comment -> {
                     Long clientId = comment.getClient().getId();
 
-                    Integer userRating = ratingRepository.findByClient_IdAndBook_Id(clientId, bookId)
-                            .map(BookRating::getRating)
-                            .orElse(null);
-
                     boolean isVerified = orderRepository.existsByClientAndBook(clientId, bookId);
 
                     return new CommentResponse(
@@ -75,9 +72,8 @@ public class ReviewServiceImpl {
                             comment.getClient().getName(),
                             comment.getComment(),
                             comment.getCreatedAt(),
-                            userRating,
-                            isVerified
-                    );
+                            comment.getRating(), // Тепер рейтинг береться напряму з коментаря
+                            isVerified);
                 });
     }
 

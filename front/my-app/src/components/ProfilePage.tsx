@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -10,6 +11,7 @@ import { User, Mail, Shield, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 export function ProfilePage() {
+  const { t } = useLanguage();
   const { currentUser, logout, isCustomer, balance } = useAuth();
   const [name, setName] = useState(currentUser?.name || '');
   const [email, setEmail] = useState(currentUser?.email || '');
@@ -33,8 +35,8 @@ export function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold mb-2">Профіль користувача</h1>
-        <p className="text-gray-600">Управління вашим акаунтом та особистою інформацією</p>
+        <h1 className="text-3xl font-semibold mb-2">{t('profile.title')}</h1>
+        <p className="text-gray-600">{t('profile.description')}</p>
       </div>
 
       {/* User Info Card */}
@@ -42,15 +44,15 @@ export function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="size-5" />
-            Особиста інформація
+            {t('profile.personalInfo.title')}
           </CardTitle>
           <CardDescription>
-            Оновіть ваші особисті дані
+            {t('profile.personalInfo.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Ім'я</Label>
+            <Label htmlFor="name">{t('profile.personalInfo.name')}</Label>
             <Input
               id="name"
               value={name}
@@ -58,7 +60,7 @@ export function ProfilePage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('profile.personalInfo.email')}</Label>
             <Input
               id="email"
               type="email"
@@ -66,15 +68,15 @@ export function ProfilePage() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-          
+
           {isSaved && (
             <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
-              ✓ Зміни успішно збережено!
+              {t('profile.personalInfo.saved')}
             </div>
           )}
 
           <Button onClick={handleSave}>
-            Зберегти зміни
+            {t('profile.personalInfo.save')}
           </Button>
         </CardContent>
       </Card>
@@ -83,8 +85,8 @@ export function ProfilePage() {
       {isCustomer && balance !== null && balance !== undefined && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">Кешбек</CardTitle>
-            <CardDescription>Ваш поточний баланс кешбеку</CardDescription>
+            <CardTitle className="flex items-center gap-2">{t('profile.cashback.title')}</CardTitle>
+            <CardDescription>{t('profile.cashback.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold text-green-600">{balance.toFixed(2)} ₴</p>
@@ -97,21 +99,25 @@ export function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="size-5" />
-            Інформація про акаунт
+            {t('profile.accountInfo.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Роль</p>
-              <Badge variant={currentUser.role === 'employee' ? 'default' : 'secondary'} className="mt-1">
-                {currentUser.role === 'employee' ? 'Співробітник' : 'Покупець'}
+              <p className="text-sm text-gray-600">{t('profile.accountInfo.role')}</p>
+              <Badge variant={currentUser.role === 'admin' ? 'destructive' : currentUser.role === 'employee' ? 'default' : 'secondary'} className="mt-1">
+                {currentUser.role === 'admin'
+                  ? t('profile.accountInfo.roles.admin')
+                  : currentUser.role === 'employee'
+                    ? t('profile.accountInfo.roles.employee')
+                    : t('profile.accountInfo.roles.customer')}
               </Badge>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Статус</p>
+              <p className="text-sm text-gray-600">{t('profile.accountInfo.status')}</p>
               <Badge variant={currentUser.isBlocked ? 'destructive' : 'default'} className="mt-1">
-                {currentUser.isBlocked ? 'Заблоковано' : 'Активний'}
+                {currentUser.isBlocked ? t('profile.accountInfo.statuses.blocked') : t('profile.accountInfo.statuses.active')}
               </Badge>
             </div>
           </div>
@@ -119,7 +125,7 @@ export function ProfilePage() {
           <Separator />
 
           <div className="space-y-2">
-            <p className="text-sm font-semibold">Email акаунту</p>
+            <p className="text-sm font-semibold">{t('profile.accountInfo.accountEmail')}</p>
             <div className="flex items-center gap-2 text-gray-600">
               <Mail className="size-4" />
               <span>{currentUser.email}</span>
@@ -134,34 +140,33 @@ export function ProfilePage() {
           <CardHeader>
             <CardTitle className="text-red-600 flex items-center gap-2">
               <Trash2 className="size-5" />
-              Небезпечна зона
+              {t('profile.dangerZone.title')}
             </CardTitle>
             <CardDescription>
-              Видалення акаунту є незворотною дією
+              {t('profile.dangerZone.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">
-                  Видалити мій акаунт
+                  {t('profile.dangerZone.deleteBtn')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Ви впевнені?</AlertDialogTitle>
+                  <AlertDialogTitle>{t('profile.dangerZone.confirmTitle')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Ця дія не може бути скасована. Це назавжди видалить ваш акаунт
-                    та всі пов'язані з ним дані з наших серверів.
+                    {t('profile.dangerZone.confirmText')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Скасувати</AlertDialogCancel>
+                  <AlertDialogCancel>{t('profile.dangerZone.cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDeleteAccount}
                     className="bg-red-600 hover:bg-red-700"
                   >
-                    Так, видалити акаунт
+                    {t('profile.dangerZone.confirm')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -173,7 +178,7 @@ export function ProfilePage() {
       {/* Permissions Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Дозволи та можливості</CardTitle>
+          <CardTitle>{t('profile.permissions.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -181,54 +186,54 @@ export function ProfilePage() {
               <>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-green-600" />
-                  <p className="text-sm">Перегляд каталогу книг</p>
+                  <p className="text-sm">{t('profile.permissions.viewCatalog')}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-green-600" />
-                  <p className="text-sm">Додавання книг в кошик</p>
+                  <p className="text-sm">{t('profile.permissions.addToCart')}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-green-600" />
-                  <p className="text-sm">Оформлення замовлень</p>
+                  <p className="text-sm">{t('profile.permissions.checkout')}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-green-600" />
-                  <p className="text-sm">Перегляд історії замовлень</p>
+                  <p className="text-sm">{t('profile.permissions.viewHistory')}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-green-600" />
-                  <p className="text-sm">Редагування особистої інформації</p>
+                  <p className="text-sm">{t('profile.permissions.editProfile')}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-green-600" />
-                  <p className="text-sm">Видалення власного акаунту</p>
+                  <p className="text-sm">{t('profile.permissions.deleteAccount')}</p>
                 </div>
               </>
             ) : (
               <>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-blue-600" />
-                  <p className="text-sm">Додавання, редагування та видалення книг</p>
+                  <p className="text-sm">{t('profile.permissions.manageBooks')}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-blue-600" />
-                  <p className="text-sm">Підтвердження замовлень клієнтів</p>
+                  <p className="text-sm">{t('profile.permissions.confirmOrders')}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-blue-600" />
-                  <p className="text-sm">Перегляд всіх замовлень</p>
+                  <p className="text-sm">{t('profile.permissions.viewAllOrders')}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-blue-600" />
-                  <p className="text-sm">Блокування/розблокування клієнтів</p>
+                  <p className="text-sm">{t('profile.permissions.manageClients')}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-blue-600" />
-                  <p className="text-sm">Перегляд списку всіх клієнтів</p>
+                  <p className="text-sm">{t('profile.permissions.viewAllClients')}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="mt-1 size-2 rounded-full bg-green-600" />
-                  <p className="text-sm">Перегляд каталогу книг</p>
+                  <p className="text-sm">{t('profile.permissions.viewCatalog')}</p>
                 </div>
               </>
             )}

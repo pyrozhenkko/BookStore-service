@@ -32,8 +32,7 @@ public class OrderController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
-            @PageableDefault(sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
+            @PageableDefault(sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(orderService.searchOrders(clientEmail, city, minPrice, maxPrice, dateFrom, pageable));
     }
 
@@ -57,5 +56,17 @@ public class OrderController {
             @PathVariable String email,
             @PageableDefault(sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(orderService.getOrdersByEmployee(email, pageable));
+    }
+
+    @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    public ResponseEntity<OrderDTO> confirmOrder(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.confirmOrder(id));
+    }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.cancelOrder(id));
     }
 }

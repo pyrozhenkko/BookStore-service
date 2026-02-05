@@ -1,6 +1,9 @@
 import { BookOpen } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className="border-t bg-white mt-auto">
       <div className="container mx-auto px-4 py-6">
@@ -10,7 +13,7 @@ export function Footer() {
             <span className="font-semibold">BookStore</span>
           </div>
           <div className="text-sm text-gray-600">
-            © {new Date().getFullYear()} BookStore. Усі права захищені.
+            {t('footer.copyright', { year: new Date().getFullYear() })}
           </div>
         </div>
       </div>

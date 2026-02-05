@@ -8,31 +8,32 @@ TRUNCATE TABLE book_ratings RESTART IDENTITY CASCADE;
 TRUNCATE TABLE book_comments RESTART IDENTITY CASCADE;
 TRUNCATE TABLE books RESTART IDENTITY CASCADE;
 TRUNCATE TABLE book_images RESTART IDENTITY CASCADE;
+TRUNCATE TABLE book_translations RESTART IDENTITY CASCADE;
 
 
-INSERT INTO EMPLOYEES (BIRTH_DATE, EMAIL, NAME, PASSWORD, PHONE, IS_ADMIN)
-VALUES ('1990-05-15', 'john.doe@email.com', 'John Doe', 'pass123', '555-123-4567', TRUE),
-       ('1985-09-20', 'jane.smith@email.com', 'Jane Smith', 'abc456', '555-987-6543', FALSE),
-       ('1978-03-08', 'bob.jones@email.com', 'Bob Jones', 'qwerty789', '555-321-6789', FALSE),
-       ('1982-11-25', 'alice.white@email.com', 'Alice White', 'secret567', '555-876-5432', FALSE),
-       ('1995-07-12', 'mike.wilson@email.com', 'Mike Wilson', 'mypassword', '555-234-5678', FALSE),
-       ('1989-01-30', 'sara.brown@email.com', 'Sara Brown', 'letmein123', '555-876-5433', FALSE),
-       ('1975-06-18', 'tom.jenkins@email.com', 'Tom Jenkins', 'pass4321', '555-345-6789', FALSE),
-       ('1987-12-04', 'lisa.taylor@email.com', 'Lisa Taylor', 'securepwd', '555-789-0123', FALSE),
-       ('1992-08-22', 'david.wright@email.com', 'David Wright', 'access123', '555-456-7890', FALSE),
-       ('1980-04-10', 'emily.harris@email.com', 'Emily Harris', '1234abcd', '555-098-7654', FALSE);
+INSERT INTO EMPLOYEES (BIRTH_DATE, EMAIL, NAME, PASSWORD, PHONE, IS_ADMIN, POSITION, HIRED_DATE, IS_BLOCKED)
+VALUES ('1990-05-15', 'john.doe@email.com', 'John Doe', 'pass123', '555-123-4567', TRUE, 'ADMIN', '2015-06-01', FALSE),
+       ('1985-09-20', 'jane.smith@email.com', 'Jane Smith', 'abc456', '555-987-6543', FALSE, 'EMPLOYEE', '2018-03-15', FALSE),
+       ('1978-03-08', 'bob.jones@email.com', 'Bob Jones', 'qwerty789', '555-321-6789', FALSE, 'EMPLOYEE', '2019-11-20', FALSE),
+       ('1982-11-25', 'alice.white@email.com', 'Alice White', 'secret567', '555-876-5432', FALSE, 'EMPLOYEE', '2020-02-10', FALSE),
+       ('1995-07-12', 'mike.wilson@email.com', 'Mike Wilson', 'mypassword', '555-234-5678', FALSE, 'EMPLOYEE', '2023-05-05', FALSE),
+       ('1989-01-30', 'sara.brown@email.com', 'Sara Brown', 'letmein123', '555-876-5433', FALSE, 'EMPLOYEE', '2022-08-12', FALSE),
+       ('1975-06-18', 'tom.jenkins@email.com', 'Tom Jenkins', 'pass4321', '555-345-6789', FALSE, 'EMPLOYEE', '2010-09-01', FALSE),
+       ('1987-12-04', 'lisa.taylor@email.com', 'Lisa Taylor', 'securepwd', '555-789-0123', FALSE, 'EMPLOYEE', '2016-12-12', FALSE),
+       ('1992-08-22', 'david.wright@email.com', 'David Wright', 'access123', '555-456-7890', FALSE, 'EMPLOYEE', '2021-04-18', FALSE),
+       ('1980-04-10', 'emily.harris@email.com', 'Emily Harris', '1234abcd', '555-098-7654', FALSE, 'EMPLOYEE', '2017-07-07', FALSE);
 
-INSERT INTO CLIENTS (BALANCE, EMAIL, NAME, PASSWORD)
-VALUES (100.00, 'pyrozhenkko@gmail.com', 'Medelyn Wright', 'password123'),
-       (0.00, 'client2@example.com', 'Landon Phillips', 'securepass'),
-       (0.00, 'client3@example.com', 'Harmony Mason', 'abc123'),
-       (0.00, 'client4@example.com', 'Archer Harper', 'pass456'),
-       (0.00, 'client5@example.com', 'Kira Jacobs', 'letmein789'),
-       (0.00, 'client6@example.com', 'Maximus Kelly', 'adminpass'),
-       (0.00, 'client7@example.com', 'Sierra Mitchell', 'mypassword'),
-       (0.00, 'client8@example.com', 'Quinton Saunders', 'test123'),
-       (0.00, 'client9@example.com', 'Amina Clarke', 'qwerty123'),
-       (0.00, 'client10@example.com', 'Bryson Chavez', 'pass789');
+INSERT INTO CLIENTS (BALANCE, EMAIL, NAME, PASSWORD, PHONE, REGISTERED_DATE, IS_BLOCKED)
+VALUES (100.00, 'pyrozhenkko@gmail.com', 'Medelyn Wright', 'password123', '+380501234567', '2023-01-15', FALSE),
+       (0.00, 'client2@example.com', 'Landon Phillips', 'securepass', '+380502345678', '2023-02-20', FALSE),
+       (0.00, 'client3@example.com', 'Harmony Mason', 'abc123', '+380503456789', '2023-03-25', FALSE),
+       (0.00, 'client4@example.com', 'Archer Harper', 'pass456', '+380504567890', '2023-04-01', FALSE),
+       (0.00, 'client5@example.com', 'Kira Jacobs', 'letmein789', '+380505678901', '2023-05-10', TRUE),
+       (0.00, 'client6@example.com', 'Maximus Kelly', 'adminpass', '+380506789012', '2023-06-15', FALSE),
+       (0.00, 'client7@example.com', 'Sierra Mitchell', 'mypassword', '+380507890123', '2023-07-20', FALSE),
+       (0.00, 'client8@example.com', 'Quinton Saunders', 'test123', '+380508901234', '2023-08-05', FALSE),
+       (0.00, 'client9@example.com', 'Amina Clarke', 'qwerty123', '+380509012345', '2023-09-12', FALSE),
+       (0.00, 'client10@example.com', 'Bryson Chavez', 'pass789', '+380500123456', '2023-10-30', FALSE);
 
 INSERT INTO BOOKS (name, genre, age_group, price, publication_date, author, pages, characteristics, description, language, quantity, isbn)
 VALUES
@@ -47,3 +48,18 @@ VALUES
     ('Silent Whispers', 'Mystery', 'ADULT', 27.50, '2021-05-15', 'Benjamin Hall', 420, 'Intricate detective work','A mystery', 'ENGLISH', 25, '978-0-38-550420-1'),
     ('Whirlwind Romance', 'Romance', 'OTHER', 23.25, '2022-05-15', 'Emma Turner', 360, 'Passionate love affair','A romance', 'ENGLISH', 45, '978-1-25-008040-0');
 
+INSERT INTO BOOK_TRANSLATIONS (book_id, locale, name, description, characteristics, genre)
+SELECT id, 'en', name, description, characteristics, genre FROM BOOKS;
+
+INSERT INTO BOOK_TRANSLATIONS (book_id, locale, name, description, characteristics, genre)
+VALUES
+(1, 'uk', 'Прихований скарб', 'Захоплююча пригода', 'Таємнична подорож', 'Пригоди'),
+(2, 'uk', 'Відлуння вічності', 'Чарівна казка', 'Магічні світи', 'Фентезі'),
+(3, 'uk', 'Шепоти в тінях', 'Захоплюючий детектив', 'Інтригуючий саспенс', 'Детектив'),
+(4, 'uk', 'Соната зоряного світла', 'Прекрасна подорож', 'Зворушлива історія кохання', 'Романтика'),
+(5, 'uk', 'За обрієм', 'Епічна наукова фантастика', 'Міжзоряна пригода', 'Наукова фантастика'),
+(6, 'uk', 'Танець з тінями', 'Захоплююча історія', 'Напружені повороти', 'Трилер'),
+(7, 'uk', 'Голоси вітру', 'Захоплююча подорож', 'Багате історичне тло', 'Історична фантастика'),
+(8, 'uk', 'Серенада душ', 'Магічна фантазія', 'Чарівні світи', 'Фентезі'),
+(9, 'uk', 'Тихі шепоти', 'Детектив', 'Складна детективна робота', 'Детектив'),
+(10, 'uk', 'Вихор романтики', 'Романтика', 'Пристрасна любовна історія', 'Романтика');

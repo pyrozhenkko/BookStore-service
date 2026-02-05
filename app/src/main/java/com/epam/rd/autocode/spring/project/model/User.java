@@ -25,4 +25,7 @@ public abstract class User {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(name = "is_blocked", nullable = false, columnDefinition = "boolean default false")
+    private boolean isBlocked = false;
 }

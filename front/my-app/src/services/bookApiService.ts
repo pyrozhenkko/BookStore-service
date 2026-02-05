@@ -37,8 +37,10 @@ function mapBackendToBook(dto: BackendBookDTO): Book {
 
 export const bookApiService = {
   async getAllBooks(): Promise<Book[]> {
-    const list = await apiRequest<BackendBookDTO[]>('/api/books');
-    return (Array.isArray(list) ? list : []).map(mapBackendToBook);
+    const res = await apiRequest<{ content: BackendBookDTO[]; totalPages: number }>('/api/books?size=1000');
+    // Handle both Page response and direct Array response (just in case)
+    const list = (res as any).content || (Array.isArray(res) ? res : []);
+    return list.map(mapBackendToBook);
   },
 
   async searchBooks(params: {

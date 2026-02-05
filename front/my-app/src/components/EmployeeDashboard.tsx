@@ -13,28 +13,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { Plus, Edit, Trash2, UserX, UserCheck, CheckCircle, Search, Filter, TrendingUp, Package, Users, DollarSign, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export function EmployeeDashboard() {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const [books, setBooks] = useState<Book[]>(mockBooks);
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [clients, setClients] = useState<User[]>(mockUsers.filter(u => u.role === 'customer'));
-  
+
   // Filter states
   const [bookSearch, setBookSearch] = useState('');
   const [bookCategory, setBookCategory] = useState('all');
   const [bookStockFilter, setBookStockFilter] = useState('all');
   const [bookSortBy, setBookSortBy] = useState('name');
-  
+
   const [orderSearch, setOrderSearch] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
   const [orderDateFilter, setOrderDateFilter] = useState('all');
   const [orderSortBy, setOrderSortBy] = useState('date-desc');
-  
+
   const [clientSearch, setClientSearch] = useState('');
   const [clientStatusFilter, setClientStatusFilter] = useState('all');
   const [clientSortBy, setClientSortBy] = useState('name');
-  
+
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
   const [isEditBookOpen, setIsEditBookOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
@@ -56,14 +58,14 @@ export function EmployeeDashboard() {
     const pendingOrders = orders.filter(o => o.status === 'pending').length;
     const lowStockBooks = books.filter(b => b.stock < 10).length;
     const activeClients = clients.filter(c => !c.isBlocked).length;
-    
+
     return { totalRevenue, pendingOrders, lowStockBooks, activeClients };
   }, [books, orders, clients]);
 
   // Filtered books
   const filteredBooks = useMemo(() => {
     let result = [...books];
-    
+
     // Search filter
     if (bookSearch) {
       result = result.filter(b =>
@@ -72,12 +74,12 @@ export function EmployeeDashboard() {
         b.isbn.toLowerCase().includes(bookSearch.toLowerCase())
       );
     }
-    
+
     // Category filter
     if (bookCategory !== 'all') {
       result = result.filter(b => b.category === bookCategory);
     }
-    
+
     // Stock filter
     if (bookStockFilter === 'in-stock') {
       result = result.filter(b => b.stock > 0);
@@ -86,7 +88,7 @@ export function EmployeeDashboard() {
     } else if (bookStockFilter === 'low-stock') {
       result = result.filter(b => b.stock > 0 && b.stock < 10);
     }
-    
+
     // Sort
     result.sort((a, b) => {
       switch (bookSortBy) {
@@ -105,14 +107,14 @@ export function EmployeeDashboard() {
           return a.name.localeCompare(b.name);
       }
     });
-    
+
     return result;
   }, [books, bookSearch, bookCategory, bookStockFilter, bookSortBy]);
 
   // Filtered orders
   const filteredOrders = useMemo(() => {
     let result = [...orders];
-    
+
     // Search filter
     if (orderSearch) {
       result = result.filter(o =>
@@ -121,12 +123,12 @@ export function EmployeeDashboard() {
         o.items.some(item => item.bookName.toLowerCase().includes(orderSearch.toLowerCase()))
       );
     }
-    
+
     // Status filter
     if (orderStatusFilter !== 'all') {
       result = result.filter(o => o.status === orderStatusFilter);
     }
-    
+
     // Date filter
     const now = new Date();
     if (orderDateFilter === 'today') {
@@ -141,7 +143,7 @@ export function EmployeeDashboard() {
       const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       result = result.filter(o => new Date(o.createdAt) >= monthAgo);
     }
-    
+
     // Sort
     result.sort((a, b) => {
       switch (orderSortBy) {
@@ -157,14 +159,14 @@ export function EmployeeDashboard() {
           return 0;
       }
     });
-    
+
     return result;
   }, [orders, orderSearch, orderStatusFilter, orderDateFilter, orderSortBy]);
 
   // Filtered clients
   const filteredClients = useMemo(() => {
     let result = [...clients];
-    
+
     // Search filter
     if (clientSearch) {
       result = result.filter(c =>
@@ -172,14 +174,14 @@ export function EmployeeDashboard() {
         c.email.toLowerCase().includes(clientSearch.toLowerCase())
       );
     }
-    
+
     // Status filter
     if (clientStatusFilter === 'active') {
       result = result.filter(c => !c.isBlocked);
     } else if (clientStatusFilter === 'blocked') {
       result = result.filter(c => c.isBlocked);
     }
-    
+
     // Sort
     result.sort((a, b) => {
       switch (clientSortBy) {
@@ -190,7 +192,7 @@ export function EmployeeDashboard() {
           return a.name.localeCompare(b.name);
       }
     });
-    
+
     return result;
   }, [clients, clientSearch, clientStatusFilter, clientSortBy]);
 
@@ -238,23 +240,23 @@ export function EmployeeDashboard() {
   };
 
   const handleConfirmOrder = (orderId: string) => {
-    setOrders(orders.map(o => 
-      o.id === orderId 
+    setOrders(orders.map(o =>
+      o.id === orderId
         ? { ...o, status: 'confirmed' as const, employeeEmail: currentUser?.email }
         : o
     ));
   };
 
   const handleCancelOrder = (orderId: string) => {
-    setOrders(orders.map(o => 
-      o.id === orderId 
+    setOrders(orders.map(o =>
+      o.id === orderId
         ? { ...o, status: 'cancelled' as const }
         : o
     ));
   };
 
   const handleToggleBlockClient = (email: string) => {
-    setClients(clients.map(c => 
+    setClients(clients.map(c =>
       c.email === email ? { ...c, isBlocked: !c.isBlocked } : c
     ));
   };
@@ -309,7 +311,7 @@ export function EmployeeDashboard() {
             <p className="text-xs text-gray-600 mt-1">Підтверджені замовлення</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Замовлення в обробці</CardTitle>
@@ -320,7 +322,7 @@ export function EmployeeDashboard() {
             <p className="text-xs text-gray-600 mt-1">Очікують підтвердження</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Мало на складі</CardTitle>
@@ -331,7 +333,7 @@ export function EmployeeDashboard() {
             <p className="text-xs text-gray-600 mt-1">Книг {'<'} 10 шт</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Активні клієнти</CardTitle>
@@ -504,9 +506,9 @@ export function EmployeeDashboard() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Всі книги</SelectItem>
-                      <SelectItem value="in-stock">В наявності</SelectItem>
+                      <SelectItem value="in-stock">{t('stockStatus.inStock')}</SelectItem>
                       <SelectItem value="low-stock">Мало ({"<"}10)</SelectItem>
-                      <SelectItem value="out-of-stock">Немає в наявності</SelectItem>
+                      <SelectItem value="out-of-stock">{t('stockStatus.outOfStock')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -539,7 +541,7 @@ export function EmployeeDashboard() {
                     <TableHead>Автор</TableHead>
                     <TableHead>Категорія</TableHead>
                     <TableHead className="text-right">Ціна</TableHead>
-                    <TableHead className="text-center">Наявність</TableHead>
+                    <TableHead className="text-center">{t('stockStatus.availability')}</TableHead>
                     <TableHead className="text-right">Дії</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -647,7 +649,7 @@ export function EmployeeDashboard() {
         {/* Orders Tab */}
         <TabsContent value="orders" className="space-y-4">
           <h2 className="text-xl font-semibold">Управління замовленнями</h2>
-          
+
           {/* Orders Filters */}
           <Card>
             <CardHeader>
@@ -724,7 +726,7 @@ export function EmployeeDashboard() {
               </div>
             </CardContent>
           </Card>
-          
+
           <div className="space-y-4">
             {filteredOrders.length === 0 ? (
               <Card>
@@ -734,87 +736,87 @@ export function EmployeeDashboard() {
               </Card>
             ) : (
               filteredOrders.map(order => (
-              <Card key={order.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        Замовлення #{order.id}
-                        <Badge variant={
-                          order.status === 'confirmed' ? 'default' : 
-                          order.status === 'cancelled' ? 'destructive' : 
-                          'secondary'
-                        }>
-                          {order.status === 'pending' ? 'В обробці' : 
-                           order.status === 'cancelled' ? 'Скасовано' : 
-                           'Підтверджено'}
-                        </Badge>
-                      </CardTitle>
-                      <CardDescription>
-                        Клієнт: {order.customerEmail}<br />
-                        {formatDate(order.createdAt)}
-                      </CardDescription>
+                <Card key={order.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          Замовлення #{order.id}
+                          <Badge variant={
+                            order.status === 'confirmed' ? 'default' :
+                              order.status === 'cancelled' ? 'destructive' :
+                                'secondary'
+                          }>
+                            {order.status === 'pending' ? 'В обробці' :
+                              order.status === 'cancelled' ? 'Скасовано' :
+                                'Підтверджено'}
+                          </Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Клієнт: {order.customerEmail}<br />
+                          {formatDate(order.createdAt)}
+                        </CardDescription>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-semibold">{order.totalPrice} ₴</p>
+                        {order.status === 'pending' && (
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleConfirmOrder(order.id)}
+                            >
+                              <CheckCircle className="size-4 mr-2" />
+                              Підтвердити
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleCancelOrder(order.id)}
+                            >
+                              <X className="size-4 mr-2" />
+                              Скасувати
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-semibold">{order.totalPrice} ₴</p>
-                      {order.status === 'pending' && (
-                        <div className="flex gap-2 mt-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleConfirmOrder(order.id)}
-                          >
-                            <CheckCircle className="size-4 mr-2" />
-                            Підтвердити
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleCancelOrder(order.id)}
-                          >
-                            <X className="size-4 mr-2" />
-                            Скасувати
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Книга</TableHead>
-                        <TableHead className="text-center">Кількість</TableHead>
-                        <TableHead className="text-right">Ціна</TableHead>
-                        <TableHead className="text-right">Підсумок</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {order.items.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{item.bookName}</TableCell>
-                          <TableCell className="text-center">{item.quantity}</TableCell>
-                          <TableCell className="text-right">{item.price} ₴</TableCell>
-                          <TableCell className="text-right">{item.quantity * item.price} ₴</TableCell>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Книга</TableHead>
+                          <TableHead className="text-center">Кількість</TableHead>
+                          <TableHead className="text-right">Ціна</TableHead>
+                          <TableHead className="text-right">Підсумок</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  {order.employeeEmail && (
-                    <p className="text-sm text-gray-600 mt-4">
-                      Опрацьовано: {order.employeeEmail}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )))}
+                      </TableHeader>
+                      <TableBody>
+                        {order.items.map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{item.bookName}</TableCell>
+                            <TableCell className="text-center">{item.quantity}</TableCell>
+                            <TableCell className="text-right">{item.price} ₴</TableCell>
+                            <TableCell className="text-right">{item.quantity * item.price} ₴</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {order.employeeEmail && (
+                      <p className="text-sm text-gray-600 mt-4">
+                        Опрацьовано: {order.employeeEmail}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )))}
           </div>
         </TabsContent>
 
         {/* Clients Tab */}
         <TabsContent value="clients" className="space-y-4">
           <h2 className="text-xl font-semibold">Управління клієнтами</h2>
-          
+
           {/* Clients Filters */}
           <Card>
             <CardHeader>
@@ -874,7 +876,7 @@ export function EmployeeDashboard() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-0">
               <Table>

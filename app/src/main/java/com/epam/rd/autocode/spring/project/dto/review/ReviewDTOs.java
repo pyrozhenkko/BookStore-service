@@ -20,6 +20,7 @@ public class ReviewDTOs {
     @AllArgsConstructor
     public static class CommentRequest {
         private String comment;
+        private Integer rating; // 1-5, може бути null
     }
 
     @Data

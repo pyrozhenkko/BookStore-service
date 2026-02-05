@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 public interface OrderService {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    Page<OrderDTO> searchOrders(String clientEmail, String city, BigDecimal minPrice, BigDecimal maxPrice, LocalDateTime dateFrom, Pageable pageable);
+    Page<OrderDTO> searchOrders(String clientEmail, String city, BigDecimal minPrice, BigDecimal maxPrice,
+            LocalDateTime dateFrom, Pageable pageable);
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE') or authentication.name == #clientEmail")
     Page<OrderDTO> getOrdersByClient(String clientEmail, Pageable pageable);
@@ -21,4 +22,10 @@ public interface OrderService {
 
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
     OrderDTO addOrder(OrderDTO order);
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    OrderDTO confirmOrder(Long id);
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    OrderDTO cancelOrder(Long id);
 }

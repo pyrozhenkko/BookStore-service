@@ -8,6 +8,7 @@ import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -16,6 +17,7 @@ interface BookCatalogProps {
 }
 
 export function BookCatalog({ onViewDetails }: BookCatalogProps) {
+  const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
@@ -38,7 +40,7 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [language]); // Refetch when language changes
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(allBooks.map((book) => book.category)));
@@ -87,19 +89,19 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold mb-2">Каталог книжок</h1>
-        <p className="text-gray-600">Знайдіть свою наступну улюблену книгу</p>
+        <h1 className="text-3xl font-semibold mb-2">{t('catalog.title')}</h1>
+        <p className="text-gray-600">{t('catalog.search')}</p>
       </div>
 
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white rounded-lg border">
         <div className="space-y-2">
-          <Label htmlFor="search">Пошук</Label>
+          <Label htmlFor="search">{t('common.search')}</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
             <Input
               id="search"
-              placeholder="Назва, автор, опис..."
+              placeholder={t('catalog.search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -108,13 +110,13 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="category">Категорія</Label>
+          <Label htmlFor="category">{t('book.category')}</Label>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger id="category">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Всі категорії</SelectItem>
+              <SelectItem value="all">{t('catalog.allCategories')}</SelectItem>
               {categories.filter(cat => cat !== 'all').map(category => (
                 <SelectItem key={category} value={category}>
                   {category}
@@ -125,16 +127,16 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="sort">Сортування</Label>
+          <Label htmlFor="sort">{t('catalog.sortBy')}</Label>
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger id="sort">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="name">За назвою</SelectItem>
-              <SelectItem value="author">За автором</SelectItem>
-              <SelectItem value="price-asc">Ціна: за зростанням</SelectItem>
-              <SelectItem value="price-desc">Ціна: за спаданням</SelectItem>
+              <SelectItem value="name">{t('catalog.nameAsc')}</SelectItem>
+              <SelectItem value="author">{t('book.author')}</SelectItem>
+              <SelectItem value="price-asc">{t('catalog.priceAsc')}</SelectItem>
+              <SelectItem value="price-desc">{t('catalog.priceDesc')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -144,23 +146,23 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
       <div>
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-gray-600">
-            Показано {paginatedBooks.length} з {filteredAndSortedBooks.length} книг
+            {paginatedBooks.length} {t('common.of')} {filteredAndSortedBooks.length}
           </p>
           {totalPages > 1 && (
             <div className="text-sm text-gray-600">
-              Сторінка {currentPage} з {totalPages}
+              {t('book.page')} {currentPage} {t('book.of')} {totalPages}
             </div>
           )}
         </div>
-        
+
         {loading ? (
           <div className="text-center py-12 text-gray-500">
-            <p className="text-lg">Завантаження...</p>
+            <p className="text-lg">{t('common.loading')}</p>
           </div>
         ) : paginatedBooks.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
-            <p className="text-lg">Нічого не знайдено</p>
-            <p className="text-sm mt-2">Спробуйте змінити фільтри пошуку</p>
+            <p className="text-lg">{t('catalog.noBooksFound')}</p>
+            <p className="text-sm mt-2">{t('catalog.tryDifferentSearch')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -185,7 +187,7 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
             disabled={currentPage === 1}
           >
             <ChevronLeft className="size-4 mr-1" />
-            Назад
+            {t('book.previousPage')}
           </Button>
           <div className="flex items-center gap-1">
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -218,7 +220,7 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
           >
-            Вперед
+            {t('book.nextPage')}
             <ChevronRight className="size-4 ml-1" />
           </Button>
         </div>

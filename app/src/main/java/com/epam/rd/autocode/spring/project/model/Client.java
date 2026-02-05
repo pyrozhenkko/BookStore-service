@@ -19,11 +19,20 @@ public class Client extends User {
     @Column(name = "balance")
     private BigDecimal balance;
 
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "registered_date")
+    private java.time.LocalDate registeredDate = java.time.LocalDate.now();
+
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<FavoriteItem> favorites = new HashSet<>();
 
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
+    private java.util.List<Order> orders = new java.util.ArrayList<>();
+
     public Client(Long id, String name, String email, String password, BigDecimal balance) {
-        super(id, email, password, name);
+        super(id, email, password, name, false);
         this.balance = balance;
     }
 }

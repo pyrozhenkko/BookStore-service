@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { Employee } from '../types';
 import { employeeService } from '../services/employeeService';
 import { Button } from './ui/button';
@@ -15,6 +16,7 @@ import { Badge } from './ui/badge';
 const ITEMS_PER_PAGE = 10;
 
 export function EmployeesPage() {
+  const { t } = useLanguage();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -42,7 +44,7 @@ export function EmployeesPage() {
       const data = await employeeService.getAllEmployees();
       setEmployees(data);
     } catch (error) {
-      toast.error('Помилка завантаження працівників');
+      toast.error(t('employees.toasts.loadError'));
     } finally {
       setLoading(false);
     }
@@ -71,7 +73,7 @@ export function EmployeesPage() {
     // Сортування
     result.sort((a, b) => {
       let compareValue = 0;
-      
+
       switch (sortBy) {
         case 'name':
           compareValue = a.name.localeCompare(b.name);
@@ -86,7 +88,7 @@ export function EmployeesPage() {
           compareValue = new Date(a.hiredDate).getTime() - new Date(b.hiredDate).getTime();
           break;
       }
-      
+
       return sortOrder === 'asc' ? compareValue : -compareValue;
     });
 
@@ -131,7 +133,7 @@ export function EmployeesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingEmployee) {
         await employeeService.updateEmployee(editingEmployee.id, {
@@ -139,47 +141,47 @@ export function EmployeesPage() {
           id: editingEmployee.id,
           isActive: editingEmployee.isActive,
         });
-        toast.success('Працівника оновлено');
+        toast.success(t('employees.toasts.updateSuccess'));
       } else {
         await employeeService.createEmployee({
           ...formData,
           isActive: true,
         });
-        toast.success('Працівника додано');
+        toast.success(t('employees.toasts.createSuccess'));
       }
-      
+
       setIsDialogOpen(false);
       loadEmployees();
     } catch (error) {
-      toast.error('Помилка збереження працівника');
+      toast.error(t('employees.toasts.saveError'));
     }
   };
 
   const handleTerminate = async (employee: Employee) => {
-    if (!confirm(`Ви впевнені, що хочете звільнити ${employee.name}?`)) {
+    if (!confirm(t('employees.actions.terminateConfirm', { name: employee.name }))) {
       return;
     }
 
     try {
       await employeeService.terminateEmployee(employee.id);
-      toast.success('Працівника звільнено');
+      toast.success(t('employees.toasts.terminateSuccess'));
       loadEmployees();
     } catch (error) {
-      toast.error('Помилка звільнення працівника');
+      toast.error(t('employees.toasts.terminateError'));
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('uk-UA');
+    return new Date(dateString).toLocaleDateString(t('language.currrent') === 'English' ? 'en-US' : 'uk-UA');
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Керування персоналом</h1>
+        <h1 className="text-3xl font-bold">{t('employees.title')}</h1>
         <Button onClick={handleAdd}>
           <Plus className="size-4 mr-2" />
-          Додати працівника
+          {t('employees.addEmployee')}
         </Button>
       </div>
 
@@ -190,7 +192,7 @@ export function EmployeesPage() {
             <div className="md:col-span-2 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
               <Input
-                placeholder="Пошук за ім'ям, email або посадою..."
+                placeholder={t('employees.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -198,12 +200,12 @@ export function EmployeesPage() {
             </div>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
               <SelectTrigger>
-                <SelectValue placeholder="Статус" />
+                <SelectValue placeholder={t('employees.status.placeholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Всі статуси</SelectItem>
-                <SelectItem value="active">Активні</SelectItem>
-                <SelectItem value="inactive">Звільнені</SelectItem>
+                <SelectItem value="all">{t('employees.status.all')}</SelectItem>
+                <SelectItem value="active">{t('employees.status.active')}</SelectItem>
+                <SelectItem value="inactive">{t('employees.status.inactive')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={`${sortBy}-${sortOrder}`} onValueChange={(v) => {
@@ -212,17 +214,17 @@ export function EmployeesPage() {
               setSortOrder(order as any);
             }}>
               <SelectTrigger>
-                <SelectValue placeholder="Сортування" />
+                <SelectValue placeholder={t('employees.sort.placeholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="name-asc">Ім'я (А-Я)</SelectItem>
-                <SelectItem value="name-desc">Ім'я (Я-А)</SelectItem>
-                <SelectItem value="email-asc">Email (А-Я)</SelectItem>
-                <SelectItem value="email-desc">Email (Я-А)</SelectItem>
-                <SelectItem value="position-asc">Посада (А-Я)</SelectItem>
-                <SelectItem value="position-desc">Посада (Я-А)</SelectItem>
-                <SelectItem value="hiredDate-asc">Дата прийому (стара-нова)</SelectItem>
-                <SelectItem value="hiredDate-desc">Дата прийому (нова-стара)</SelectItem>
+                <SelectItem value="name-asc">{t('employees.sort.nameAsc')}</SelectItem>
+                <SelectItem value="name-desc">{t('employees.sort.nameDesc')}</SelectItem>
+                <SelectItem value="email-asc">{t('employees.sort.emailAsc')}</SelectItem>
+                <SelectItem value="email-desc">{t('employees.sort.emailDesc')}</SelectItem>
+                <SelectItem value="position-asc">{t('employees.sort.positionAsc')}</SelectItem>
+                <SelectItem value="position-desc">{t('employees.sort.positionDesc')}</SelectItem>
+                <SelectItem value="hiredDate-asc">{t('employees.sort.hiredDateAsc')}</SelectItem>
+                <SelectItem value="hiredDate-desc">{t('employees.sort.hiredDateDesc')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -232,30 +234,30 @@ export function EmployeesPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Список працівників</CardTitle>
+            <CardTitle>{t('employees.listTitle')}</CardTitle>
             <div className="text-sm text-gray-600">
-              Показано {paginatedEmployees.length} з {filteredAndSortedEmployees.length}
+              {t('employees.showing', { current: paginatedEmployees.length, total: filteredAndSortedEmployees.length })}
             </div>
           </div>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">Завантаження...</div>
+            <div className="text-center py-8">{t('common.loading')}</div>
           ) : filteredAndSortedEmployees.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              {searchQuery || statusFilter !== 'all' ? 'Нічого не знайдено' : 'Немає працівників'}
+              {searchQuery || statusFilter !== 'all' ? t('employees.notFound') : t('employees.noEmployees')}
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ім'я</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Посада</TableHead>
-                  <TableHead>Телефон</TableHead>
-                  <TableHead>Дата прийому</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead className="text-right">Дії</TableHead>
+                  <TableHead>{t('employees.table.name')}</TableHead>
+                  <TableHead>{t('employees.table.email')}</TableHead>
+                  <TableHead>{t('employees.table.position')}</TableHead>
+                  <TableHead>{t('employees.table.phone')}</TableHead>
+                  <TableHead>{t('employees.table.hiredDate')}</TableHead>
+                  <TableHead>{t('employees.table.status')}</TableHead>
+                  <TableHead className="text-right">{t('employees.table.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -270,12 +272,12 @@ export function EmployeesPage() {
                       {employee.isActive ? (
                         <Badge variant="default" className="bg-green-500">
                           <UserCheck className="size-3 mr-1" />
-                          Активний
+                          {t('employees.badges.active')}
                         </Badge>
                       ) : (
                         <Badge variant="secondary">
                           <UserX className="size-3 mr-1" />
-                          Звільнений
+                          {t('employees.badges.terminated')}
                         </Badge>
                       )}
                     </TableCell>
@@ -295,7 +297,7 @@ export function EmployeesPage() {
                             size="icon"
                             onClick={() => handleTerminate(employee)}
                             className="text-red-600 hover:text-red-700"
-                            title="Звільнити"
+                            title={t('employees.actions.terminate')}
                           >
                             <Trash2 className="size-4" />
                           </Button>
@@ -314,7 +316,7 @@ export function EmployeesPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            Сторінка {currentPage} з {totalPages}
+            {t('book.page')} {currentPage} {t('book.of')} {totalPages}
           </div>
           <div className="flex gap-2">
             <Button
@@ -324,7 +326,7 @@ export function EmployeesPage() {
               disabled={currentPage === 1}
             >
               <ChevronLeft className="size-4 mr-1" />
-              Назад
+              {t('book.previousPage')}
             </Button>
             <Button
               variant="outline"
@@ -332,7 +334,7 @@ export function EmployeesPage() {
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
-              Вперед
+              {t('book.nextPage')}
               <ChevronRight className="size-4 ml-1" />
             </Button>
           </div>
@@ -343,12 +345,12 @@ export function EmployeesPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingEmployee ? 'Редагувати працівника' : 'Додати працівника'}
+              {editingEmployee ? t('employees.form.editTitle') : t('employees.form.addTitle')}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Ім'я *</Label>
+              <Label htmlFor="name">{t('employees.form.name')} *</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -357,7 +359,7 @@ export function EmployeesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{t('employees.form.email')} *</Label>
               <Input
                 id="email"
                 type="email"
@@ -367,7 +369,7 @@ export function EmployeesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="position">Посада *</Label>
+              <Label htmlFor="position">{t('employees.form.position')} *</Label>
               <Input
                 id="position"
                 value={formData.position}
@@ -376,7 +378,7 @@ export function EmployeesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Телефон</Label>
+              <Label htmlFor="phone">{t('employees.form.phone')}</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -385,7 +387,7 @@ export function EmployeesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="hiredDate">Дата прийому *</Label>
+              <Label htmlFor="hiredDate">{t('employees.form.hiredDate')} *</Label>
               <Input
                 id="hiredDate"
                 type="date"
@@ -396,10 +398,10 @@ export function EmployeesPage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Скасувати
+                {t('employees.form.cancel')}
               </Button>
               <Button type="submit">
-                {editingEmployee ? 'Зберегти' : 'Додати'}
+                {editingEmployee ? t('employees.form.save') : t('employees.form.add')}
               </Button>
             </DialogFooter>
           </form>

@@ -1,0 +1,481 @@
+{
+    "header": {
+        "catalog": "Catalog",
+        "employees": "Employees",
+        "books": "Books",
+        "orders": "Orders",
+        "clients": "Clients",
+        "logs": "Logs",
+        "myOrders": "My Orders",
+        "favorites": "Favorites",
+        "login": "Login",
+        "logout": "Logout",
+        "profile": "Cabinet"
+    },
+    "auth": {
+        "login": "Login",
+        "register": "Register",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "name": "Name",
+        "phone": "Phone",
+        "loginButton": "Sign In",
+        "registerButton": "Sign Up",
+        "noAccount": "Don't have an account?",
+        "hasAccount": "Already have an account?",
+        "forgotPassword": "Forgot password?",
+        "orContinueWith": "Or continue with",
+        "google": "Google",
+        "resetPassword": "Reset Password",
+        "sendResetLink": "Send Reset Link",
+        "backToLogin": "Back to Login",
+        "newPassword": "New Password",
+        "resetSuccess": "Password changed successfully",
+        "emailRequired": "Email is required",
+        "passwordRequired": "Password is required",
+        "invalidEmail": "Invalid email format",
+        "passwordMinLength": "Password must be at least 6 characters",
+        "passwordsNotMatch": "Passwords do not match",
+        "loginTitle": "Login to BookStore",
+        "loginDescription": "Enter your credentials to access the system",
+        "loggingIn": "Signing in...",
+        "googleLogin": "Sign in with Google",
+        "invalidCredentials": "Invalid email or password",
+        "loginError": "Login error"
+    },
+    "catalog": {
+        "title": "Book Catalog",
+        "search": "Search books...",
+        "allCategories": "All Categories",
+        "sortBy": "Sort by",
+        "priceAsc": "Price: Low to High",
+        "priceDesc": "Price: High to Low",
+        "nameAsc": "Name: A-Z",
+        "nameDesc": "Name: Z-A",
+        "newest": "Newest",
+        "noBooksFound": "No books found",
+        "tryDifferentSearch": "Try a different search query",
+        "loading": "Loading..."
+    },
+    "book": {
+        "addToCart": "Add to Cart",
+        "toCart": "To Cart",
+        "inCart": "In Cart",
+        "inStock": "In Stock",
+        "outOfStock": "Out of Stock",
+        "quantity": "Quantity",
+        "price": "Price",
+        "author": "Author",
+        "category": "Category",
+        "isbn": "ISBN",
+        "publishedYear": "Published Year",
+        "description": "Description",
+        "backToCatalog": "Back to Catalog",
+        "reviews": "Reviews",
+        "addReview": "Add Review",
+        "yourRating": "Your Rating",
+        "writeReview": "Write your review...",
+        "submitReview": "Submit",
+        "noReviews": "No reviews yet",
+        "verifiedPurchase": "Verified Purchase",
+        "reviewAdded": "Review added successfully!",
+        "reviewError": "Failed to add review",
+        "addedToCart": "added to cart",
+        "previousPage": "Previous",
+        "nextPage": "Next",
+        "page": "Page",
+        "of": "of"
+    },
+    "cart": {
+        "title": "Shopping Cart",
+        "empty": "Your cart is empty",
+        "continueShopping": "Continue Shopping",
+        "remove": "Remove",
+        "total": "Total",
+        "checkout": "Checkout",
+        "item": "item",
+        "items": "items",
+        "clearCart": "Clear Cart"
+    },
+    "checkout": {
+        "title": "Checkout",
+        "delivery": "Delivery",
+        "payment": "Payment",
+        "confirmation": "Confirmation",
+        "deliveryAddress": "Delivery Address",
+        "city": "City",
+        "warehouse": "Warehouse",
+        "selectCity": "Select city",
+        "selectWarehouse": "Select warehouse",
+        "searchCity": "Search city...",
+        "paymentMethod": "Payment Method",
+        "cardPayment": "Card Payment",
+        "cashOnDelivery": "Cash on Delivery",
+        "orderSummary": "Order Summary",
+        "placeOrder": "Place Order",
+        "back": "Back",
+        "next": "Next",
+        "orderSuccess": "Order placed successfully!",
+        "orderError": "Error placing order",
+        "processing": "Processing..."
+    },
+    "orders": {
+        "title": "My Orders",
+        "orderNumber": "Order #",
+        "date": "Date",
+        "status": "Status",
+        "total": "Total",
+        "details": "Details",
+        "noOrders": "You have no orders yet",
+        "startShopping": "Start Shopping",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled",
+        "payNow": "Pay Now",
+        "cancel": "Cancel"
+    },
+    "favorites": {
+        "title": "Favorites",
+        "empty": "You have no favorites yet",
+        "browseCatalog": "Browse Catalog",
+        "remove": "Remove from Favorites"
+    },
+    "admin": {
+        "dashboard": "Dashboard",
+        "addBook": "Add Book",
+        "editBook": "Edit Book",
+        "deleteBook": "Delete Book",
+        "addEmployee": "Add Employee",
+        "editEmployee": "Edit Employee",
+        "deleteEmployee": "Delete Employee",
+        "blockClient": "Block",
+        "unblockClient": "Unblock",
+        "confirmOrder": "Confirm",
+        "cancelOrder": "Cancel",
+        "search": "Search...",
+        "noResults": "No results found",
+        "actions": "Actions",
+        "created": "Created",
+        "updated": "Updated",
+        "deleted": "Deleted",
+        "blocked": "Blocked",
+        "active": "Active",
+        "position": "Position",
+        "salary": "Salary"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "save": "Save",
+        "delete": "Delete",
+        "edit": "Edit",
+        "close": "Close",
+        "yes": "Yes",
+        "no": "No",
+        "or": "or",
+        "and": "and",
+        "from": "from",
+        "to": "to",
+        "all": "All",
+        "currency": "$",
+        "search": "Search",
+        "of": "of",
+        "details": "Details"
+    },
+    "stockStatus": {
+        "inStock": "In Stock",
+        "inStockWithCount": "In Stock: {{count}}",
+        "outOfStock": "Out of Stock",
+        "availability": "Availability"
+    },
+    "footer": {
+        "copyright": "© {{year}} BookStore. All rights reserved.",
+        "privacyPolicy": "Privacy Policy",
+        "terms": "Terms of Service"
+    },
+    "language": {
+        "uk": "Українська",
+        "en": "English"
+    },
+    "manageBooks": {
+        "title": "Manage Books",
+        "addBook": "Add Book",
+        "searchPlaceholder": "Search by name, author, or ISBN...",
+        "categories": {
+            "placeholder": "Category",
+            "all": "All Categories"
+        },
+        "stock": {
+            "placeholder": "Stock Status",
+            "all": "All Books",
+            "inStock": "In Stock",
+            "lowStock": "Low Stock",
+            "outOfStock": "Out of Stock"
+        },
+        "sort": {
+            "placeholder": "Sort By",
+            "nameAsc": "Name (A-Z)",
+            "nameDesc": "Name (Z-A)",
+            "authorAsc": "Author (A-Z)",
+            "authorDesc": "Author (Z-A)",
+            "priceAsc": "Price (Low to High)",
+            "priceDesc": "Price (High to Low)",
+            "stockAsc": "Stock (Low to High)",
+            "stockDesc": "Stock (High to Low)"
+        },
+        "bookList": "Books List",
+        "showing": "Showing {{current}} of {{total}}",
+        "notFound": "No books found",
+        "noBooks": "No books",
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
+        "form": {
+            "editTitle": "Edit Book",
+            "addTitle": "Add Book",
+            "name": "Name",
+            "author": "Author",
+            "description": "Description",
+            "price": "Price",
+            "stock": "Stock Quantity",
+            "category": "Category",
+            "year": "Published Year",
+            "isbn": "ISBN",
+            "imageUrl": "Image URL",
+            "cancel": "Cancel",
+            "save": "Save",
+            "add": "Add"
+        },
+        "toasts": {
+            "loadError": "Error loading books",
+            "updateSuccess": "Book updated",
+            "createSuccess": "Book created",
+            "saveError": "Error saving book",
+            "deleteSuccess": "Book deleted",
+            "deleteError": "Error deleting book"
+        }
+    },
+    "allOrders": {
+        "title": "All Orders",
+        "searchPlaceholder": "Search by ID, client, or book...",
+        "status": {
+            "placeholder": "Status",
+            "all": "All Statuses",
+            "pending": "Pending",
+            "confirmed": "Confirmed",
+            "cancelled": "Cancelled"
+        },
+        "sort": {
+            "placeholder": "Sort By",
+            "dateDesc": "Date (Newest First)",
+            "dateAsc": "Date (Oldest First)",
+            "priceDesc": "Total (High to Low)",
+            "priceAsc": "Total (Low to High)",
+            "customerAsc": "Client (A-Z)",
+            "customerDesc": "Client (Z-A)"
+        },
+        "globalList": "Global Order List",
+        "showing": "Showing {{current}} of {{total}}",
+        "notFound": "No orders found",
+        "noOrders": "No orders",
+        "confirmPrompt": "Confirm this order?",
+        "cancelPrompt": "Cancel this order?",
+        "fields": {
+            "orderId": "Order #{{id}}",
+            "client": "Client",
+            "email": "Email",
+            "phone": "Phone",
+            "date": "Date",
+            "status": "Status",
+            "items": "Items",
+            "total": "Total",
+            "delivery": "Delivery",
+            "transactionId": "Transaction ID"
+        },
+        "actions": {
+            "confirm": "Confirm",
+            "cancel": "Cancel"
+        },
+        "toasts": {
+            "loadError": "Error loading orders",
+            "confirmSuccess": "Order confirmed",
+            "confirmError": "Error confirming order",
+            "cancelSuccess": "Order cancelled",
+            "cancelError": "Error cancelling order"
+        }
+    },
+    "employees": {
+        "title": "Staff Management",
+        "addEmployee": "Add Employee",
+        "searchPlaceholder": "Search by name, email, or position...",
+        "status": {
+            "placeholder": "Status",
+            "all": "All Statuses",
+            "active": "Active",
+            "inactive": "Terminated"
+        },
+        "sort": {
+            "placeholder": "Sort By",
+            "nameAsc": "Name (A-Z)",
+            "nameDesc": "Name (Z-A)",
+            "emailAsc": "Email (A-Z)",
+            "emailDesc": "Email (Z-A)",
+            "positionAsc": "Position (A-Z)",
+            "positionDesc": "Position (Z-A)",
+            "hiredDateAsc": "Hired Date (Oldest First)",
+            "hiredDateDesc": "Hired Date (Newest First)"
+        },
+        "listTitle": "Employees List",
+        "showing": "Showing {{current}} of {{total}}",
+        "notFound": "No employees found",
+        "noEmployees": "No employees",
+        "table": {
+            "name": "Name",
+            "email": "Email",
+            "position": "Position",
+            "phone": "Phone",
+            "hiredDate": "Hired Date",
+            "status": "Status",
+            "actions": "Actions"
+        },
+        "badges": {
+            "active": "Active",
+            "terminated": "Terminated"
+        },
+        "actions": {
+            "edit": "Edit",
+            "terminate": "Terminate",
+            "terminateConfirm": "Are you sure you want to terminate {{name}}?"
+        },
+        "form": {
+            "editTitle": "Edit Employee",
+            "addTitle": "Add Employee",
+            "name": "Name",
+            "email": "Email",
+            "position": "Position",
+            "phone": "Phone",
+            "hiredDate": "Hired Date",
+            "cancel": "Cancel",
+            "save": "Save",
+            "add": "Add"
+        },
+        "toasts": {
+            "loadError": "Error loading employees",
+            "updateSuccess": "Employee updated",
+            "createSuccess": "Employee added",
+            "saveError": "Error saving employee",
+            "terminateSuccess": "Employee terminated",
+            "terminateError": "Error terminating employee"
+        }
+    },
+    "clients": {
+        "title": "Clients",
+        "searchPlaceholder": "Search by name or email...",
+        "status": {
+            "placeholder": "Status",
+            "all": "All Statuses",
+            "active": "Active",
+            "blocked": "Blocked"
+        },
+        "sort": {
+            "placeholder": "Sort By",
+            "nameAsc": "Name (A-Z)",
+            "nameDesc": "Name (Z-A)",
+            "emailAsc": "Email (A-Z)",
+            "emailDesc": "Email (Z-A)",
+            "ordersDesc": "Orders (High to Low)",
+            "ordersAsc": "Orders (Low to High)",
+            "dateAsc": "Registered (Oldest First)",
+            "dateDesc": "Registered (Newest First)"
+        },
+        "listTitle": "Clients List",
+        "showing": "Showing {{current}} of {{total}}",
+        "notFound": "No clients found",
+        "noClients": "No clients",
+        "table": {
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone",
+            "registeredDate": "Registered Date",
+            "orders": "Orders",
+            "status": "Status",
+            "actions": "Actions"
+        },
+        "badges": {
+            "blocked": "Blocked",
+            "active": "Active"
+        },
+        "actions": {
+            "block": "Block",
+            "unblock": "Unblock",
+            "confirmBlock": "Are you sure you want to block {{name}}?",
+            "confirmUnblock": "Are you sure you want to unblock {{name}}?"
+        },
+        "toasts": {
+            "loadError": "Error loading clients",
+            "blockSuccess": "Client blocked",
+            "unblockSuccess": "Client unblocked",
+            "actionError": "Error: failed to update client status"
+        }
+    },
+    "profile": {
+        "title": "User Profile",
+        "description": "Manage your account and personal information",
+        "personalInfo": {
+            "title": "Personal Information",
+            "description": "Update your personal details",
+            "name": "Name",
+            "email": "Email",
+            "save": "Save Changes",
+            "saved": "✓ Changes saved successfully!"
+        },
+        "cashback": {
+            "title": "Cashback",
+            "description": "Your current cashback balance"
+        },
+        "accountInfo": {
+            "title": "Account Information",
+            "role": "Role",
+            "roles": {
+                "employee": "Employee",
+                "customer": "Customer",
+                "admin": "Admin"
+            },
+            "status": "Status",
+            "statuses": {
+                "blocked": "Blocked",
+                "active": "Active"
+            },
+            "accountEmail": "Account Email"
+        },
+        "dangerZone": {
+            "title": "Danger Zone",
+            "description": "Deleting account is permanent",
+            "deleteBtn": "Delete my account",
+            "confirmTitle": "Are you sure?",
+            "confirmText": "This action cannot be undone. This will permanently delete your account and all associated data from our servers.",
+            "cancel": "Cancel",
+            "confirm": "Yes, delete account"
+        },
+        "permissions": {
+            "title": "Permissions & Capabilities",
+            "viewCatalog": "View book catalog",
+            "addToCart": "Add books to cart",
+            "checkout": "Place orders",
+            "viewHistory": "View order history",
+            "editProfile": "Edit personal information",
+            "deleteAccount": "Delete own account",
+            "manageBooks": "Add, edit, and delete books",
+            "confirmOrders": "Confirm client orders",
+            "viewAllOrders": "View all orders",
+            "manageClients": "Block/unblock clients",
+            "viewAllClients": "View all clients list"
+        }
+    }
+}

@@ -24,10 +24,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BookController {
 
-
     private final BookServiceImpl bookService;
     private final FileStorageService fileStorageService;
-
 
     @GetMapping("/search")
     public ResponseEntity<Page<BookDTO>> searchBooks(
@@ -35,18 +33,22 @@ public class BookController {
             @RequestParam(required = false) String genre,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
-            @PageableDefault(sort = "id", direction = Sort.Direction.DESC, size = 10) Pageable pageable) {
-        return ResponseEntity.ok(bookService.searchBooks(keyword, genre, minPrice, maxPrice, pageable));
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC, size = 10) Pageable pageable,
+            @RequestHeader(value = "Accept-Language", defaultValue = "uk") String locale) {
+        return ResponseEntity.ok(bookService.searchBooks(keyword, genre, minPrice, maxPrice, pageable, locale));
     }
 
     @GetMapping
-    public ResponseEntity<List<BookDTO>> getAllBooks() {
-        return ResponseEntity.ok(bookService.getAllBooks());
+    public ResponseEntity<List<BookDTO>> getAllBooks(
+            @RequestHeader(value = "Accept-Language", defaultValue = "uk") String locale) {
+        return ResponseEntity.ok(bookService.getAllBooks(locale));
     }
 
     @GetMapping("/{name}")
-    public ResponseEntity<BookDTO> getBookByName(@PathVariable String name) {
-        return ResponseEntity.ok(bookService.getBookByName(name));
+    public ResponseEntity<BookDTO> getBookByName(
+            @PathVariable String name,
+            @RequestHeader(value = "Accept-Language", defaultValue = "uk") String locale) {
+        return ResponseEntity.ok(bookService.getBookByName(name, locale));
     }
 
     @GetMapping("/{name}/quantity")
@@ -56,10 +58,10 @@ public class BookController {
     }
 
     @GetMapping("/genres")
-    public ResponseEntity<List<String>> getAllGenres() {
-        return ResponseEntity.ok(bookService.getAllGenres());
+    public ResponseEntity<List<String>> getAllGenres(
+            @RequestHeader(value = "Accept-Language", defaultValue = "uk") String locale) {
+        return ResponseEntity.ok(bookService.getAllGenres(locale));
     }
-
 
     @PostMapping(value = "/{name}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
@@ -80,7 +82,6 @@ public class BookController {
 
         return ResponseEntity.ok(bookService.removeImageFromBook(name, imageUrl));
     }
-
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")

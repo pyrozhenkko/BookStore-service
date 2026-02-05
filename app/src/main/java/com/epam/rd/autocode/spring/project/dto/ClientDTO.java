@@ -10,8 +10,13 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClientDTO {
+    private Long id;
     private String email;
     private String password;
     private String name;
     private BigDecimal balance;
+    private String phone;
+    private java.time.LocalDate registeredDate;
+    private int totalOrders;
+    private boolean isBlocked;
 }

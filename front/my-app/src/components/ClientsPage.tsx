@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import type{ Client } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
+import type { Client } from '../types';
 import { clientService } from '../services/clientService';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -13,6 +14,7 @@ import { Badge } from './ui/badge';
 const ITEMS_PER_PAGE = 10;
 
 export function ClientsPage() {
+  const { t } = useLanguage();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,34 +33,37 @@ export function ClientsPage() {
       const data = await clientService.getAllClients();
       setClients(data);
     } catch (error) {
-      toast.error('Помилка завантаження клієнтів');
+      toast.error(t('clients.toasts.loadError'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleBlockToggle = async (client: Client) => {
-    const action = client.isBlocked ? 'розблокувати' : 'заблокувати';
-    if (!confirm(`Ви впевнені, що хочете ${action} ${client.name}?`)) {
+    const confirmMessage = client.isBlocked
+      ? t('clients.actions.confirmUnblock', { name: client.name })
+      : t('clients.actions.confirmBlock', { name: client.name });
+
+    if (!confirm(confirmMessage)) {
       return;
     }
 
     try {
       if (client.isBlocked) {
         await clientService.unblockClient(client.id);
-        toast.success('Клієнта розблоковано');
+        toast.success(t('clients.toasts.unblockSuccess'));
       } else {
         await clientService.blockClient(client.id);
-        toast.success('Клієнта заблоковано');
+        toast.success(t('clients.toasts.blockSuccess'));
       }
       loadClients();
     } catch (error) {
-      toast.error(`Помилка: не вдалося ${action} клієнта`);
+      toast.error(t('clients.toasts.actionError'));
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('uk-UA');
+    return new Date(dateString).toLocaleDateString(t('language.currrent') === 'English' ? 'en-US' : 'uk-UA');
   };
 
   // Фільтрація та сортування
@@ -83,7 +88,7 @@ export function ClientsPage() {
     // Сортування
     result.sort((a, b) => {
       let compareValue = 0;
-      
+
       switch (sortBy) {
         case 'name':
           compareValue = a.name.localeCompare(b.name);
@@ -98,7 +103,7 @@ export function ClientsPage() {
           compareValue = new Date(a.registeredDate).getTime() - new Date(b.registeredDate).getTime();
           break;
       }
-      
+
       return sortOrder === 'asc' ? compareValue : -compareValue;
     });
 
@@ -120,7 +125,7 @@ export function ClientsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Клієнти</h1>
+        <h1 className="text-3xl font-bold">{t('clients.title')}</h1>
       </div>
 
       {/* Пошук та фільтри */}
@@ -130,7 +135,7 @@ export function ClientsPage() {
             <div className="md:col-span-2 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
               <Input
-                placeholder="Пошук за ім'ям або email..."
+                placeholder={t('clients.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -138,12 +143,12 @@ export function ClientsPage() {
             </div>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
               <SelectTrigger>
-                <SelectValue placeholder="Статус" />
+                <SelectValue placeholder={t('clients.status.placeholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Всі статуси</SelectItem>
-                <SelectItem value="active">Активні</SelectItem>
-                <SelectItem value="blocked">Заблоковані</SelectItem>
+                <SelectItem value="all">{t('clients.status.all')}</SelectItem>
+                <SelectItem value="active">{t('clients.status.active')}</SelectItem>
+                <SelectItem value="blocked">{t('clients.status.blocked')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={`${sortBy}-${sortOrder}`} onValueChange={(v) => {
@@ -152,17 +157,17 @@ export function ClientsPage() {
               setSortOrder(order as any);
             }}>
               <SelectTrigger>
-                <SelectValue placeholder="Сортування" />
+                <SelectValue placeholder={t('clients.sort.placeholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="name-asc">Ім'я (А-Я)</SelectItem>
-                <SelectItem value="name-desc">Ім'я (Я-А)</SelectItem>
-                <SelectItem value="email-asc">Email (А-Я)</SelectItem>
-                <SelectItem value="email-desc">Email (Я-А)</SelectItem>
-                <SelectItem value="totalOrders-desc">Замовлень (більше-менше)</SelectItem>
-                <SelectItem value="totalOrders-asc">Замовлень (менше-більше)</SelectItem>
-                <SelectItem value="registeredDate-asc">Дата реєстрації (стара-нова)</SelectItem>
-                <SelectItem value="registeredDate-desc">Дата реєстрації (нова-стара)</SelectItem>
+                <SelectItem value="name-asc">{t('clients.sort.nameAsc')}</SelectItem>
+                <SelectItem value="name-desc">{t('clients.sort.nameDesc')}</SelectItem>
+                <SelectItem value="email-asc">{t('clients.sort.emailAsc')}</SelectItem>
+                <SelectItem value="email-desc">{t('clients.sort.emailDesc')}</SelectItem>
+                <SelectItem value="totalOrders-desc">{t('clients.sort.ordersDesc')}</SelectItem>
+                <SelectItem value="totalOrders-asc">{t('clients.sort.ordersAsc')}</SelectItem>
+                <SelectItem value="registeredDate-asc">{t('clients.sort.dateAsc')}</SelectItem>
+                <SelectItem value="registeredDate-desc">{t('clients.sort.dateDesc')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -172,30 +177,30 @@ export function ClientsPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Список клієнтів</CardTitle>
+            <CardTitle>{t('clients.listTitle')}</CardTitle>
             <div className="text-sm text-gray-600">
-              Показано {paginatedClients.length} з {filteredAndSortedClients.length}
+              {t('clients.showing', { current: paginatedClients.length, total: filteredAndSortedClients.length })}
             </div>
           </div>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">Завантаження...</div>
+            <div className="text-center py-8">{t('common.loading')}</div>
           ) : filteredAndSortedClients.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              {searchQuery || statusFilter !== 'all' ? 'Нічого не знайдено' : 'Немає клієнтів'}
+              {searchQuery || statusFilter !== 'all' ? t('clients.notFound') : t('clients.noClients')}
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ім'я</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Телефон</TableHead>
-                  <TableHead>Дата реєстрації</TableHead>
-                  <TableHead className="text-center">Замовлень</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead className="text-right">Дії</TableHead>
+                  <TableHead>{t('clients.table.name')}</TableHead>
+                  <TableHead>{t('clients.table.email')}</TableHead>
+                  <TableHead>{t('clients.table.phone')}</TableHead>
+                  <TableHead>{t('clients.table.registeredDate')}</TableHead>
+                  <TableHead className="text-center">{t('clients.table.orders')}</TableHead>
+                  <TableHead>{t('clients.table.status')}</TableHead>
+                  <TableHead className="text-right">{t('clients.table.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -210,12 +215,12 @@ export function ClientsPage() {
                       {client.isBlocked ? (
                         <Badge variant="destructive">
                           <Ban className="size-3 mr-1" />
-                          Заблокований
+                          {t('clients.badges.blocked')}
                         </Badge>
                       ) : (
                         <Badge variant="default" className="bg-green-500">
                           <ShieldCheck className="size-3 mr-1" />
-                          Активний
+                          {t('clients.badges.active')}
                         </Badge>
                       )}
                     </TableCell>
@@ -228,12 +233,12 @@ export function ClientsPage() {
                         {client.isBlocked ? (
                           <>
                             <ShieldCheck className="size-4 mr-2" />
-                            Розблокувати
+                            {t('clients.actions.unblock')}
                           </>
                         ) : (
                           <>
                             <Ban className="size-4 mr-2" />
-                            Заблокувати
+                            {t('clients.actions.block')}
                           </>
                         )}
                       </Button>
@@ -250,7 +255,7 @@ export function ClientsPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            Сторінка {currentPage} з {totalPages}
+            {t('book.page')} {currentPage} {t('book.of')} {totalPages}
           </div>
           <div className="flex gap-2">
             <Button
@@ -260,7 +265,7 @@ export function ClientsPage() {
               disabled={currentPage === 1}
             >
               <ChevronLeft className="size-4 mr-1" />
-              Назад
+              {t('book.previousPage')}
             </Button>
             <Button
               variant="outline"
@@ -268,7 +273,7 @@ export function ClientsPage() {
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
-              Вперед
+              {t('book.nextPage')}
               <ChevronRight className="size-4 ml-1" />
             </Button>
           </div>

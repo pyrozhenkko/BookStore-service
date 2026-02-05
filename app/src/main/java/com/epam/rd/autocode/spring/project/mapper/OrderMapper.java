@@ -9,14 +9,17 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
-        unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OrderMapper {
 
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "client.email", target = "clientEmail")
+    @Mapping(source = "client.name", target = "clientName")
+    @Mapping(source = "client.phone", target = "clientPhone")
     @Mapping(source = "employee.email", target = "employeeEmail")
     @Mapping(source = "orderDate", target = "orderDate")
     @Mapping(source = "price", target = "price")
+    @Mapping(source = "status", target = "status")
     @Mapping(source = "bookItems", target = "bookItems")
     @Mapping(source = "deliveryCity", target = "deliveryCity")
     @Mapping(source = "deliveryBranch", target = "deliveryBranch")
@@ -28,6 +31,7 @@ public interface OrderMapper {
     @Mapping(target = "bookItems", ignore = true)
     @Mapping(source = "orderDate", target = "orderDate")
     @Mapping(source = "price", target = "price")
+    @Mapping(source = "status", target = "status")
     @Mapping(source = "deliveryCity", target = "deliveryCity")
     @Mapping(source = "deliveryBranch", target = "deliveryBranch")
     Order toEntity(OrderDTO orderDTO);

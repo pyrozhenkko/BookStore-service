@@ -21,7 +21,6 @@ public class ClientController {
 
     private final ClientService clientService;
 
-
     @PostMapping("/favorites")
     public ResponseEntity<Void> addToFavorites(@RequestBody FavoriteRequest request) {
         clientService.addBookToFavorites(request);
@@ -38,7 +37,6 @@ public class ClientController {
     public ResponseEntity<List<FavoriteItemDTO>> getMyFavorites() {
         return ResponseEntity.ok(clientService.getMyFavorites());
     }
-
 
     @PostMapping
     public ResponseEntity<ClientDTO> registerClient(@RequestBody ClientDTO clientDTO) {
@@ -72,5 +70,17 @@ public class ClientController {
     public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
         clientService.deleteClientById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/block")
+    public ResponseEntity<Void> blockClient(@PathVariable Long id) {
+        clientService.blockClient(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/unblock")
+    public ResponseEntity<Void> unblockClient(@PathVariable Long id) {
+        clientService.unblockClient(id);
+        return ResponseEntity.ok().build();
     }
 }

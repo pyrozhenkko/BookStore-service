@@ -41,7 +41,6 @@ public class ClientServiceImpl implements ClientService {
         return clientRepository.findAll(pageable).map(clientMapper::toDto);
     }
 
-    // --- РЕАЛІЗАЦІЯ ПОШУКУ ---
     @Override
     public Page<ClientDTO> searchClients(String keyword, Pageable pageable) {
         Specification<Client> spec = ClientSpecification.hasKeyword(keyword);
@@ -50,12 +49,14 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public ClientDTO getClientById(Long id) {
-        return clientRepository.findById(id).map(clientMapper::toDto).orElseThrow(() -> new RuntimeException("Client not found"));
+        return clientRepository.findById(id).map(clientMapper::toDto)
+                .orElseThrow(() -> new RuntimeException("Client not found"));
     }
 
     @Override
     public ClientDTO getClientByEmail(String email) {
-        return clientRepository.findByEmail(email).map(clientMapper::toDto).orElseThrow(() -> new RuntimeException("Client not found"));
+        return clientRepository.findByEmail(email).map(clientMapper::toDto)
+                .orElseThrow(() -> new RuntimeException("Client not found"));
     }
 
     @Override
@@ -87,18 +88,16 @@ public class ClientServiceImpl implements ClientService {
         clientRepository.deleteById(id);
     }
 
-
     @Override
     @Transactional
     public void addBookToFavorites(FavoriteRequest request) {
         Client client = getCurrentClient();
 
-        // 1. Перевірка, чи книга існує
         Book book = bookRepository.findById(request.getBookId())
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
-        // 2. Перевірка, чи вже є в улюблених
-        Optional<FavoriteItem> existing = favoriteItemRepository.findByClient_EmailAndBook_Id(client.getEmail(), request.getBookId());
+        Optional<FavoriteItem> existing = favoriteItemRepository.findByClient_EmailAndBook_Id(client.getEmail(),
+                request.getBookId());
 
         if (existing.isPresent()) {
             // Якщо є - оновлюємо примітку
@@ -133,8 +132,7 @@ public class ClientServiceImpl implements ClientService {
                         item.getId(),
                         bookMapper.toDto(item.getBook()),
                         item.getNote(),
-                        item.getAddedAt()
-                ))
+                        item.getAddedAt()))
                 .collect(Collectors.toList());
     }
 
@@ -142,5 +140,21 @@ public class ClientServiceImpl implements ClientService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return clientRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
+    }
+
+    @Override
+    @Transactional
+    public void blockClient(Long id) {
+        Client client = clientRepository.findById(id).orElseThrow(() -> new RuntimeException("Client not found"));
+        client.setBlocked(true);
+        clientRepository.save(client);
+    }
+
+    @Override
+    @Transactional
+    public void unblockClient(Long id) {
+        Client client = clientRepository.findById(id).orElseThrow(() -> new RuntimeException("Client not found"));
+        client.setBlocked(false);
+        clientRepository.save(client);
     }
 }

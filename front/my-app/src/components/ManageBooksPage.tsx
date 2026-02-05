@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { Book } from '../types';
-import { mockBooks } from '../services/mockData';
+import { bookApiService } from '../services/bookApiService';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
@@ -15,6 +16,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 const ITEMS_PER_PAGE = 12;
 
 export function ManageBooksPage() {
+  const { t } = useLanguage();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -44,19 +46,11 @@ export function ManageBooksPage() {
   const loadBooks = async () => {
     try {
       setLoading(true);
-      // Спроба завантажити з бекенду
-      const response = await fetch(`${API_BASE_URL}/books`);
-      if (response.ok) {
-        const data = await response.json();
-        setBooks(data);
-      } else {
-        // Fallback на mock data
-        setBooks(mockBooks);
-      }
+      const data = await bookApiService.getAllBooks();
+      setBooks(data);
     } catch (error) {
       console.error('Error loading books:', error);
-      // Fallback на mock data
-      setBooks(mockBooks);
+      toast.error(t('manageBooks.toasts.loadError'));
     } finally {
       setLoading(false);
     }
@@ -96,7 +90,7 @@ export function ManageBooksPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const bookData = {
       name: formData.name,
       author: formData.author,
@@ -119,9 +113,9 @@ export function ManageBooksPage() {
           },
           body: JSON.stringify(bookData),
         });
-        
+
         if (!response.ok) throw new Error('Failed to update book');
-        toast.success('Книгу оновлено');
+        toast.success(t('manageBooks.toasts.updateSuccess'));
       } else {
         // Додавання нової книги
         const response = await fetch(`${API_BASE_URL}/books`, {
@@ -131,21 +125,21 @@ export function ManageBooksPage() {
           },
           body: JSON.stringify(bookData),
         });
-        
+
         if (!response.ok) throw new Error('Failed to create book');
-        toast.success('Книгу додано');
+        toast.success(t('manageBooks.toasts.createSuccess'));
       }
-      
+
       setIsDialogOpen(false);
       loadBooks();
     } catch (error) {
-      toast.error('Помилка збереження книги');
+      toast.error(t('manageBooks.toasts.saveError'));
       console.error('Error saving book:', error);
     }
   };
 
   const handleDelete = async (book: Book) => {
-    if (!confirm(`Ви впевнені, що хочете видалити "${book.name}"?`)) {
+    if (!confirm(t('manageBooks.deleteConfirm', { name: book.name }))) {
       return;
     }
 
@@ -153,12 +147,12 @@ export function ManageBooksPage() {
       const response = await fetch(`${API_BASE_URL}/books/${book.id}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) throw new Error('Failed to delete book');
-      toast.success('Книгу видалено');
+      toast.success(t('manageBooks.toasts.deleteSuccess'));
       loadBooks();
     } catch (error) {
-      toast.error('Помилка видалення книги');
+      toast.error(t('manageBooks.toasts.deleteError'));
       console.error('Error deleting book:', error);
     }
   };
@@ -198,7 +192,7 @@ export function ManageBooksPage() {
     // Сортування
     result.sort((a, b) => {
       let compareValue = 0;
-      
+
       switch (sortBy) {
         case 'name':
           compareValue = a.name.localeCompare(b.name);
@@ -213,7 +207,7 @@ export function ManageBooksPage() {
           compareValue = a.stock - b.stock;
           break;
       }
-      
+
       return sortOrder === 'asc' ? compareValue : -compareValue;
     });
 
@@ -235,10 +229,10 @@ export function ManageBooksPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Керування книгами</h1>
+        <h1 className="text-3xl font-bold">{t('manageBooks.title')}</h1>
         <Button onClick={handleAdd}>
           <Plus className="size-4 mr-2" />
-          Додати книгу
+          {t('manageBooks.addBook')}
         </Button>
       </div>
 
@@ -249,7 +243,7 @@ export function ManageBooksPage() {
             <div className="md:col-span-2 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
               <Input
-                placeholder="Пошук за назвою, автором або ISBN..."
+                placeholder={t('manageBooks.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -257,10 +251,10 @@ export function ManageBooksPage() {
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Категорія" />
+                <SelectValue placeholder={t('manageBooks.categories.placeholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Всі категорії</SelectItem>
+                <SelectItem value="all">{t('manageBooks.categories.all')}</SelectItem>
                 {categories.map(cat => (
                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
@@ -268,13 +262,13 @@ export function ManageBooksPage() {
             </Select>
             <Select value={stockFilter} onValueChange={(v) => setStockFilter(v as any)}>
               <SelectTrigger>
-                <SelectValue placeholder="Наявність" />
+                <SelectValue placeholder={t('manageBooks.stock.placeholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Всі книги</SelectItem>
-                <SelectItem value="in-stock">В наявності</SelectItem>
-                <SelectItem value="low-stock">Мало на складі</SelectItem>
-                <SelectItem value="out-of-stock">Немає в наявності</SelectItem>
+                <SelectItem value="all">{t('manageBooks.stock.all')}</SelectItem>
+                <SelectItem value="in-stock">{t('manageBooks.stock.inStock')}</SelectItem>
+                <SelectItem value="low-stock">{t('manageBooks.stock.lowStock')}</SelectItem>
+                <SelectItem value="out-of-stock">{t('manageBooks.stock.outOfStock')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={`${sortBy}-${sortOrder}`} onValueChange={(v) => {
@@ -283,17 +277,17 @@ export function ManageBooksPage() {
               setSortOrder(order as any);
             }}>
               <SelectTrigger>
-                <SelectValue placeholder="Сортування" />
+                <SelectValue placeholder={t('manageBooks.sort.placeholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="name-asc">Назва (А-Я)</SelectItem>
-                <SelectItem value="name-desc">Назва (Я-А)</SelectItem>
-                <SelectItem value="author-asc">Автор (А-Я)</SelectItem>
-                <SelectItem value="author-desc">Автор (Я-А)</SelectItem>
-                <SelectItem value="price-asc">Ціна (зростання)</SelectItem>
-                <SelectItem value="price-desc">Ціна (спадання)</SelectItem>
-                <SelectItem value="stock-asc">Наявність (зростання)</SelectItem>
-                <SelectItem value="stock-desc">Наявність (спадання)</SelectItem>
+                <SelectItem value="name-asc">{t('manageBooks.sort.nameAsc')}</SelectItem>
+                <SelectItem value="name-desc">{t('manageBooks.sort.nameDesc')}</SelectItem>
+                <SelectItem value="author-asc">{t('manageBooks.sort.authorAsc')}</SelectItem>
+                <SelectItem value="author-desc">{t('manageBooks.sort.authorDesc')}</SelectItem>
+                <SelectItem value="price-asc">{t('manageBooks.sort.priceAsc')}</SelectItem>
+                <SelectItem value="price-desc">{t('manageBooks.sort.priceDesc')}</SelectItem>
+                <SelectItem value="stock-asc">{t('manageBooks.sort.stockAsc')}</SelectItem>
+                <SelectItem value="stock-desc">{t('manageBooks.sort.stockDesc')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -301,59 +295,59 @@ export function ManageBooksPage() {
       </Card>
 
       {loading ? (
-        <div className="text-center py-8">Завантаження...</div>
+        <div className="text-center py-8">{t('common.loading')}</div>
       ) : filteredAndSortedBooks.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          {searchQuery || categoryFilter !== 'all' || stockFilter !== 'all' ? 'Нічого не знайдено' : 'Немає книг'}
+          {searchQuery || categoryFilter !== 'all' || stockFilter !== 'all' ? t('manageBooks.notFound') : t('manageBooks.noBooks')}
         </div>
       ) : (
         <>
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Список книг</CardTitle>
+                <CardTitle>{t('manageBooks.bookList')}</CardTitle>
                 <div className="text-sm text-gray-600">
-                  Показано {paginatedBooks.length} з {filteredAndSortedBooks.length}
+                  {t('manageBooks.showing', { current: paginatedBooks.length, total: filteredAndSortedBooks.length })}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {paginatedBooks.map((book) => (
-            <Card key={book.id} className="overflow-hidden">
-              <div className="aspect-[3/4] overflow-hidden">
-                <img
-                  src={book.imageUrl}
-                  alt={book.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <CardContent className="p-4">
-                <h3 className="font-semibold line-clamp-1">{book.name}</h3>
-                <p className="text-sm text-gray-600 line-clamp-1">{book.author}</p>
-                <p className="text-lg font-bold mt-2">{book.price} грн</p>
-                <p className="text-sm text-gray-600">В наявності: {book.stock}</p>
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(book)}
-                    className="flex-1"
-                  >
-                    <Pencil className="size-3 mr-1" />
-                    Редагувати
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(book)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="size-3" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  <Card key={book.id} className="overflow-hidden">
+                    <div className="aspect-[3/4] overflow-hidden">
+                      <img
+                        src={book.imageUrl}
+                        alt={book.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold line-clamp-1">{book.name}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-1">{book.author}</p>
+                      <p className="text-lg font-bold mt-2">{book.price} {t('common.currency')}</p>
+                      <p className="text-sm text-gray-600">{t('manageBooks.stock.inStock')}: {book.stock}</p>
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(book)}
+                          className="flex-1"
+                        >
+                          <Pencil className="size-3 mr-1" />
+                          {t('manageBooks.edit')}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(book)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="size-3" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </CardContent>
@@ -363,7 +357,7 @@ export function ManageBooksPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                Сторінка {currentPage} з {totalPages}
+                {t('book.page')} {currentPage} {t('book.of')} {totalPages}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -373,7 +367,7 @@ export function ManageBooksPage() {
                   disabled={currentPage === 1}
                 >
                   <ChevronLeft className="size-4 mr-1" />
-                  Назад
+                  {t('book.previousPage')}
                 </Button>
                 <Button
                   variant="outline"
@@ -381,7 +375,7 @@ export function ManageBooksPage() {
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  Вперед
+                  {t('book.nextPage')}
                   <ChevronRight className="size-4 ml-1" />
                 </Button>
               </div>
@@ -394,13 +388,13 @@ export function ManageBooksPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingBook ? 'Редагувати книгу' : 'Додати книгу'}
+              {editingBook ? t('manageBooks.form.editTitle') : t('manageBooks.form.addTitle')}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Назва *</Label>
+                <Label htmlFor="name">{t('manageBooks.form.name')} *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -409,7 +403,7 @@ export function ManageBooksPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="author">Автор *</Label>
+                <Label htmlFor="author">{t('manageBooks.form.author')} *</Label>
                 <Input
                   id="author"
                   value={formData.author}
@@ -418,9 +412,9 @@ export function ManageBooksPage() {
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="description">Опис *</Label>
+              <Label htmlFor="description">{t('manageBooks.form.description')} *</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -432,7 +426,7 @@ export function ManageBooksPage() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Ціна (грн) *</Label>
+                <Label htmlFor="price">{t('manageBooks.form.price')} *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -443,7 +437,7 @@ export function ManageBooksPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stock">Кількість на складі *</Label>
+                <Label htmlFor="stock">{t('manageBooks.form.stock')} *</Label>
                 <Input
                   id="stock"
                   type="number"
@@ -456,7 +450,7 @@ export function ManageBooksPage() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Категорія *</Label>
+                <Label htmlFor="category">{t('manageBooks.form.category')} *</Label>
                 <Input
                   id="category"
                   value={formData.category}
@@ -465,7 +459,7 @@ export function ManageBooksPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="publishedYear">Рік видання *</Label>
+                <Label htmlFor="publishedYear">{t('manageBooks.form.year')} *</Label>
                 <Input
                   id="publishedYear"
                   type="number"
@@ -477,7 +471,7 @@ export function ManageBooksPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="isbn">ISBN *</Label>
+              <Label htmlFor="isbn">{t('manageBooks.form.isbn')} *</Label>
               <Input
                 id="isbn"
                 value={formData.isbn}
@@ -487,7 +481,7 @@ export function ManageBooksPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="imageUrl">URL зображення *</Label>
+              <Label htmlFor="imageUrl">{t('manageBooks.form.imageUrl')} *</Label>
               <Input
                 id="imageUrl"
                 type="url"
@@ -499,10 +493,10 @@ export function ManageBooksPage() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Скасувати
+                {t('manageBooks.form.cancel')}
               </Button>
               <Button type="submit">
-                {editingBook ? 'Зберегти' : 'Додати'}
+                {editingBook ? t('manageBooks.form.save') : t('manageBooks.form.add')}
               </Button>
             </DialogFooter>
           </form>
