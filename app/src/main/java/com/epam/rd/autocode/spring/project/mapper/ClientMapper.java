@@ -18,7 +18,7 @@ public interface ClientMapper {
     @Mapping(source = "phone", target = "phone")
     @Mapping(source = "registeredDate", target = "registeredDate")
     @Mapping(source = "blocked", target = "blocked")
-    @Mapping(target = "totalOrders", expression = "java(client.getOrders() != null ? client.getOrders().size() : 0)")
+    @Mapping(source = "totalOrders", target = "totalOrders")
     ClientDTO toDto(Client client);
 
     @Mapping(target = "favorites", ignore = true)

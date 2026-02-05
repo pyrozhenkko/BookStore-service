@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import type { Order } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -12,6 +13,7 @@ import { Package, Calendar, MapPin, Search, ChevronLeft, ChevronRight } from 'lu
 const ITEMS_PER_PAGE = 5;
 
 export function OrdersPage() {
+  const { t, i18n } = useTranslation();
   const { currentUser } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,7 +31,7 @@ export function OrdersPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('uk-UA', {
+    return date.toLocaleDateString(i18n.language === 'uk' ? 'uk-UA' : 'en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -40,11 +42,11 @@ export function OrdersPage() {
 
   const getStatusBadge = (status: Order['status']) => {
     const variants = {
-      pending: { variant: 'secondary' as const, text: 'В обробці' },
-      confirmed: { variant: 'default' as const, text: 'Підтверджено' },
-      cancelled: { variant: 'destructive' as const, text: 'Скасовано' }
+      pending: { variant: 'secondary' as const, text: t('orders.pending') },
+      confirmed: { variant: 'default' as const, text: t('orders.confirmed') },
+      cancelled: { variant: 'destructive' as const, text: t('orders.cancelled') }
     };
-    
+
     const { variant, text } = variants[status];
     return <Badge variant={variant}>{text}</Badge>;
   };
@@ -69,13 +71,13 @@ export function OrdersPage() {
     // Сортування
     result.sort((a, b) => {
       let compareValue = 0;
-      
+
       if (sortBy === 'date') {
         compareValue = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       } else {
         compareValue = a.totalPrice - b.totalPrice;
       }
-      
+
       return sortOrder === 'asc' ? compareValue : -compareValue;
     });
 
@@ -98,8 +100,8 @@ export function OrdersPage() {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
         <Package className="size-24 text-gray-300" />
-        <h2 className="text-2xl font-semibold text-gray-700">У вас поки немає замовлень</h2>
-        <p className="text-gray-500">Ваші замовлення з'являться тут після оформлення</p>
+        <h2 className="text-2xl font-semibold text-gray-700">{t('orders.empty.title')}</h2>
+        <p className="text-gray-500">{t('orders.empty.description')}</p>
       </div>
     );
   }
@@ -107,8 +109,8 @@ export function OrdersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold mb-2">Мої замовлення</h1>
-        <p className="text-gray-600">Перегляд історії ваших замовлень</p>
+        <h1 className="text-3xl font-semibold mb-2">{t('orders.title')}</h1>
+        <p className="text-gray-600">{t('orders.empty.description')}</p>
       </div>
 
       {/* Пошук та фільтри */}
@@ -118,7 +120,7 @@ export function OrdersPage() {
             <div className="md:col-span-2 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
               <Input
-                placeholder="Пошук за ID або назвою книги..."
+                placeholder={t('allOrders.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -126,13 +128,13 @@ export function OrdersPage() {
             </div>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
               <SelectTrigger>
-                <SelectValue placeholder="Статус" />
+                <SelectValue placeholder={t('orders.status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Всі статуси</SelectItem>
-                <SelectItem value="pending">В обробці</SelectItem>
-                <SelectItem value="confirmed">Підтверджені</SelectItem>
-                <SelectItem value="cancelled">Скасовані</SelectItem>
+                <SelectItem value="all">{t('allOrders.status.all')}</SelectItem>
+                <SelectItem value="pending">{t('orders.pending')}</SelectItem>
+                <SelectItem value="confirmed">{t('orders.confirmed')}</SelectItem>
+                <SelectItem value="cancelled">{t('orders.cancelled')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={`${sortBy}-${sortOrder}`} onValueChange={(v) => {
@@ -141,13 +143,13 @@ export function OrdersPage() {
               setSortOrder(order as any);
             }}>
               <SelectTrigger>
-                <SelectValue placeholder="Сортування" />
+                <SelectValue placeholder={t('catalog.sortBy')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="date-desc">Дата (нові спочатку)</SelectItem>
-                <SelectItem value="date-asc">Дата (старі спочатку)</SelectItem>
-                <SelectItem value="price-desc">Сума (більша-менша)</SelectItem>
-                <SelectItem value="price-asc">Сума (менша-більша)</SelectItem>
+                <SelectItem value="date-desc">{t('allOrders.sort.dateDesc')}</SelectItem>
+                <SelectItem value="date-asc">{t('allOrders.sort.dateAsc')}</SelectItem>
+                <SelectItem value="price-desc">{t('allOrders.sort.priceDesc')}</SelectItem>
+                <SelectItem value="price-asc">{t('allOrders.sort.priceAsc')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -156,80 +158,80 @@ export function OrdersPage() {
 
       {filteredAndSortedOrders.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
-          <p className="text-lg">Нічого не знайдено</p>
-          <p className="text-sm mt-2">Спробуйте змінити фільтри пошуку</p>
+          <p className="text-lg">{t('allOrders.notFound')}</p>
+          <p className="text-sm mt-2">{t('catalog.tryDifferentSearch')}</p>
         </div>
       ) : (
         <>
           <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Показано {paginatedOrders.length} з {filteredAndSortedOrders.length} замовлень</span>
-            {totalPages > 1 && <span>Сторінка {currentPage} з {totalPages}</span>}
+            <span>{t('manageBooks.showing', { current: paginatedOrders.length, total: filteredAndSortedOrders.length })}</span>
+            {totalPages > 1 && <span>{t('book.page')} {currentPage} {t('book.of')} {totalPages}</span>}
           </div>
 
           <div className="space-y-4">
             {paginatedOrders.map(order => (
-          <Card key={order.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    Замовлення #{order.id}
-                    {getStatusBadge(order.status)}
-                  </CardTitle>
-                  <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                    <Calendar className="size-4" />
-                    {formatDate(order.createdAt)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">Загалом</p>
-                  <p className="text-2xl font-semibold">{order.totalPrice} ₴</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Книга</TableHead>
-                    <TableHead className="text-center">Кількість</TableHead>
-                    <TableHead className="text-right">Ціна</TableHead>
-                    <TableHead className="text-right">Підсумок</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {order.items.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{item.bookName}</TableCell>
-                      <TableCell className="text-center">{item.quantity}</TableCell>
-                      <TableCell className="text-right">{item.price} ₴</TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {item.quantity * item.price} ₴
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {(order as any).delivery && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
-                    <MapPin className="size-4" />
-                    Доставка Нова Пошта
+              <Card key={order.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        {t('orders.orderNumber')}{order.id}
+                        {getStatusBadge(order.status)}
+                      </CardTitle>
+                      <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                        <Calendar className="size-4" />
+                        {formatDate(order.createdAt)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600">{t('orders.total')}</p>
+                      <p className="text-2xl font-semibold">{order.totalPrice} ₴</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600">{(order as any).delivery.city}</p>
-                  <p className="text-sm text-gray-600">{(order as any).delivery.warehouse}</p>
-                  {(order as any).phone && (
-                    <p className="text-sm text-gray-600 mt-1">Телефон: {(order as any).phone}</p>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('allOrders.searchPlaceholder')}</TableHead>
+                        <TableHead className="text-center">{t('book.quantity')}</TableHead>
+                        <TableHead className="text-right">{t('book.price')}</TableHead>
+                        <TableHead className="text-right">{t('orders.total')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {order.items.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{item.bookName}</TableCell>
+                          <TableCell className="text-center">{item.quantity}</TableCell>
+                          <TableCell className="text-right">{item.price} ₴</TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {item.quantity * item.price} ₴
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {(order as any).delivery && (
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                        <MapPin className="size-4" />
+                        {t('checkout.delivery')}
+                      </div>
+                      <p className="text-sm text-gray-600">{(order as any).delivery.city}</p>
+                      <p className="text-sm text-gray-600">{(order as any).delivery.warehouse}</p>
+                      {(order as any).phone && (
+                        <p className="text-sm text-gray-600 mt-1">{t('auth.phone')}: {(order as any).phone}</p>
+                      )}
+                    </div>
                   )}
-                </div>
-              )}
-              {order.employeeEmail && (
-                <p className="text-sm text-gray-600 mt-4">
-                  Підтверджено співробітником: {order.employeeEmail}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                  {order.employeeEmail && (
+                    <p className="text-sm text-gray-600 mt-4">
+                      {t('orders.confirmed')} {order.employeeEmail}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
             ))}
           </div>
 
@@ -243,7 +245,7 @@ export function OrdersPage() {
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="size-4 mr-1" />
-                Назад
+                {t('book.previousPage')}
               </Button>
               <Button
                 variant="outline"
@@ -251,7 +253,7 @@ export function OrdersPage() {
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
               >
-                Вперед
+                {t('book.nextPage')}
                 <ChevronRight className="size-4 ml-1" />
               </Button>
             </div>

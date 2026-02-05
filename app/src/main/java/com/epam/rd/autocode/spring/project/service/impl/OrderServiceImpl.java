@@ -30,6 +30,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public Page<OrderDTO> searchOrders(String clientEmail, String city, BigDecimal minPrice, BigDecimal maxPrice,
             LocalDateTime dateFrom, Pageable pageable) {
         Specification<Order> spec = Specification.where(OrderSpecification.hasClientEmail(clientEmail))
@@ -42,11 +43,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<OrderDTO> getOrdersByClient(String clientEmail, Pageable pageable) {
         return orderRepository.findAllByClient_Email(clientEmail, pageable).map(orderMapper::toDto);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<OrderDTO> getOrdersByEmployee(String employeeEmail, Pageable pageable) {
         return orderRepository.findAllByEmployee_Email(employeeEmail, pageable).map(orderMapper::toDto);
     }

@@ -37,16 +37,16 @@ VALUES (100.00, 'pyrozhenkko@gmail.com', 'Medelyn Wright', 'password123', '+3805
 
 INSERT INTO BOOKS (name, genre, age_group, price, publication_date, author, pages, characteristics, description, language, quantity, isbn)
 VALUES
-    ('The Hidden Treasure', 'Adventure', 'ADULT', 24.99, '2018-05-15', 'Emily White', 400, 'Mysterious journey','An enthralling adventure', 'ENGLISH', 50, '978-3-16-148410-0'),
-    ('Echoes of Eternity', 'Fantasy', 'TEEN', 16.50, '2011-01-15', 'Daniel Black', 350, 'Magical realms', 'A spellbinding tale', 'ENGLISH', 20, '978-1-40-289462-6'),
-    ('Whispers in the Shadows', 'Mystery', 'ADULT', 29.95, '2018-08-11', 'Sophia Green', 450, 'Intriguing suspense','A gripping mystery', 'ENGLISH', 15, '978-0-74-327356-5'),
-    ('The Starlight Sonata', 'Romance', 'ADULT', 21.75, '2011-05-15', 'Michael Rose', 320, 'Heartwarming love story','A beautiful journey', 'ENGLISH', 100, '978-0-06-112008-4'),
-    ('Beyond the Horizon', 'Science Fiction', 'CHILD', 18.99, '2004-05-15', 'Alex Carter', 280,'Interstellar adventure', 'An epic sci-fi', 'ENGLISH', 30, '978-0-45-228423-4'),
-    ('Dancing with Shadows', 'Thriller', 'ADULT', 26.50, '2015-05-15', 'Olivia Smith', 380, 'Suspenseful twists','A thrilling tale', 'ENGLISH', 12, '978-0-30-727767-1'),
-    ('Voices in the Wind', 'Historical Fiction', 'ADULT', 32.00, '2017-05-15', 'William Turner', 500,'Rich historical setting', 'A compelling journey', 'ENGLISH', 5, '978-1-50-112634-9'),
-    ('Serenade of Souls', 'Fantasy', 'TEEN', 15.99, '2013-05-15', 'Isabella Reed', 330, 'Enchanting realms','A magical fantasy', 'ENGLISH', 60, '978-0-55-338168-9'),
-    ('Silent Whispers', 'Mystery', 'ADULT', 27.50, '2021-05-15', 'Benjamin Hall', 420, 'Intricate detective work','A mystery', 'ENGLISH', 25, '978-0-38-550420-1'),
-    ('Whirlwind Romance', 'Romance', 'OTHER', 23.25, '2022-05-15', 'Emma Turner', 360, 'Passionate love affair','A romance', 'ENGLISH', 45, '978-1-25-008040-0');
+    ('The Hidden Treasure', 'Adventure', 'ADULT', 240.99, '2018-05-15', 'Emily White', 400, 'Mysterious journey','An enthralling adventure', 'ENGLISH', 50, '978-3-16-148410-0'),
+    ('Echoes of Eternity', 'Fantasy', 'TEEN', 160.50, '2011-01-15', 'Daniel Black', 350, 'Magical realms', 'A spellbinding tale', 'ENGLISH', 20, '978-1-40-289462-6'),
+    ('Whispers in the Shadows', 'Mystery', 'ADULT', 290.95, '2018-08-11', 'Sophia Green', 450, 'Intriguing suspense','A gripping mystery', 'ENGLISH', 15, '978-0-74-327356-5'),
+    ('The Starlight Sonata', 'Romance', 'ADULT', 210.75, '2011-05-15', 'Michael Rose', 320, 'Heartwarming love story','A beautiful journey', 'ENGLISH', 100, '978-0-06-112008-4'),
+    ('Beyond the Horizon', 'Science Fiction', 'CHILD', 108.99, '2004-05-15', 'Alex Carter', 280,'Interstellar adventure', 'An epic sci-fi', 'ENGLISH', 30, '978-0-45-228423-4'),
+    ('Dancing with Shadows', 'Thriller', 'ADULT', 260.50, '2015-05-15', 'Olivia Smith', 380, 'Suspenseful twists','A thrilling tale', 'ENGLISH', 12, '978-0-30-727767-1'),
+    ('Voices in the Wind', 'Historical Fiction', 'ADULT', 302.00, '2017-05-15', 'William Turner', 500,'Rich historical setting', 'A compelling journey', 'ENGLISH', 5, '978-1-50-112634-9'),
+    ('Serenade of Souls', 'Fantasy', 'TEEN', 150.99, '2013-05-15', 'Isabella Reed', 330, 'Enchanting realms','A magical fantasy', 'ENGLISH', 60, '978-0-55-338168-9'),
+    ('Silent Whispers', 'Mystery', 'ADULT', 207.50, '2021-05-15', 'Benjamin Hall', 420, 'Intricate detective work','A mystery', 'ENGLISH', 25, '978-0-38-550420-1'),
+    ('Whirlwind Romance', 'Romance', 'OTHER', 230.25, '2022-05-15', 'Emma Turner', 360, 'Passionate love affair','A romance', 'ENGLISH', 45, '978-1-25-008040-0');
 
 INSERT INTO BOOK_TRANSLATIONS (book_id, locale, name, description, characteristics, genre)
 SELECT id, 'en', name, description, characteristics, genre FROM BOOKS;

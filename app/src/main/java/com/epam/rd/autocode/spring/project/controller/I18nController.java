@@ -1,6 +1,6 @@
 package com.epam.rd.autocode.spring.project.controller;
 
-import com.epam.rd.autocode.spring.project.service.I18nService;
+import com.epam.rd.autocode.spring.project.service.impl.I18nService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -18,9 +18,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function toUser(me: { email: string; name: string; role: string }): User {
+function toUser(me: { id: string | number; email: string; name: string; role: string }): User {
   const role = me.role === 'ADMIN' ? 'admin' : me.role === 'EMPLOYEE' ? 'employee' : 'customer';
-  return { email: me.email, name: me.name, role };
+  return { id: me.id, email: me.email, name: me.name, role };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

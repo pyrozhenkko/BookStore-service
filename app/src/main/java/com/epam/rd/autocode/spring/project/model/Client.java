@@ -31,6 +31,9 @@ public class Client extends User {
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
     private java.util.List<Order> orders = new java.util.ArrayList<>();
 
+    @Transient
+    private int totalOrders;
+
     public Client(Long id, String name, String email, String password, BigDecimal balance) {
         super(id, email, password, name, false);
         this.balance = balance;

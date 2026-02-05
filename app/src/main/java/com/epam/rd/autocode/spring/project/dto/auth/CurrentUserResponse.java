@@ -10,8 +10,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CurrentUserResponse {
+    private Long id;
     private String email;
     private String name;
-    private String role;  // CUSTOMER, EMPLOYEE, ADMIN
-    private BigDecimal balance;  // null for employees/admins
+    private String role; // CUSTOMER, EMPLOYEE, ADMIN
+    private BigDecimal balance; // null for employees/admins
 }

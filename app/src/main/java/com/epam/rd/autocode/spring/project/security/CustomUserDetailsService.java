@@ -39,7 +39,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         Optional<Client> clientOpt = clientRepository.findByEmail(email);
         if (clientOpt.isPresent()) {
-            return buildUserDetails(clientOpt.get(), "ROLE_CUSTOMER");
+            Client client = clientOpt.get();
+            if (client.isBlocked()) {
+                throw new RuntimeException("blocked");
+            }
+            return buildUserDetails(client, "ROLE_CUSTOMER");
         }
 
         throw new UsernameNotFoundException("User not found with email: " + email);
@@ -50,7 +54,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singletonList(authority)
-        );
+                Collections.singletonList(authority));
     }
 }

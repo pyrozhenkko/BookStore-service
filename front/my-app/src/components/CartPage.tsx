@@ -4,12 +4,14 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Separator } from './ui/separator';
 import { Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface CartPageProps {
   onCheckout: () => void;
 }
 
 export function CartPage({ onCheckout }: CartPageProps) {
+  const { t } = useTranslation();
   const { cart, removeFromCart, updateQuantity, totalItems, totalPrice, clearCart } = useCart();
   const { currentUser } = useAuth();
 
@@ -21,8 +23,8 @@ export function CartPage({ onCheckout }: CartPageProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
         <ShoppingBag className="size-24 text-gray-300" />
-        <h2 className="text-2xl font-semibold text-gray-700">Ваш кошик порожній</h2>
-        <p className="text-gray-500">Додайте книжки з каталогу для покупки</p>
+        <h2 className="text-2xl font-semibold text-gray-700">{t('cart.empty.title')}</h2>
+        <p className="text-gray-500">{t('cart.empty.description')}</p>
       </div>
     );
   }
@@ -30,9 +32,9 @@ export function CartPage({ onCheckout }: CartPageProps) {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold mb-2">Кошик</h1>
+        <h1 className="text-3xl font-semibold mb-2">{t('cart.title')}</h1>
         <p className="text-gray-600">
-          {totalItems} {totalItems === 1 ? 'товар' : 'товарів'} в кошику
+          {totalItems} {totalItems === 1 ? t('cart.item') : t('cart.items')} {t('book.inCart')}
         </p>
       </div>
 
@@ -50,20 +52,20 @@ export function CartPage({ onCheckout }: CartPageProps) {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  
+
                   <div className="flex-1 space-y-2">
                     <div>
                       <h3 className="font-semibold">{item.book.name}</h3>
                       <p className="text-sm text-gray-600">{item.book.author}</p>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="icon"
                           className="size-8"
-                          onClick={() => updateQuantity(item.book.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(String(item.book.id), item.quantity - 1)}
                         >
                           <Minus className="size-3" />
                         </Button>
@@ -72,24 +74,24 @@ export function CartPage({ onCheckout }: CartPageProps) {
                           variant="outline"
                           size="icon"
                           className="size-8"
-                          onClick={() => updateQuantity(item.book.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(String(item.book.id), item.quantity + 1)}
                           disabled={item.quantity >= item.book.stock}
                         >
                           <Plus className="size-3" />
                         </Button>
                       </div>
-                      
+
                       <div className="text-right">
                         <p className="font-semibold">{item.book.price * item.quantity} ₴</p>
                         <p className="text-xs text-gray-500">{item.book.price} ₴ за шт.</p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => removeFromCart(item.book.id)}
+                    onClick={() => removeFromCart(String(item.book.id))}
                   >
                     <Trash2 className="size-4 text-red-600" />
                   </Button>
@@ -103,12 +105,12 @@ export function CartPage({ onCheckout }: CartPageProps) {
         <div className="lg:col-span-1">
           <Card className="sticky top-24">
             <CardHeader>
-              <CardTitle>Підсумок замовлення</CardTitle>
+              <CardTitle>{t('checkout.orderSummary')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Товарів</span>
+                  <span className="text-gray-600">{t('cart.items')}</span>
                   <span>{totalItems}</span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -116,15 +118,15 @@ export function CartPage({ onCheckout }: CartPageProps) {
                   <span>{totalPrice} ₴</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Доставка</span>
+                  <span className="text-gray-600">{t('checkout.delivery')}</span>
                   <span className="text-green-600">Безкоштовно</span>
                 </div>
               </div>
-              
+
               <Separator />
-              
+
               <div className="flex justify-between">
-                <span className="font-semibold">Загалом</span>
+                <span className="font-semibold">{t('cart.total')}</span>
                 <span className="text-2xl font-semibold">{totalPrice} ₴</span>
               </div>
 
@@ -137,14 +139,14 @@ export function CartPage({ onCheckout }: CartPageProps) {
             </CardContent>
             <CardFooter className="flex-col gap-2">
               <Button className="w-full" size="lg" onClick={handleCheckout}>
-                Оформити замовлення
+                {t('cart.checkout')}
               </Button>
               <Button
                 variant="outline"
                 className="w-full"
                 onClick={() => clearCart()}
               >
-                Очистити кошик
+                {t('cart.clearCart')}
               </Button>
             </CardFooter>
           </Card>

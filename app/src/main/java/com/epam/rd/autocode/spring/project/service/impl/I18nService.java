@@ -1,4 +1,4 @@
-package com.epam.rd.autocode.spring.project.service;
+package com.epam.rd.autocode.spring.project.service.impl;
 
 import com.epam.rd.autocode.spring.project.conf.I18nConfig;
 import lombok.RequiredArgsConstructor;

@@ -39,7 +39,7 @@ public interface ClientService {
     @PreAuthorize("hasRole('CUSTOMER')")
     List<FavoriteItemDTO> getMyFavorites();
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE') or @customSecurity.isClientOwner(#id)")
     void blockClient(Long id);
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")

@@ -15,6 +15,7 @@ export interface Book {
 }
 
 export interface User {
+  id: string | number;
   email: string;
   name: string;
   role: 'customer' | 'employee' | 'admin';
@@ -28,7 +29,7 @@ export interface Employee {
   position: string;
   hiredDate: string;
   phone?: string;
-  isActive: boolean;
+  active: boolean;
 }
 
 export interface Client {

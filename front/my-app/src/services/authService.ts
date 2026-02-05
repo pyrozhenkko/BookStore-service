@@ -66,7 +66,10 @@ export const authService = {
     return `${getApiBaseUrl()}/oauth2/authorization/google`;
   },
 
-  async getCurrentUser(): Promise<{ email: string; name: string; role: string; balance?: number }> {
+  async getCurrentUser(): Promise<{ id: string | number; email: string; name: string; role: string; balance?: number }> {
     return apiRequest('/api/auth/me');
+  },
+  async deactivateAccount(): Promise<void> {
+    await apiRequest('/api/auth/deactivate', { method: 'POST' });
   },
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { bookApiService } from '../services/bookApiService';
 import { BookCard } from './BookCard';
@@ -11,6 +12,7 @@ interface FavoritesPageProps {
 }
 
 export function FavoritesPage({ onViewDetails }: FavoritesPageProps) {
+    const { t } = useTranslation();
     const { favoriteIds, isLoading: favLoading } = useFavorites();
     const [books, setBooks] = useState<Book[]>([]);
     const [loading, setLoading] = useState(true);
@@ -55,9 +57,9 @@ export function FavoritesPage({ onViewDetails }: FavoritesPageProps) {
             <Card>
                 <CardContent className="p-12 text-center">
                     <Heart className="size-16 text-gray-300 mx-auto mb-4" />
-                    <h2 className="text-xl font-semibold mb-2">У вас ще немає улюблених книг</h2>
+                    <h2 className="text-xl font-semibold mb-2">{t('favorites.empty.title')}</h2>
                     <p className="text-gray-600">
-                        Додавайте книги до улюблених, натискаючи на іконку серця
+                        {t('favorites.empty.description')}
                     </p>
                 </CardContent>
             </Card>
@@ -68,7 +70,7 @@ export function FavoritesPage({ onViewDetails }: FavoritesPageProps) {
         <div className="space-y-6">
             <div className="flex items-center gap-3">
                 <Heart className="size-8 text-red-500 fill-red-500" />
-                <h1 className="text-2xl font-semibold">Улюблені книги</h1>
+                <h1 className="text-2xl font-semibold">{t('favorites.title')}</h1>
                 <span className="text-gray-500">({books.length})</span>
             </div>
 

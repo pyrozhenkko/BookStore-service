@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import ukTranslations from '../locales/uk.json';
 import enTranslations from '../locales/en.json';
+import i18n from '../i18n';
 
 type Language = 'uk' | 'en';
 
@@ -52,6 +53,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, language);
         document.documentElement.lang = language;
+        i18n.changeLanguage(language);
     }, [language]);
 
     const setLanguage = useCallback((lang: Language) => {

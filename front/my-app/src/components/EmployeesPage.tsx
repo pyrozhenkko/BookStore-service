@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Pencil, Trash2, Plus, UserCheck, UserX, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Ban, Plus, UserCheck, UserX, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 
@@ -65,9 +65,9 @@ export function EmployeesPage() {
 
     // Фільтр за статусом
     if (statusFilter === 'active') {
-      result = result.filter(emp => emp.isActive);
+      result = result.filter(emp => emp.active);
     } else if (statusFilter === 'inactive') {
-      result = result.filter(emp => !emp.isActive);
+      result = result.filter(emp => !emp.active);
     }
 
     // Сортування
@@ -139,13 +139,13 @@ export function EmployeesPage() {
         await employeeService.updateEmployee(editingEmployee.id, {
           ...formData,
           id: editingEmployee.id,
-          isActive: editingEmployee.isActive,
+          active: editingEmployee.active,
         });
         toast.success(t('employees.toasts.updateSuccess'));
       } else {
         await employeeService.createEmployee({
           ...formData,
-          isActive: true,
+          active: true,
         });
         toast.success(t('employees.toasts.createSuccess'));
       }
@@ -269,7 +269,7 @@ export function EmployeesPage() {
                     <TableCell>{employee.phone || '—'}</TableCell>
                     <TableCell>{formatDate(employee.hiredDate)}</TableCell>
                     <TableCell>
-                      {employee.isActive ? (
+                      {employee.active ? (
                         <Badge variant="default" className="bg-green-500">
                           <UserCheck className="size-3 mr-1" />
                           {t('employees.badges.active')}
@@ -291,7 +291,7 @@ export function EmployeesPage() {
                         >
                           <Pencil className="size-4" />
                         </Button>
-                        {employee.isActive && (
+                        {employee.active && (
                           <Button
                             variant="outline"
                             size="icon"
@@ -299,7 +299,7 @@ export function EmployeesPage() {
                             className="text-red-600 hover:text-red-700"
                             title={t('employees.actions.terminate')}
                           >
-                            <Trash2 className="size-4" />
+                            <Ban className="size-4" />
                           </Button>
                         )}
                       </div>

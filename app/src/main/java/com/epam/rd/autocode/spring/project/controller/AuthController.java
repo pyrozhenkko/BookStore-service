@@ -49,8 +49,7 @@ public class AuthController {
 
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
             loginAttemptService.loginSucceeded(request.getEmail());
         } catch (Exception e) {
             loginAttemptService.loginFailed(request.getEmail());
@@ -111,15 +110,40 @@ public class AuthController {
         var employeeOpt = employeeRepository.findByEmail(email);
         if (employeeOpt.isPresent()) {
             Employee e = employeeOpt.get();
-            return ResponseEntity.ok(new CurrentUserResponse(e.getEmail(), e.getName(),
+            return ResponseEntity.ok(new CurrentUserResponse(e.getId(), e.getEmail(), e.getName(),
                     e.isAdmin() ? "ADMIN" : "EMPLOYEE", null));
         }
         var clientOpt = clientRepository.findByEmail(email);
         if (clientOpt.isPresent()) {
             Client c = clientOpt.get();
-            return ResponseEntity.ok(new CurrentUserResponse(c.getEmail(), c.getName(),
+            return ResponseEntity.ok(new CurrentUserResponse(c.getId(), c.getEmail(), c.getName(),
                     "CUSTOMER", c.getBalance()));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @PostMapping("/deactivate")
+    public ResponseEntity<?> deactivateAccount() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        var clientOpt = clientRepository.findByEmail(email);
+        if (clientOpt.isPresent()) {
+            Client client = clientOpt.get();
+            client.setBlocked(true);
+            clientRepository.save(client);
+            refreshTokenService.deleteByEmail(email);
+            return ResponseEntity.ok().build();
+        }
+
+        var employeeOpt = employeeRepository.findByEmail(email);
+        if (employeeOpt.isPresent()) {
+            Employee employee = employeeOpt.get();
+            employee.setBlocked(true);
+            employeeRepository.save(employee);
+            refreshTokenService.deleteByEmail(email);
+            return ResponseEntity.ok().build();
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found: " + email);
     }
 }

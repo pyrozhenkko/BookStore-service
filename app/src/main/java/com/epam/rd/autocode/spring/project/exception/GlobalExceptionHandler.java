@@ -1,6 +1,6 @@
 package com.epam.rd.autocode.spring.project.exception;
 
-import com.epam.rd.autocode.spring.project.service.I18nService;
+import com.epam.rd.autocode.spring.project.service.impl.I18nService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

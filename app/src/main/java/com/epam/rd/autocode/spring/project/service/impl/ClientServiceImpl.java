@@ -32,30 +32,35 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository clientRepository;
     private final BookRepository bookRepository;
     private final FavoriteItemRepository favoriteItemRepository;
+    private final com.epam.rd.autocode.spring.project.repo.OrderRepository orderRepository;
     private final ClientMapper clientMapper;
     private final BookMapper bookMapper;
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ClientDTO> getAllClients(Pageable pageable) {
-        return clientRepository.findAll(pageable).map(clientMapper::toDto);
+        return clientRepository.findAll(pageable).map(this::toDtoWithCount);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ClientDTO> searchClients(String keyword, Pageable pageable) {
         Specification<Client> spec = ClientSpecification.hasKeyword(keyword);
-        return clientRepository.findAll(spec, pageable).map(clientMapper::toDto);
+        return clientRepository.findAll(spec, pageable).map(this::toDtoWithCount);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClientDTO getClientById(Long id) {
-        return clientRepository.findById(id).map(clientMapper::toDto)
+        return clientRepository.findById(id).map(this::toDtoWithCount)
                 .orElseThrow(() -> new RuntimeException("Client not found"));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClientDTO getClientByEmail(String email) {
-        return clientRepository.findByEmail(email).map(clientMapper::toDto)
+        return clientRepository.findByEmail(email).map(this::toDtoWithCount)
                 .orElseThrow(() -> new RuntimeException("Client not found"));
     }
 
@@ -67,7 +72,7 @@ public class ClientServiceImpl implements ClientService {
         }
         Client client = clientMapper.toEntity(clientDTO);
         client.setPassword(passwordEncoder.encode(clientDTO.getPassword()));
-        return clientMapper.toDto(clientRepository.save(client));
+        return this.toDtoWithCount(clientRepository.save(client));
     }
 
     @Override
@@ -76,10 +81,23 @@ public class ClientServiceImpl implements ClientService {
         Client client = clientRepository.findById(id).orElseThrow(() -> new RuntimeException("Client not found"));
         client.setName(clientDTO.getName());
 
+        if (clientDTO.getEmail() != null && !clientDTO.getEmail().equals(client.getEmail())) {
+            if (clientRepository.findByEmail(clientDTO.getEmail()).isPresent()) {
+                throw new RuntimeException("Email already exists");
+            }
+            client.setEmail(clientDTO.getEmail());
+        }
+
         if (clientDTO.getPassword() != null && !clientDTO.getPassword().isBlank()) {
             client.setPassword(passwordEncoder.encode(clientDTO.getPassword()));
         }
-        return clientMapper.toDto(clientRepository.save(client));
+        return this.toDtoWithCount(clientRepository.save(client));
+    }
+
+    private ClientDTO toDtoWithCount(Client client) {
+        ClientDTO dto = clientMapper.toDto(client);
+        dto.setTotalOrders(orderRepository.countOrdersByClientId(client.getId()));
+        return dto;
     }
 
     @Override

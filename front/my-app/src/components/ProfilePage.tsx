@@ -10,22 +10,52 @@ import { Badge } from './ui/badge';
 import { User, Mail, Shield, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
+import { clientService } from '../services/clientService';
+import { authService } from '../services/authService';
+import { toast } from 'sonner';
+
 export function ProfilePage() {
   const { t } = useLanguage();
-  const { currentUser, logout, isCustomer, balance } = useAuth();
+  const { currentUser, logout, isCustomer, balance, refreshUser } = useAuth();
   const [name, setName] = useState(currentUser?.name || '');
   const [email, setEmail] = useState(currentUser?.email || '');
   const [isSaved, setIsSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = () => {
-    // In a real app, this would call an API to update user info
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+  const handleSave = async () => {
+    if (!currentUser?.id) return;
+
+    setIsLoading(true);
+    try {
+      await clientService.updateClient(currentUser.id, {
+        name,
+        email
+      } as any);
+
+      await refreshUser();
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
+
+      toast.success(t('profile.personalInfo.saved'), {
+        description: t('profile.personalInfo.savedMessage'),
+      });
+    } catch (error) {
+      toast.error("Error", {
+        description: "Failed to update profile",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteAccount = () => {
-    // In a real app, this would call an API to delete the account
-    logout();
+  const handleDeleteAccount = async () => {
+    try {
+      await authService.deactivateAccount();
+      toast.success(t('profile.dangerZone.successMessage') || 'Account deactivated successfully');
+      logout();
+    } catch (error) {
+      toast.error(t('profile.dangerZone.errorMessage') || 'Failed to deactivate account');
+    }
   };
 
   if (!currentUser) {
@@ -75,8 +105,8 @@ export function ProfilePage() {
             </div>
           )}
 
-          <Button onClick={handleSave}>
-            {t('profile.personalInfo.save')}
+          <Button onClick={handleSave} disabled={isLoading}>
+            {isLoading ? "Saving..." : t('profile.personalInfo.save')}
           </Button>
         </CardContent>
       </Card>

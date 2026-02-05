@@ -89,7 +89,10 @@
     },
     "cart": {
         "title": "Shopping Cart",
-        "empty": "Your cart is empty",
+        "empty": {
+            "title": "Your cart is empty",
+            "description": "Add books from the catalog to purchase"
+        },
         "continueShopping": "Continue Shopping",
         "remove": "Remove",
         "total": "Total",
@@ -127,6 +130,10 @@
         "status": "Status",
         "total": "Total",
         "details": "Details",
+        "empty": {
+            "title": "You have no orders yet",
+            "description": "Your orders will appear here after placement"
+        },
         "noOrders": "You have no orders yet",
         "startShopping": "Start Shopping",
         "pending": "Pending",
@@ -138,8 +145,11 @@
         "cancel": "Cancel"
     },
     "favorites": {
-        "title": "Favorites",
-        "empty": "You have no favorites yet",
+        "title": "Favorite Books",
+        "empty": {
+            "title": "You have no favorite books yet",
+            "description": "Add books to favorites by clicking the heart icon"
+        },
         "browseCatalog": "Browse Catalog",
         "remove": "Remove from Favorites"
     },
@@ -318,7 +328,7 @@
             "placeholder": "Status",
             "all": "All Statuses",
             "active": "Active",
-            "inactive": "Terminated"
+            "inactive": "Blocked"
         },
         "sort": {
             "placeholder": "Sort By",
@@ -346,12 +356,12 @@
         },
         "badges": {
             "active": "Active",
-            "terminated": "Terminated"
+            "terminated": "Blocked"
         },
         "actions": {
             "edit": "Edit",
-            "terminate": "Terminate",
-            "terminateConfirm": "Are you sure you want to terminate {{name}}?"
+            "terminate": "Block",
+            "terminateConfirm": "Are you sure you want to block {{name}}?"
         },
         "form": {
             "editTitle": "Edit Employee",
@@ -370,8 +380,8 @@
             "updateSuccess": "Employee updated",
             "createSuccess": "Employee added",
             "saveError": "Error saving employee",
-            "terminateSuccess": "Employee terminated",
-            "terminateError": "Error terminating employee"
+            "terminateSuccess": "Employee blocked",
+            "terminateError": "Error blocking employee"
         }
     },
     "clients": {
