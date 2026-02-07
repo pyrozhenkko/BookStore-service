@@ -15,7 +15,7 @@ const ITEMS_PER_PAGE = 5;
 
 export function OrdersPage() {
   const { t, i18n } = useTranslation();
-  const { currentUser } = useAuth();
+  const { currentUser, refreshUser } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
@@ -29,13 +29,19 @@ export function OrdersPage() {
         try {
           const data = await orderService.getOrdersByCustomer(currentUser.email);
           setOrders(data);
+
+          // Refresh balance if returning from successful payment
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('session_id')) {
+            refreshUser();
+          }
         } catch (error) {
           console.error('Error loading orders:', error);
         }
       }
     };
     loadOrders();
-  }, [currentUser]);
+  }, [currentUser, refreshUser]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
