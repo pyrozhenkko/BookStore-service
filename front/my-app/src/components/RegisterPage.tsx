@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -19,16 +20,17 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (password !== confirmPassword) {
-      setError('Паролі не збігаються');
+      setError(t('auth.passwordsNotMatch'));
       return;
     }
     if (password.length < 6) {
-      setError('Пароль має містити щонайменше 6 символів');
+      setError(t('auth.passwordMinLength'));
       return;
     }
     setLoading(true);
@@ -37,8 +39,8 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
       const success = await login(email, password);
       if (success) onRegisterSuccess();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Помилка реєстрації';
-      setError(msg.includes('Exists') ? 'Користувач з таким email вже існує' : msg);
+      const msg = err instanceof Error ? err.message : t('auth.registerError');
+      setError(msg.includes('Exists') ? t('auth.alreadyExists') : msg);
     } finally {
       setLoading(false);
     }
@@ -48,25 +50,25 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Реєстрація</CardTitle>
+          <CardTitle>{t('auth.register')}</CardTitle>
           <CardDescription>
-            Створіть обліковий запис для покупок
+            {t('auth.registerDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Ім'я</Label>
+              <Label htmlFor="name">{t('auth.name')}</Label>
               <Input
                 id="name"
-                placeholder="Ваше ім'я"
+                placeholder={t('auth.namePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -77,7 +79,7 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Пароль</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -89,7 +91,7 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirm">Підтвердіть пароль</Label>
+              <Label htmlFor="confirm">{t('auth.confirmPassword')}</Label>
               <Input
                 id="confirm"
                 type="password"
@@ -105,12 +107,12 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
               </Alert>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Реєстрація...' : 'Зареєструватися'}
+              {loading ? t('auth.registering') : t('auth.registerButton')}
             </Button>
             <p className="text-center text-sm text-gray-600">
-              Вже є акаунт?{' '}
+              {t('auth.hasAccount')}{' '}
               <a href="/#/login" className="text-blue-600 hover:underline font-medium">
-                Увійти
+                {t('auth.login')}
               </a>
             </p>
           </form>

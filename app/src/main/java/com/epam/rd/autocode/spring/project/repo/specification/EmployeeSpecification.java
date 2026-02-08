@@ -14,8 +14,16 @@ public class EmployeeSpecification {
             return cb.or(
                     cb.like(cb.lower(root.get("name")), likePattern),
                     cb.like(cb.lower(root.get("email")), likePattern),
-                    cb.like(cb.lower(root.get("phone")), likePattern)
-            );
+                    cb.like(cb.lower(root.get("phone")), likePattern));
+        };
+    }
+
+    public static Specification<Employee> isBlocked(Boolean blocked) {
+        return (root, query, cb) -> {
+            if (blocked == null) {
+                return null;
+            }
+            return cb.equal(root.get("blocked"), blocked);
         };
     }
 }

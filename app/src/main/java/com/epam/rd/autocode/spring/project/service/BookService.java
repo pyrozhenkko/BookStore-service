@@ -14,8 +14,9 @@ public interface BookService {
     List<BookDTO> getAllBooks(String locale);
 
     @PreAuthorize("permitAll()")
-    Page<BookDTO> searchBooks(String keyword, String genre, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable,
-            String locale);
+    Page<BookDTO> searchBooks(String keyword, String genre, String stockStatus, BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Pageable pageable, String locale);
 
     @PreAuthorize("permitAll()")
     BookDTO getBookByName(String name, String locale);

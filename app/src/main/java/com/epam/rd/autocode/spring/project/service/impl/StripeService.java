@@ -9,6 +9,9 @@ import com.epam.rd.autocode.spring.project.model.ShoppingCart;
 import com.epam.rd.autocode.spring.project.repo.BookRepository;
 import com.epam.rd.autocode.spring.project.repo.ClientRepository;
 import com.epam.rd.autocode.spring.project.repo.ShoppingCartRepository;
+import com.epam.rd.autocode.spring.project.exception.AuthException;
+import com.epam.rd.autocode.spring.project.exception.InvalidOperationException;
+import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.stripe.Stripe;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
@@ -43,36 +46,36 @@ public class StripeService {
     @Transactional
     public PaymentResponse createPaymentIntent(CheckoutRequest deliveryRequest) {
         if (stripeApiKey == null || stripeApiKey.isEmpty()) {
-            throw new RuntimeException("Stripe API Key is not configured!");
+            throw new AuthException("Stripe API Key is not configured!");
         }
         Stripe.apiKey = stripeApiKey.trim();
 
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            throw new RuntimeException("No authentication found in security context");
+            throw new AuthException("No authentication found in security context");
         }
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        System.out.println("💳 Creating Payment Intent for: " + email);
+        System.out.println(" Creating Payment Intent for: " + email);
 
         BigDecimal cartTotal = BigDecimal.ZERO;
 
         if (deliveryRequest != null && deliveryRequest.getItems() != null && !deliveryRequest.getItems().isEmpty()) {
             for (CartItemDTO itemDTO : deliveryRequest.getItems()) {
                 Book book = bookRepository.findById(itemDTO.getBookId())
-                        .orElseThrow(() -> new RuntimeException("Book not found: " + itemDTO.getBookId()));
+                        .orElseThrow(() -> new NotFoundException("Book not found: " + itemDTO.getBookId()));
                 cartTotal = cartTotal.add(book.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
             }
         } else {
             ShoppingCart cart = cartRepository.findByClient_Email(email)
-                    .orElseThrow(() -> new RuntimeException("Cart not found for user: " + email));
+                    .orElseThrow(() -> new NotFoundException("Cart not found for user: " + email));
 
             if (cart.getItems() == null || cart.getItems().isEmpty()) {
-                throw new RuntimeException("Cannot checkout with an empty cart");
+                throw new InvalidOperationException("Cannot checkout with an empty cart");
             }
             cartTotal = cart.getTotalPrice();
         }
 
         Client client = clientRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Client not found for user: " + email));
+                .orElseThrow(() -> new NotFoundException("Client not found for user: " + email));
 
         BigDecimal bonusDiscount = BigDecimal.ZERO;
 
@@ -142,9 +145,9 @@ public class StripeService {
                     .clientSecret(session.getId()) // use ID as secret for backup
                     .build();
         } catch (Exception e) {
-            System.err.println("❌ Stripe Checkout Session Creation Failed: " + e.getMessage());
+            System.err.println(" Stripe Checkout Session Creation Failed: " + e.getMessage());
             e.printStackTrace();
-            throw new RuntimeException("Error creating Stripe Checkout Session: " + e.getMessage());
+            throw new InvalidOperationException("Error creating Stripe Checkout Session: " + e.getMessage());
         }
     }
 

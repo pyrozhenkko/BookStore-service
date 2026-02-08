@@ -82,8 +82,8 @@ export function CartPage({ onCheckout }: CartPageProps) {
                       </div>
 
                       <div className="text-right">
-                        <p className="font-semibold">{item.book.price * item.quantity} ₴</p>
-                        <p className="text-xs text-gray-500">{item.book.price} ₴ за шт.</p>
+                        <p className="font-semibold">{item.book.price * item.quantity} {t('common.currency')}</p>
+                        <p className="text-xs text-gray-500">{item.book.price} {t('common.currency')} {t('cart.perItem')}</p>
                       </div>
                     </div>
                   </div>
@@ -114,12 +114,12 @@ export function CartPage({ onCheckout }: CartPageProps) {
                   <span>{totalItems}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Проміжний підсумок</span>
-                  <span>{totalPrice} ₴</span>
+                  <span className="text-gray-600">{t('cart.subtotal')}</span>
+                  <span>{totalPrice} {t('common.currency')}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">{t('checkout.delivery')}</span>
-                  <span className="text-green-600">Безкоштовно</span>
+                  <span className="text-green-600">{t('cart.free')}</span>
                 </div>
               </div>
 
@@ -127,12 +127,12 @@ export function CartPage({ onCheckout }: CartPageProps) {
 
               <div className="flex justify-between">
                 <span className="font-semibold">{t('cart.total')}</span>
-                <span className="text-2xl font-semibold">{totalPrice} ₴</span>
+                <span className="text-2xl font-semibold">{totalPrice} {t('common.currency')}</span>
               </div>
 
               {currentUser && (
                 <div className="text-sm text-gray-600">
-                  <p>Замовник: {currentUser.name}</p>
+                  <p>{t('cart.customer')}: {currentUser.name}</p>
                   <p className="text-xs">{currentUser.email}</p>
                 </div>
               )}

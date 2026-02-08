@@ -40,8 +40,8 @@ export function ProfilePage() {
         description: t('profile.personalInfo.savedMessage'),
       });
     } catch (error) {
-      toast.error("Error", {
-        description: "Failed to update profile",
+      toast.error(t('common.error'), {
+        description: t('profile.personalInfo.saveError'),
       });
     } finally {
       setIsLoading(false);
@@ -51,10 +51,10 @@ export function ProfilePage() {
   const handleDeleteAccount = async () => {
     try {
       await authService.deactivateAccount();
-      toast.success(t('profile.dangerZone.successMessage') || 'Account deactivated successfully');
+      toast.success(t('profile.dangerZone.successMessage'));
       logout();
     } catch (error) {
-      toast.error(t('profile.dangerZone.errorMessage') || 'Failed to deactivate account');
+      toast.error(t('profile.dangerZone.errorMessage'));
     }
   };
 
@@ -106,7 +106,7 @@ export function ProfilePage() {
           )}
 
           <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? "Saving..." : t('profile.personalInfo.save')}
+            {isLoading ? t('common.saving') : t('profile.personalInfo.save')}
           </Button>
         </CardContent>
       </Card>
@@ -119,7 +119,7 @@ export function ProfilePage() {
             <CardDescription>{t('profile.cashback.description')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-green-600">{balance.toFixed(2)} ₴</p>
+            <p className="text-2xl font-semibold text-green-600">{balance.toFixed(2)} {t('common.currency')}</p>
           </CardContent>
         </Card>
       )}

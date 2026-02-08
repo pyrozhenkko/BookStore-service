@@ -171,9 +171,9 @@ export function AdminLogsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('logs.allLevels')}</SelectItem>
-                <SelectItem value="INFO">INFO</SelectItem>
-                <SelectItem value="WARN">WARN</SelectItem>
-                <SelectItem value="ERROR">ERROR</SelectItem>
+                <SelectItem value="INFO">{t('logs.level.info')}</SelectItem>
+                <SelectItem value="WARN">{t('logs.level.warn')}</SelectItem>
+                <SelectItem value="ERROR">{t('logs.level.error')}</SelectItem>
               </SelectContent>
             </Select>
             <Button onClick={applyFilters}>{t('logs.filter')}</Button>
@@ -204,10 +204,10 @@ export function AdminLogsPage() {
                         log.level === 'WARN' ? 'bg-amber-100 text-amber-700' :
                           'bg-green-100 text-green-700'
                         }`}>
-                        {log.level}
+                        {t(`logs.level.${log.level.toLowerCase()}`)}
                       </span>
                     </td>
-                    <td className="p-3 font-medium">{log.category}</td>
+                    <td className="p-3 font-medium">{t(`logs.category.${log.category.toLowerCase()}`)}</td>
                     <td className="p-3 text-gray-700 max-w-[300px]">
                       <div className="truncate" title={log.message}>{log.message}</div>
                     </td>

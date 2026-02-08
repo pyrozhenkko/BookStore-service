@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 public interface OrderService {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    Page<OrderDTO> searchOrders(String clientEmail, String city, BigDecimal minPrice, BigDecimal maxPrice,
+    Page<OrderDTO> searchOrders(String clientEmail, String city, String status, BigDecimal minPrice,
+            BigDecimal maxPrice,
             LocalDateTime dateFrom, Pageable pageable);
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE') or authentication.name == #clientEmail")

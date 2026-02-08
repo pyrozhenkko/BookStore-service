@@ -92,7 +92,7 @@ class ClientControllerTest {
         client.setEmail("test@client.com");
         Page<ClientDTO> page = new PageImpl<>(List.of(client), PageRequest.of(0, 10), 1);
 
-        when(clientService.searchClients(anyString(), any(Pageable.class))).thenReturn(page);
+        when(clientService.searchClients(anyString(), any(), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/clients/search").param("keyword", "test"))
                 .andExpect(status().isOk())

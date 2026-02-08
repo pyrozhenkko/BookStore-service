@@ -239,7 +239,7 @@ class BookServiceImplTest {
                 .thenReturn(new PageImpl<>(List.of(book)));
         when(bookMapper.toDto(book)).thenReturn(bookDTO);
 
-        Page<BookDTO> result = bookService.searchBooks("query", null, null, null, pageable, "en");
+        Page<BookDTO> result = bookService.searchBooks("query", null, null, null, null, pageable, "en");
 
         assertEquals(1, result.getTotalElements());
     }

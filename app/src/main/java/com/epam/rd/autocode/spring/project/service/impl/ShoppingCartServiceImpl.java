@@ -5,6 +5,9 @@ import com.epam.rd.autocode.spring.project.dto.cart.CheckoutRequest;
 import com.epam.rd.autocode.spring.project.dto.cart.ShoppingCartDTO;
 import com.epam.rd.autocode.spring.project.mapper.ShoppingCartMapper;
 import com.epam.rd.autocode.spring.project.model.*;
+import com.epam.rd.autocode.spring.project.exception.InsufficientStockException;
+import com.epam.rd.autocode.spring.project.exception.InvalidOperationException;
+import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.repo.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,10 +43,10 @@ public class ShoppingCartServiceImpl {
     public ShoppingCartDTO addToCart(Long bookId, Integer quantity) {
         ShoppingCart cart = getOrCreateCart();
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+                .orElseThrow(() -> new NotFoundException("Book not found"));
 
         if (book.getQuantity() < quantity) {
-            throw new RuntimeException("Not enough books in stock!");
+            throw new InsufficientStockException("Not enough books in stock!");
         }
 
         Optional<CartItem> existingItem = cart.getItems().stream()
@@ -53,7 +56,7 @@ public class ShoppingCartServiceImpl {
         if (existingItem.isPresent()) {
             CartItem item = existingItem.get();
             if (book.getQuantity() < item.getQuantity() + quantity) {
-                throw new RuntimeException("Not enough books in stock for update!");
+                throw new InsufficientStockException("Not enough books in stock for update!");
             }
             item.setQuantity(item.getQuantity() + quantity);
         } else {
@@ -68,10 +71,10 @@ public class ShoppingCartServiceImpl {
     public ShoppingCartDTO removeOneOrDelete(Long cartItemId) {
         ShoppingCart cart = getOrCreateCart();
         CartItem item = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new NotFoundException("Item not found"));
 
         if (!item.getShoppingCart().getId().equals(cart.getId())) {
-            throw new RuntimeException("Access denied to this item");
+            throw new InvalidOperationException("Access denied to this item");
         }
 
         if (item.getQuantity() > 1) {
@@ -88,10 +91,10 @@ public class ShoppingCartServiceImpl {
     public ShoppingCartDTO removeItem(Long cartItemId) {
         ShoppingCart cart = getOrCreateCart();
         CartItem item = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new NotFoundException("Item not found"));
 
         if (!item.getShoppingCart().getId().equals(cart.getId())) {
-            throw new RuntimeException("Access denied to this item");
+            throw new InvalidOperationException("Access denied to this item");
         }
 
         cart.getItems().remove(item);
@@ -116,7 +119,7 @@ public class ShoppingCartServiceImpl {
     public void checkout(CheckoutRequest request, BigDecimal bonusDiscount) {
         ShoppingCart cart = getOrCreateCart();
         if (cart.getItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty!");
+            throw new InvalidOperationException("Cart is empty!");
         }
 
         List<CartItemDTO> items = cart.getItems().stream()
@@ -137,7 +140,7 @@ public class ShoppingCartServiceImpl {
     public void checkout(CheckoutRequest request, java.util.List<CartItemDTO> items, BigDecimal bonusDiscount) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Client client = clientRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Client not found: " + email));
+                .orElseThrow(() -> new NotFoundException("Client not found: " + email));
 
         Order order = new Order();
         order.setClient(client);
@@ -155,10 +158,10 @@ public class ShoppingCartServiceImpl {
 
         for (CartItemDTO itemDTO : items) {
             Book book = bookRepository.findById(itemDTO.getBookId())
-                    .orElseThrow(() -> new RuntimeException("Book not found: " + itemDTO.getBookId()));
+                    .orElseThrow(() -> new NotFoundException("Book not found: " + itemDTO.getBookId()));
 
             if (book.getQuantity() < itemDTO.getQuantity()) {
-                throw new RuntimeException("Not enough stock for: " + book.getName());
+                throw new InsufficientStockException("Not enough stock for: " + book.getName());
             }
 
             book.setQuantity(book.getQuantity() - itemDTO.getQuantity());
@@ -179,6 +182,7 @@ public class ShoppingCartServiceImpl {
             finalPrice = BigDecimal.ZERO;
         }
         order.setPrice(finalPrice);
+        order.setUsedBonuses(bonusDiscount);
 
         if (bonusDiscount.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal currentBalance = client.getBalance() != null ? client.getBalance() : BigDecimal.ZERO;
@@ -199,6 +203,13 @@ public class ShoppingCartServiceImpl {
         clientRepository.save(client);
         orderRepository.save(order);
 
+        // Clear the shopping cart after successful checkout
+        cartRepository.findByClient_Email(email).ifPresent(cart -> {
+            cart.getItems().clear();
+            cartRepository.save(cart);
+            System.out.println("🛒 Shopping cart cleared for: " + email);
+        });
+
         try {
             System.out.println("📧 Sending confirmation email to " + client.getEmail());
             emailService.sendOrderConfirmationEmail(client.getEmail(), order);
@@ -212,7 +223,7 @@ public class ShoppingCartServiceImpl {
         return cartRepository.findByClient_Email(email)
                 .orElseGet(() -> {
                     Client client = clientRepository.findByEmail(email)
-                            .orElseThrow(() -> new RuntimeException("Client not found: " + email));
+                            .orElseThrow(() -> new NotFoundException("Client not found: " + email));
                     ShoppingCart cart = new ShoppingCart();
                     cart.setClient(client);
                     return cartRepository.save(cart);

@@ -3,6 +3,8 @@ package com.epam.rd.autocode.spring.project.service.impl;
 import com.epam.rd.autocode.spring.project.dto.ClientDTO;
 import com.epam.rd.autocode.spring.project.dto.favorite.FavoriteDTOs.*;
 import com.epam.rd.autocode.spring.project.mapper.BookMapper;
+import com.epam.rd.autocode.spring.project.exception.AlreadyExistException;
+import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.mapper.ClientMapper;
 import com.epam.rd.autocode.spring.project.model.Book;
 import com.epam.rd.autocode.spring.project.model.Client;
@@ -45,8 +47,9 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ClientDTO> searchClients(String keyword, Pageable pageable) {
-        Specification<Client> spec = ClientSpecification.hasKeyword(keyword);
+    public Page<ClientDTO> searchClients(String keyword, Boolean isBlocked, Pageable pageable) {
+        Specification<Client> spec = Specification.where(ClientSpecification.hasKeyword(keyword))
+                .and(ClientSpecification.isBlocked(isBlocked));
         return clientRepository.findAll(spec, pageable).map(this::toDtoWithCount);
     }
 
@@ -54,21 +57,21 @@ public class ClientServiceImpl implements ClientService {
     @Transactional(readOnly = true)
     public ClientDTO getClientById(Long id) {
         return clientRepository.findById(id).map(this::toDtoWithCount)
-                .orElseThrow(() -> new RuntimeException("Client not found"));
+                .orElseThrow(() -> new NotFoundException("Client not found"));
     }
 
     @Override
     @Transactional(readOnly = true)
     public ClientDTO getClientByEmail(String email) {
         return clientRepository.findByEmail(email).map(this::toDtoWithCount)
-                .orElseThrow(() -> new RuntimeException("Client not found"));
+                .orElseThrow(() -> new NotFoundException("Client not found"));
     }
 
     @Override
     @Transactional
     public ClientDTO addClient(ClientDTO clientDTO) {
         if (clientRepository.findByEmail(clientDTO.getEmail()).isPresent()) {
-            throw new RuntimeException("Exists");
+            throw new AlreadyExistException("Client with this email already exists");
         }
         Client client = clientMapper.toEntity(clientDTO);
         client.setPassword(passwordEncoder.encode(clientDTO.getPassword()));
@@ -78,12 +81,12 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     public ClientDTO updateClientById(Long id, ClientDTO clientDTO) {
-        Client client = clientRepository.findById(id).orElseThrow(() -> new RuntimeException("Client not found"));
+        Client client = clientRepository.findById(id).orElseThrow(() -> new NotFoundException("Client not found"));
         client.setName(clientDTO.getName());
 
         if (clientDTO.getEmail() != null && !clientDTO.getEmail().equals(client.getEmail())) {
             if (clientRepository.findByEmail(clientDTO.getEmail()).isPresent()) {
-                throw new RuntimeException("Email already exists");
+                throw new AlreadyExistException("Email already exists");
             }
             client.setEmail(clientDTO.getEmail());
         }
@@ -112,7 +115,7 @@ public class ClientServiceImpl implements ClientService {
         Client client = getCurrentClient();
 
         Book book = bookRepository.findById(request.getBookId())
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+                .orElseThrow(() -> new NotFoundException("Book not found"));
 
         Optional<FavoriteItem> existing = favoriteItemRepository.findByClient_EmailAndBook_Id(client.getEmail(),
                 request.getBookId());
@@ -134,7 +137,7 @@ public class ClientServiceImpl implements ClientService {
         Client client = getCurrentClient();
 
         FavoriteItem itemToRemove = favoriteItemRepository.findByClient_EmailAndBook_Id(client.getEmail(), bookId)
-                .orElseThrow(() -> new RuntimeException("Book not in favorites"));
+                .orElseThrow(() -> new NotFoundException("Book not in favorites"));
 
         client.getFavorites().remove(itemToRemove);
         favoriteItemRepository.delete(itemToRemove);
@@ -157,13 +160,13 @@ public class ClientServiceImpl implements ClientService {
     private Client getCurrentClient() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return clientRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Current user not found"));
+                .orElseThrow(() -> new NotFoundException("Current user not found"));
     }
 
     @Override
     @Transactional
     public void blockClient(Long id) {
-        Client client = clientRepository.findById(id).orElseThrow(() -> new RuntimeException("Client not found"));
+        Client client = clientRepository.findById(id).orElseThrow(() -> new NotFoundException("Client not found"));
         client.setBlocked(true);
         clientRepository.save(client);
     }
@@ -171,7 +174,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     public void unblockClient(Long id) {
-        Client client = clientRepository.findById(id).orElseThrow(() -> new RuntimeException("Client not found"));
+        Client client = clientRepository.findById(id).orElseThrow(() -> new NotFoundException("Client not found"));
         client.setBlocked(false);
         clientRepository.save(client);
     }

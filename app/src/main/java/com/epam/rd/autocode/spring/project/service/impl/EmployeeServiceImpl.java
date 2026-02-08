@@ -3,6 +3,9 @@ package com.epam.rd.autocode.spring.project.service.impl;
 import com.epam.rd.autocode.spring.project.dto.EmployeeDTO;
 import com.epam.rd.autocode.spring.project.mapper.EmployeeMapper;
 import com.epam.rd.autocode.spring.project.model.Employee;
+import com.epam.rd.autocode.spring.project.exception.AlreadyExistException;
+import com.epam.rd.autocode.spring.project.exception.InvalidOperationException;
+import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.repo.EmployeeRepository;
 import com.epam.rd.autocode.spring.project.repo.specification.EmployeeSpecification;
 import com.epam.rd.autocode.spring.project.service.EmployeeService;
@@ -29,8 +32,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public Page<EmployeeDTO> searchEmployees(String keyword, Pageable pageable) {
-        Specification<Employee> spec = EmployeeSpecification.hasKeyword(keyword);
+    public Page<EmployeeDTO> searchEmployees(String keyword, Boolean isBlocked, Pageable pageable) {
+        Specification<Employee> spec = Specification.where(EmployeeSpecification.hasKeyword(keyword))
+                .and(EmployeeSpecification.isBlocked(isBlocked));
         return employeeRepository.findAll(spec, pageable)
                 .map(employeeMapper::toDto);
     }
@@ -39,21 +43,21 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeDTO getEmployeeById(Long id) {
         return employeeRepository.findById(id)
                 .map(employeeMapper::toDto)
-                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("Employee not found with id: " + id));
     }
 
     @Override
     public EmployeeDTO getEmployeeByEmail(String email) {
         return employeeRepository.findByEmail(email)
                 .map(employeeMapper::toDto)
-                .orElseThrow(() -> new RuntimeException("Employee not found with email: " + email));
+                .orElseThrow(() -> new NotFoundException("Employee not found with email: " + email));
     }
 
     @Override
     @Transactional
     public EmployeeDTO updateEmployeeById(Long id, EmployeeDTO employeeDTO) {
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("Employee not found with id: " + id));
 
         employee.setName(employeeDTO.getName());
         employee.setPhone(employeeDTO.getPhone());
@@ -66,7 +70,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             String currentEmail = org.springframework.security.core.context.SecurityContextHolder.getContext()
                     .getAuthentication().getName();
             if (employee.getEmail().equals(currentEmail)) {
-                throw new RuntimeException("You cannot block yourself");
+                throw new InvalidOperationException("You cannot block yourself");
             }
         }
         employee.setBlocked(!employeeDTO.isActive());
@@ -82,7 +86,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     public void deleteEmployeeById(Long id) {
         if (!employeeRepository.existsById(id)) {
-            throw new RuntimeException("Employee not found with id: " + id);
+            throw new NotFoundException("Employee not found with id: " + id);
         }
         employeeRepository.deleteById(id);
     }
@@ -91,7 +95,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     public EmployeeDTO addEmployee(EmployeeDTO employeeDTO) {
         if (employeeRepository.findByEmail(employeeDTO.getEmail()).isPresent()) {
-            throw new RuntimeException("Employee with email " + employeeDTO.getEmail() + " already exists");
+            throw new AlreadyExistException("Employee with email " + employeeDTO.getEmail() + " already exists");
         }
 
         Employee employee = employeeMapper.toEntity(employeeDTO);

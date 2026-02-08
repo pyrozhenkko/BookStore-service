@@ -7,8 +7,11 @@ import {
   MapPin,
   Package,
   Loader2,
-  ArrowLeft
+  ArrowLeft,
+  Coins
 } from 'lucide-react';
+import { Checkbox } from './ui/checkbox';
+import { useTranslation } from 'react-i18next';
 import { NovaPoshtaService, type NovaPoshtaCity, type NovaPoshtaWarehouse } from '../services/novaPoshtaService';
 import { useState, useEffect } from 'react';
 import { useCart } from '../contexts/CartContext';
@@ -24,8 +27,9 @@ interface CheckoutPageProps {
 }
 
 export function CheckoutPage({ onBack }: CheckoutPageProps) {
+  const { t } = useTranslation();
   const { cart, totalPrice } = useCart();
-  const { currentUser } = useAuth();
+  const { currentUser, balance, isCustomer } = useAuth();
 
   // Delivery state
   const [cityQuery, setCityQuery] = useState('');
@@ -41,6 +45,9 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
   const [email, setEmail] = useState(currentUser?.email || '');
   const [recipientName, setRecipientName] = useState(currentUser?.name || '');
 
+  // Cashback state
+  const [useCashback, setUseCashback] = useState(false);
+
   // Process state
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -54,7 +61,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
           setCities(results);
         } catch (error) {
           console.error('Error searching cities:', error);
-          toast.error('Помилка пошуку міста');
+          toast.error(t('checkout.errors.citySearch'));
         } finally {
           setLoadingCities(false);
         }
@@ -77,7 +84,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
           setSelectedWarehouse('');
         } catch (error) {
           console.error('Error loading warehouses:', error);
-          toast.error('Помилка завантаження відділень');
+          toast.error(t('checkout.errors.warehouseLoading'));
         } finally {
           setLoadingWarehouses(false);
         }
@@ -103,7 +110,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
     e.preventDefault();
 
     if (!selectedCity || !selectedWarehouse || !phone || !recipientName) {
-      toast.error('Будь ласка, заповніть всі обовʼязкові поля');
+      toast.error(t('common.fillRequired'));
       return;
     }
 
@@ -115,7 +122,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
         deliveryCityRef: selectedCity?.Ref,
         deliveryBranch: warehouses.find(w => w.Ref === selectedWarehouse)?.Description,
         deliveryBranchRef: selectedWarehouse,
-        useBonuses: false,
+        useBonuses: useCashback,
         items: cart.map(item => ({
           bookId: item.book.id,
           quantity: item.quantity,
@@ -131,11 +138,11 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
       if (result.paymentUrl) {
         window.location.href = result.paymentUrl;
       } else {
-        toast.error('Не вдалося створити платіжну сесію');
+        toast.error(t('checkout.errors.session'));
       }
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error('Помилка обробки платежу');
+      toast.error(t('checkout.errors.payment'));
     } finally {
       setIsProcessing(false);
     }
@@ -146,7 +153,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onBack}>
           <ArrowLeft className="size-4 mr-2" />
-          Назад до кошика
+          {t('checkout.backToCart')}
         </Button>
       </div>
 
@@ -157,58 +164,58 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="size-5" />
-                Оформлення замовлення
+                {t('checkout.title')}
               </CardTitle>
-              <CardDescription>Вкажіть дані для доставки та перейдіть до оплати</CardDescription>
+              <CardDescription>{t('checkout.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <form id="checkout-form" onSubmit={handleCheckout} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="recipientName">Прізвище та імʼя отримувача *</Label>
+                    <Label htmlFor="recipientName">{t('checkout.recipientName')}</Label>
                     <Input
                       id="recipientName"
                       value={recipientName}
                       onChange={(e) => setRecipientName(e.target.value)}
-                      placeholder="Іванов Іван"
+                      placeholder={t('checkout.recipientNamePlaceholder')}
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Телефон *</Label>
+                    <Label htmlFor="phone">{t('checkout.phone')}</Label>
                     <Input
                       id="phone"
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+380XXXXXXXXX"
+                      placeholder={t('checkout.phonePlaceholder')}
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('auth.email')}</Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="example@mail.com"
+                    placeholder={t('checkout.emailPlaceholder')}
                   />
                 </div>
 
                 <Separator />
 
                 <div className="space-y-2">
-                  <Label htmlFor="city">Місто доставки *</Label>
+                  <Label htmlFor="city">{t('checkout.city')}</Label>
                   <div className="relative">
                     <Input
                       id="city"
                       value={cityQuery}
                       onChange={(e) => setCityQuery(e.target.value)}
-                      placeholder="Введіть місто..."
+                      placeholder={t('checkout.cityPlaceholder')}
                       required
                     />
                     {loadingCities && (
@@ -235,13 +242,13 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
                   {selectedCity && (
                     <div className="flex items-center gap-2 text-sm text-green-600">
                       <MapPin className="size-4" />
-                      Місто вибрано: {selectedCity.Description}
+                      {t('checkout.citySelected')}: {selectedCity.Description}
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="warehouse">Відділення Нової Пошти *</Label>
+                  <Label htmlFor="warehouse">{t('checkout.warehouse')}</Label>
                   <Select
                     value={selectedWarehouse}
                     onValueChange={setSelectedWarehouse}
@@ -250,9 +257,9 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
                   >
                     <SelectTrigger>
                       <SelectValue placeholder={
-                        loadingWarehouses ? 'Завантаження...' :
-                          !selectedCity ? 'Спочатку оберіть місто' :
-                            'Оберіть відділення'
+                        loadingWarehouses ? t('common.loading') :
+                          !selectedCity ? t('checkout.selectCityFirst') :
+                            t('checkout.selectWarehouse')
                       } />
                     </SelectTrigger>
                     <SelectContent>
@@ -275,7 +282,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
 
           <Card className="sticky top-24">
             <CardHeader>
-              <CardTitle>Ваше замовлення</CardTitle>
+              <CardTitle>{t('checkout.orderSummary')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
@@ -284,7 +291,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
                     <span className="text-gray-600 truncate mr-2">
                       {item.book.name} × {item.quantity}
                     </span>
-                    <span className="font-medium whitespace-nowrap">{item.book.price * item.quantity} ₴</span>
+                    <span className="font-medium whitespace-nowrap">{item.book.price * item.quantity} {t('common.currency')}</span>
                   </div>
                 ))}
               </div>
@@ -293,41 +300,88 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Сума</span>
-                  <span>{totalPrice} ₴</span>
+                  <span className="text-gray-600">{t('cart.subtotal')}</span>
+                  <span>{totalPrice} {t('common.currency')}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Доставка</span>
-                  <span className="text-green-600 font-medium">За тарифами НП</span>
+                  <span className="text-gray-600">{t('checkout.delivery')}</span>
+                  <span className="text-green-600 font-medium">{t('checkout.deliveryRates')}</span>
                 </div>
               </div>
 
               <Separator />
 
+              {isCustomer && (
+                <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-primary/10 p-1.5 rounded-lg">
+                        <Coins className="size-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{t('checkout.cashbackTitle')}</p>
+                        <p className="text-xs text-muted-foreground">{t('checkout.availableCashback', { amount: balance || 0 })}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="use-cashback"
+                        checked={useCashback}
+                        onCheckedChange={(checked) => setUseCashback(checked as boolean)}
+                        disabled={!balance || balance <= 0}
+                      />
+                      <label
+                        htmlFor="use-cashback"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {t('checkout.useCashback') || 'Use Cashback'}
+                      </label>
+                    </div>
+                  </div>
+                  {useCashback && balance && balance > 0 && (
+                    <div className="flex justify-between text-sm text-primary font-medium">
+                      <span>{t('checkout.cashbackDiscount')}</span>
+                      <span>-{Math.min(balance, totalPrice - 1)} {t('common.currency')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="bg-green-50 p-3 rounded-lg border border-green-100 flex items-center gap-2">
+                <div className="bg-green-500/10 p-1 rounded-full">
+                  <Package className="size-3.5 text-green-600" />
+                </div>
+                <p className="text-[11px] text-green-700 font-medium">
+                  {t('checkout.potentialCashback', { amount: (totalPrice * 0.05).toFixed(2) })}
+                </p>
+              </div>
+
               <div className="flex justify-between items-baseline">
-                <span className="font-semibold text-lg">Всього</span>
-                <span className="text-2xl font-bold text-primary">{totalPrice} ₴</span>
+                <span className="font-semibold text-lg">{t('cart.total')}</span>
+                <span className="text-2xl font-bold text-primary">
+                  {useCashback ? Math.max(1, totalPrice - (balance || 0)) : totalPrice} {t('common.currency')}
+                </span>
               </div>
 
               <Button
                 form="checkout-form"
                 type="submit"
-                className="w-full h-12 text-lg font-semibold"
+                className="w-full h-12 text-lg font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] transition-all"
                 disabled={isProcessing}
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="size-5 mr-2 animate-spin" />
-                    Обробка...
+                    {t('checkout.processing')}
                   </>
                 ) : (
-                  'Оплатити замовлення'
+                  t('checkout.placeOrder')
                 )}
               </Button>
 
               <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-4">
                 <Package className="size-3" />
-                Безпечна оплата через Stripe
+                {t('checkout.securePayment')}
               </div>
             </CardContent>
           </Card>

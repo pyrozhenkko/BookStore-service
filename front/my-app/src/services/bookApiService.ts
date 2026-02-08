@@ -64,14 +64,18 @@ export const bookApiService = {
   async searchBooks(params: {
     keyword?: string;
     genre?: string;
+    stockStatus?: string;
     page?: number;
     size?: number;
+    sort?: string;
   }): Promise<{ content: Book[]; totalPages: number }> {
     const search = new URLSearchParams();
     if (params.keyword) search.set('keyword', params.keyword);
-    if (params.genre) search.set('genre', params.genre);
+    if (params.genre && params.genre !== 'all') search.set('genre', params.genre);
+    if (params.stockStatus && params.stockStatus !== 'all') search.set('stockStatus', params.stockStatus);
     if (params.page != null) search.set('page', String(params.page));
     if (params.size != null) search.set('size', String(params.size));
+    if (params.sort) search.set('sort', params.sort);
     const res = await apiRequest<{ content: BackendBookDTO[]; totalPages: number }>(
       `/api/books/search?${search}`
     );

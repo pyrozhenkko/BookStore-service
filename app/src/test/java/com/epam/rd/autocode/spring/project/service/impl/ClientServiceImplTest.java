@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -118,12 +119,13 @@ class ClientServiceImplTest {
     @Test
     void searchClients_ShouldReturnPage() {
         Pageable pageable = Pageable.unpaged();
-        when(clientRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), eq(pageable)))
+        when(clientRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class),
+                any(Pageable.class)))
                 .thenReturn(new PageImpl<>(Collections.singletonList(client)));
         when(clientMapper.toDto(client)).thenReturn(clientDTO);
         when(orderRepository.countOrdersByClientId(1L)).thenReturn(0);
 
-        Page<ClientDTO> result = clientService.searchClients("keyword", pageable);
+        Page<ClientDTO> result = clientService.searchClients("test", null, PageRequest.of(0, 10));
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());

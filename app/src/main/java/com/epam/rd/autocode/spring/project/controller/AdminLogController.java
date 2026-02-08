@@ -25,9 +25,9 @@ public class AdminLogController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<LogRecordDTO>> getAllLogs(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String level,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "level", required = false) String level,
             @PageableDefault(sort = "timestamp", direction = Sort.Direction.DESC, size = 20) Pageable pageable) {
         return ResponseEntity.ok(logService.searchLogs(keyword, category, level, pageable));
     }

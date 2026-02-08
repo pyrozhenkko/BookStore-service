@@ -12,10 +12,32 @@ export const clientService = {
 
   // Get all clients
   async getAllClients(): Promise<Client[]> {
-    const data = await apiRequest<{ content: Client[] }>('/api/clients?size=1000', {
+    const data = await await this.searchClients({ size: 1000 });
+    return data.content || [];
+  },
+
+  // Search clients with backend filtering and pagination
+  async searchClients(params: {
+    keyword?: string;
+    isBlocked?: boolean;
+    page?: number;
+    size?: number;
+    sort?: string;
+  }): Promise<{ content: Client[]; totalPages: number }> {
+    const search = new URLSearchParams();
+    if (params.keyword) search.set('keyword', params.keyword);
+    if (params.isBlocked !== undefined) search.set('isBlocked', String(params.isBlocked));
+    if (params.page !== undefined) search.set('page', String(params.page));
+    if (params.size !== undefined) search.set('size', String(params.size));
+    if (params.sort) search.set('sort', params.sort);
+
+    const data = await apiRequest<{ content: Client[]; totalPages: number }>(`/api/clients/search?${search}`, {
       method: 'GET',
     });
-    return data.content || [];
+    return {
+      content: data.content || [],
+      totalPages: data.totalPages || 0
+    };
   },
 
   // Block client

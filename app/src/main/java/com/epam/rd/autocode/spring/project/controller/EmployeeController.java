@@ -26,13 +26,15 @@ public class EmployeeController {
 
     @GetMapping("/search")
     public ResponseEntity<Page<EmployeeDTO>> searchEmployees(
-            @RequestParam(required = false) String keyword,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "active", required = false) Boolean active,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
-        return ResponseEntity.ok(employeeService.searchEmployees(keyword, pageable));
+        Boolean isBlocked = active != null ? !active : null;
+        return ResponseEntity.ok(employeeService.searchEmployees(keyword, isBlocked, pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EmployeeDTO> getEmployeeById(@PathVariable Long id) {
+    public ResponseEntity<EmployeeDTO> getEmployeeById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
@@ -42,12 +44,13 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable Long id, @RequestBody EmployeeDTO employeeDTO) {
+    public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable("id") Long id,
+            @RequestBody EmployeeDTO employeeDTO) {
         return ResponseEntity.ok(employeeService.updateEmployeeById(id, employeeDTO));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteEmployee(@PathVariable("id") Long id) {
         employeeService.deleteEmployeeById(id);
         return ResponseEntity.noContent().build();
     }

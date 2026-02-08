@@ -5,6 +5,8 @@ import com.epam.rd.autocode.spring.project.model.Book;
 import com.epam.rd.autocode.spring.project.model.BookComment;
 import com.epam.rd.autocode.spring.project.model.BookRating;
 import com.epam.rd.autocode.spring.project.model.Client;
+import com.epam.rd.autocode.spring.project.exception.NotFoundException;
+import com.epam.rd.autocode.spring.project.exception.ValidationException;
 import com.epam.rd.autocode.spring.project.repo.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,11 +31,12 @@ public class ReviewServiceImpl {
     @Transactional
     public void setRating(Long bookId, Integer ratingValue) {
         if (ratingValue < 1 || ratingValue > 5)
-            throw new RuntimeException("Rating must be 1-5");
+            throw new ValidationException("Rating must be 1-5");
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Client client = clientRepository.findByEmail(email).orElseThrow();
-        Book book = bookRepository.findById(bookId).orElseThrow();
+        Client client = clientRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Client not found"));
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new NotFoundException("Book not found"));
 
         Optional<BookRating> existingRating = ratingRepository.findByClient_EmailAndBook_Id(email, bookId);
 
@@ -52,8 +55,9 @@ public class ReviewServiceImpl {
     @Transactional
     public void addComment(Long bookId, String text, Integer rating) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Client client = clientRepository.findByEmail(email).orElseThrow();
-        Book book = bookRepository.findById(bookId).orElseThrow();
+        Client client = clientRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Client not found"));
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new NotFoundException("Book not found"));
 
         BookComment comment = new BookComment(book, client, text, rating);
         commentRepository.save(comment);

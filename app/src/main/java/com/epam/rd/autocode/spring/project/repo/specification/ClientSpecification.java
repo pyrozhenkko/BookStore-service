@@ -13,8 +13,16 @@ public class ClientSpecification {
             String likePattern = "%" + keyword.toLowerCase() + "%";
             return cb.or(
                     cb.like(cb.lower(root.get("name")), likePattern),
-                    cb.like(cb.lower(root.get("email")), likePattern)
-            );
+                    cb.like(cb.lower(root.get("email")), likePattern));
+        };
+    }
+
+    public static Specification<Client> isBlocked(Boolean blocked) {
+        return (root, query, cb) -> {
+            if (blocked == null) {
+                return null;
+            }
+            return cb.equal(root.get("isBlocked"), blocked);
         };
     }
 }

@@ -1,14 +1,16 @@
 import { Package, CreditCard, CheckCircle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface CheckoutProgressProps {
   currentStep: 'delivery' | 'payment' | 'success';
 }
 
 export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
+  const { t } = useLanguage();
   const steps = [
-    { id: 'delivery', label: 'Доставка', icon: Package },
-    { id: 'payment', label: 'Оплата', icon: CreditCard },
-    { id: 'success', label: 'Завершено', icon: CheckCircle },
+    { id: 'delivery', label: t('checkout.deliveryStep'), icon: Package },
+    { id: 'payment', label: t('checkout.paymentStep'), icon: CreditCard },
+    { id: 'success', label: t('checkout.successStep'), icon: CheckCircle },
   ];
 
   const getCurrentStepIndex = () => {

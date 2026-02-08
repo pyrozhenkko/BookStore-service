@@ -58,6 +58,7 @@ export interface Order {
   employeeEmail?: string;
   orderDate: string;
   price: number;
+  usedBonuses?: number;
   status: 'pending' | 'confirmed' | 'cancelled';
   bookItems: OrderItem[];
   deliveryCity?: string;

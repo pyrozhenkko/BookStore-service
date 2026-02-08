@@ -71,7 +71,7 @@ export function BookCard({ book, onViewDetails }: BookCardProps) {
           </div>
           <p className="text-sm text-gray-600 line-clamp-2">{book.description}</p>
           <div className="flex items-center justify-between pt-2">
-            <span className="text-2xl font-semibold">{book.price} ₴</span>
+            <p className="text-sm font-bold text-primary">{book.price} {t('common.currency')}</p>
             {book.stock > 0 ? (
               <Badge variant="outline" className="text-green-600">
                 {t('stockStatus.inStockWithCount', { count: book.stock })}

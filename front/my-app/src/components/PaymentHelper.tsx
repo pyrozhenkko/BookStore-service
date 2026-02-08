@@ -3,40 +3,42 @@ import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { HelpCircle, CreditCard, Package, CheckCircle, XCircle, Shield, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export function PaymentHelper() {
+  const { t, language } = useLanguage();
   const [open, setOpen] = useState(false);
 
   const testCards = [
     {
       number: '4242424242424242',
       display: '4242 4242 4242 4242',
-      type: 'Успішна оплата',
+      type: t('payment.helper.successPayment'),
       icon: CheckCircle,
       color: 'text-green-600',
-      description: 'Використовуйте цю картку для успішної оплати'
+      description: t('payment.helper.successPaymentDesc')
     },
     {
       number: '4000000000000002',
       display: '4000 0000 0000 0002',
-      type: 'Відхилена картка',
+      type: t('payment.helper.declinedCard'),
       icon: XCircle,
       color: 'text-red-600',
-      description: 'Симулює відхилення платежу банком'
+      description: t('payment.helper.declinedCardDesc')
     },
     {
       number: '4000002760003184',
       display: '4000 0027 6000 3184',
-      type: '3D Secure',
+      type: t('payment.helper.3ds'),
       icon: Shield,
       color: 'text-blue-600',
-      description: 'Симулює додаткову аутентифікацію'
+      description: t('payment.helper.3dsDesc')
     },
   ];
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`${label} скопійовано`);
+    toast.success(t('payment.helper.copied', { label }));
   };
 
   return (
@@ -44,14 +46,14 @@ export function PaymentHelper() {
       <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <HelpCircle className="size-4" />
-          Довідка
+          {t('payment.helper.button')}
         </Button>
       </SheetTrigger>
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Довідка по оплаті та доставці</SheetTitle>
+          <SheetTitle>{t('payment.helper.title')}</SheetTitle>
           <SheetDescription>
-            Інформація про тестові картки та API Нової Пошти
+            {t('payment.helper.description')}
           </SheetDescription>
         </SheetHeader>
 
@@ -60,9 +62,9 @@ export function PaymentHelper() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <CreditCard className="size-5 text-blue-600" />
-              <h3 className="font-semibold">Тестові картки Stripe</h3>
+              <h3 className="font-semibold">{t('payment.helper.stripeCards')}</h3>
             </div>
-            
+
             <div className="space-y-3">
               {testCards.map((card, index) => {
                 const Icon = card.icon;
@@ -78,7 +80,7 @@ export function PaymentHelper() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => copyToClipboard(card.number, 'Номер картки')}
+                        onClick={() => copyToClipboard(card.number, t('payment.helper.cardNumber'))}
                       >
                         <Copy className="size-3" />
                       </Button>
@@ -100,7 +102,7 @@ export function PaymentHelper() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard('123', 'CVV')}
+                    onClick={() => copyToClipboard('123', t('payment.helper.cvv'))}
                   >
                     <Copy className="size-3" />
                   </Button>
@@ -113,14 +115,14 @@ export function PaymentHelper() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard('12/26', 'Термін дії')}
+                    onClick={() => copyToClipboard('12/26', t('payment.helper.expiry'))}
                   >
                     <Copy className="size-3" />
                   </Button>
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                * Використовуйте будь-які значення для CVV та майбутню дату для терміну дії
+                {t('payment.helper.testCardHint')}
               </p>
             </div>
           </div>
@@ -129,26 +131,26 @@ export function PaymentHelper() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Package className="size-5 text-green-600" />
-              <h3 className="font-semibold">Нова Пошта API</h3>
+              <h3 className="font-semibold">{t('payment.helper.npApi')}</h3>
             </div>
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2">
               <p className="text-sm font-semibold text-green-800">
-                ✓ Реальний API Нової Пошти
+                {t('payment.helper.realNpApi')}
               </p>
               <p className="text-xs text-green-700">
-                Використовуються справжні дані з API Нової Пошти для пошуку міст та відділень
+                {t('payment.helper.realNpApiDesc')}
               </p>
             </div>
 
             <div className="space-y-3 text-sm">
               <div>
-                <h4 className="font-semibold mb-1">Як користуватися:</h4>
+                <h4 className="font-semibold mb-1">{t('payment.helper.howToUse')}</h4>
                 <ol className="list-decimal list-inside space-y-1 text-gray-600">
-                  <li>Почніть вводити назву міста (мін. 2 символи)</li>
-                  <li>Оберіть місто зі списку</li>
-                  <li>Відділення завантажаться автоматично</li>
-                  <li>Оберіть зручне відділення</li>
+                  <li>{t('payment.helper.step1')}</li>
+                  <li>{t('payment.helper.step2')}</li>
+                  <li>{t('payment.helper.step3')}</li>
+                  <li>{t('payment.helper.step4')}</li>
                 </ol>
               </div>
 
@@ -156,42 +158,42 @@ export function PaymentHelper() {
                 <h4 className="font-semibold mb-2">Приклади міст:</h4>
                 <div className="space-y-1 text-gray-600">
                   <div className="flex items-center justify-between">
-                    <span>Київ</span>
+                    <span>{language === 'en' ? 'Kyiv' : 'Київ'}</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        copyToClipboard('Київ', 'Місто');
+                        copyToClipboard(language === 'en' ? 'Kyiv' : 'Київ', t('payment.helper.city'));
                         setOpen(false);
                       }}
                     >
-                      Використати
+                      {t('payment.helper.use')}
                     </Button>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Львів</span>
+                    <span>{language === 'en' ? 'Lviv' : 'Львів'}</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        copyToClipboard('Львів', 'Місто');
+                        copyToClipboard(language === 'en' ? 'Lviv' : 'Львів', t('payment.helper.city'));
                         setOpen(false);
                       }}
                     >
-                      Використати
+                      {t('payment.helper.use')}
                     </Button>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Одеса</span>
+                    <span>{language === 'en' ? 'Odesa' : 'Одеса'}</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        copyToClipboard('Одеса', 'Місто');
+                        copyToClipboard(language === 'en' ? 'Odesa' : 'Одеса', t('payment.helper.city'));
                         setOpen(false);
                       }}
                     >
-                      Використати
+                      {t('payment.helper.use')}
                     </Button>
                   </div>
                 </div>
@@ -202,13 +204,13 @@ export function PaymentHelper() {
           {/* Additional Info */}
           <div className="border-t pt-4 space-y-2 text-xs text-gray-500">
             <p>
-              <strong>Примітка:</strong> Це демонстраційна версія системи оплати та доставки.
+              <strong>{t('payment.helper.note')}</strong> {t('payment.helper.demoNote')}
             </p>
             <p>
-              Всі платежі здійснюються в тестовому режимі Stripe. Реальні кошти не списуються.
+              {t('payment.helper.stripeNote')}
             </p>
             <p>
-              API Нової Пошти надає довідкову інформацію про міста та відділення.
+              {t('payment.helper.npNote')}
             </p>
           </div>
         </div>

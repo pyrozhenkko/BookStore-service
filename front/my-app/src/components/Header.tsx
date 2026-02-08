@@ -44,7 +44,7 @@ export function Header({ currentView, onViewChange }: HeaderProps) {
                 {t('header.catalog')}
               </Button>
 
-              {/* Меню для адміна */}
+              {/* Admin Menu */}
               {isAdmin && (
                 <>
                   <Button
@@ -85,7 +85,7 @@ export function Header({ currentView, onViewChange }: HeaderProps) {
                 </>
               )}
 
-              {/* Меню для працівника */}
+              {/* Employee Menu */}
               {isEmployee && !isAdmin && (
                 <>
                   <Button
@@ -112,7 +112,7 @@ export function Header({ currentView, onViewChange }: HeaderProps) {
                 </>
               )}
 
-              {/* Меню для звичайного клієнта */}
+              {/* Regular Client Menu */}
               {isCustomer && (
                 <>
                   <Button

@@ -221,8 +221,7 @@ export function BookDetails({ book, onBack }: BookDetailsProps) {
 
               <div className="border-t pt-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{t('book.price')}</span>
-                  <span className="text-3xl font-semibold">{book.price} ₴</span>
+                  <span className="text-3xl font-semibold">{book.price} {t('common.currency')}</span>
                 </div>
 
                 {isCustomer && book.stock > 0 && (

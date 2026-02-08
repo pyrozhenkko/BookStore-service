@@ -1,5 +1,7 @@
 package com.epam.rd.autocode.spring.project.service.impl;
 
+import com.epam.rd.autocode.spring.project.exception.AuthException;
+import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.model.Client;
 import com.epam.rd.autocode.spring.project.model.Employee;
 import com.epam.rd.autocode.spring.project.model.PasswordResetToken;
@@ -59,11 +61,11 @@ public class PasswordResetService {
     @Transactional
     public void resetPassword(String token, String newPassword) {
         PasswordResetToken resetToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid password reset token"));
+                .orElseThrow(() -> new AuthException("Invalid password reset token"));
 
         if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             tokenRepository.delete(resetToken);
-            throw new RuntimeException("Token expired");
+            throw new AuthException("Token expired");
         }
 
         String email = resetToken.getEmail();
@@ -87,7 +89,7 @@ public class PasswordResetService {
         }
 
         if (!updated) {
-            throw new RuntimeException("User not found for this token");
+            throw new NotFoundException("User not found for this token");
         }
 
         tokenRepository.delete(resetToken);

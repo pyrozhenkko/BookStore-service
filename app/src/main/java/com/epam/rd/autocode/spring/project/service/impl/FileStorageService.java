@@ -1,5 +1,6 @@
 package com.epam.rd.autocode.spring.project.service.impl;
 
+import com.epam.rd.autocode.spring.project.exception.FileStorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,7 +19,7 @@ public class FileStorageService {
         try {
             Files.createDirectories(this.fileStorageLocation);
         } catch (Exception ex) {
-            throw new RuntimeException("Could not create upload directory.", ex);
+            throw new FileStorageException("Could not create upload directory.", ex);
         }
     }
 
@@ -31,7 +32,7 @@ public class FileStorageService {
 
             return "/uploads/" + fileName;
         } catch (IOException ex) {
-            throw new RuntimeException("Could not store file. Please try again!", ex);
+            throw new FileStorageException("Could not store file. Please try again!", ex);
         }
     }
 

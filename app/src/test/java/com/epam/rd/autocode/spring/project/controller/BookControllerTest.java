@@ -71,8 +71,8 @@ class BookControllerTest {
         book.setName("Test Book");
         Page<BookDTO> page = new PageImpl<>(List.of(book), PageRequest.of(0, 10), 1);
 
-        when(bookService.searchBooks(anyString(), nullable(String.class), nullable(BigDecimal.class),
-                nullable(BigDecimal.class),
+        when(bookService.searchBooks(anyString(), nullable(String.class), nullable(String.class),
+                nullable(BigDecimal.class), nullable(BigDecimal.class),
                 any(Pageable.class), nullable(String.class)))
                 .thenReturn(page);
 

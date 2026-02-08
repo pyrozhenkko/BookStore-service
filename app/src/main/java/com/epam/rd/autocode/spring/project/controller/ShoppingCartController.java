@@ -22,18 +22,18 @@ public class ShoppingCartController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<ShoppingCartDTO> addToCart(@RequestParam Long bookId,
-                                                     @RequestParam(defaultValue = "1") Integer quantity) {
+    public ResponseEntity<ShoppingCartDTO> addToCart(@RequestParam("bookId") Long bookId,
+            @RequestParam(name = "quantity", defaultValue = "1") Integer quantity) {
         return ResponseEntity.ok(cartService.addToCart(bookId, quantity));
     }
 
     @PostMapping("/item/{itemId}/decrement")
-    public ResponseEntity<ShoppingCartDTO> decrementItem(@PathVariable Long itemId) {
+    public ResponseEntity<ShoppingCartDTO> decrementItem(@PathVariable("itemId") Long itemId) {
         return ResponseEntity.ok(cartService.removeOneOrDelete(itemId));
     }
 
     @DeleteMapping("/item/{itemId}")
-    public ResponseEntity<ShoppingCartDTO> removeItem(@PathVariable Long itemId) {
+    public ResponseEntity<ShoppingCartDTO> removeItem(@PathVariable("itemId") Long itemId) {
         return ResponseEntity.ok(cartService.removeItem(itemId));
     }
 

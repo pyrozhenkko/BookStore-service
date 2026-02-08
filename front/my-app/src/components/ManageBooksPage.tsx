@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { Book } from '../types';
 import { bookApiService } from '../services/bookApiService';
@@ -41,18 +41,28 @@ export function ManageBooksPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadBooks();
-  }, []);
 
-  const loadBooks = async () => {
+  const fetchBooks = async () => {
     try {
       setLoading(true);
-      const data = await bookApiService.getAllBooks();
-      setBooks(data);
+      const sortParam = `${sortBy},${sortOrder}`;
+
+      const data = await bookApiService.searchBooks({
+        keyword: searchQuery,
+        genre: categoryFilter === 'all' ? undefined : categoryFilter,
+        stockStatus: stockFilter === 'all' ? undefined : stockFilter,
+        page: currentPage - 1,
+        size: ITEMS_PER_PAGE,
+        sort: sortParam
+      });
+
+      setBooks(data.content);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
     } catch (error) {
       console.error('Error loading books:', error);
       toast.error(t('manageBooks.toasts.loadError'));
+      setBooks([]);
     } finally {
       setLoading(false);
     }
@@ -139,7 +149,8 @@ export function ManageBooksPage() {
       setIsDialogOpen(false);
       setSelectedFile(null);
       setPreviewUrl(null);
-      loadBooks();
+      setPreviewUrl(null);
+      fetchBooks();
     } catch (error: any) {
       const errorMsg = error.message || t('manageBooks.toasts.saveError');
       toast.error(errorMsg);
@@ -156,7 +167,9 @@ export function ManageBooksPage() {
     try {
       await bookApiService.deleteBook(book.name);
       toast.success(t('manageBooks.toasts.deleteSuccess'));
-      loadBooks();
+      await bookApiService.deleteBook(book.name);
+      toast.success(t('manageBooks.toasts.deleteSuccess'));
+      fetchBooks();
     } catch (error) {
       toast.error(t('manageBooks.toasts.deleteError'));
       console.error('Error deleting book:', error);
@@ -186,71 +199,27 @@ export function ManageBooksPage() {
     }
   };
 
-  // Отримати унікальні категорії
-  const categories = useMemo(() => {
-    return Array.from(new Set(books.map(b => b.category)));
-  }, [books]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+  const [categories, setCategories] = useState<string[]>(['all']);
 
-  // Фільтрація та сортування
-  const filteredAndSortedBooks = useMemo(() => {
-    let result = [...books];
-
-    // Пошук
-    if (searchQuery) {
-      result = result.filter(book =>
-        book.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.isbn.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Фільтр за категорією
-    if (categoryFilter !== 'all') {
-      result = result.filter(book => book.category === categoryFilter);
-    }
-
-    // Фільтр за наявністю
-    if (stockFilter === 'in-stock') {
-      result = result.filter(book => book.stock > 0);
-    } else if (stockFilter === 'low-stock') {
-      result = result.filter(book => book.stock > 0 && book.stock < 10);
-    } else if (stockFilter === 'out-of-stock') {
-      result = result.filter(book => book.stock === 0);
-    }
-
-    // Сортування
-    result.sort((a, b) => {
-      let compareValue = 0;
-
-      switch (sortBy) {
-        case 'name':
-          compareValue = a.name.localeCompare(b.name);
-          break;
-        case 'author':
-          compareValue = a.author.localeCompare(b.author);
-          break;
-        case 'price':
-          compareValue = a.price - b.price;
-          break;
-        case 'stock':
-          compareValue = a.stock - b.stock;
-          break;
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const genres = await bookApiService.getGenres();
+        setCategories(['all', ...genres]);
+      } catch (error) {
+        console.error('Error fetching genres:', error);
       }
+    };
+    fetchGenres();
+  }, []);
 
-      return sortOrder === 'asc' ? compareValue : -compareValue;
-    });
+  useEffect(() => {
+    fetchBooks();
+  }, [searchQuery, categoryFilter, stockFilter, sortBy, sortOrder, currentPage]);
 
-    return result;
-  }, [books, searchQuery, categoryFilter, stockFilter, sortBy, sortOrder]);
-
-  // Пагінація
-  const totalPages = Math.ceil(filteredAndSortedBooks.length / ITEMS_PER_PAGE);
-  const paginatedBooks = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedBooks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredAndSortedBooks, currentPage]);
-
-  // Скидання сторінки при зміні фільтрів
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, categoryFilter, stockFilter, sortBy, sortOrder]);
@@ -265,7 +234,7 @@ export function ManageBooksPage() {
         </Button>
       </div>
 
-      {/* Пошук та фільтри */}
+      {/* Search and filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -325,7 +294,7 @@ export function ManageBooksPage() {
 
       {loading ? (
         <div className="text-center py-8">{t('common.loading')}</div>
-      ) : filteredAndSortedBooks.length === 0 ? (
+      ) : books.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           {searchQuery || categoryFilter !== 'all' || stockFilter !== 'all' ? t('manageBooks.notFound') : t('manageBooks.noBooks')}
         </div>
@@ -336,13 +305,13 @@ export function ManageBooksPage() {
               <div className="flex items-center justify-between">
                 <CardTitle>{t('manageBooks.bookList')}</CardTitle>
                 <div className="text-sm text-gray-600">
-                  {t('manageBooks.showing', { current: paginatedBooks.length, total: filteredAndSortedBooks.length })}
+                  {t('manageBooks.showing', { current: books.length, total: totalElements })}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {paginatedBooks.map((book) => (
+                {books.map((book) => (
                   <Card key={book.id} className="overflow-hidden">
                     <div className="aspect-[3/4] overflow-hidden">
                       <img
@@ -382,7 +351,7 @@ export function ManageBooksPage() {
             </CardContent>
           </Card>
 
-          {/* Пагінація */}
+          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">

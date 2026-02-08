@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -13,6 +14,7 @@ function getTokenFromHash(): string | null {
 }
 
 export function ResetPasswordPage() {
+  const { t } = useLanguage();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [message, setMessage] = useState('');
@@ -26,24 +28,24 @@ export function ResetPasswordPage() {
     setError('');
     setMessage('');
     if (password !== confirm) {
-      setError('Паролі не збігаються');
+      setError(t('auth.passwordsNotMatch'));
       return;
     }
     if (password.length < 6) {
-      setError('Пароль має містити щонайменше 6 символів');
+      setError(t('auth.passwordMinLength'));
       return;
     }
     if (!token) {
-      setError('Недійсне посилання. Запитайте новий лист для скидання пароля.');
+      setError(t('auth.invalidToken'));
       return;
     }
     setLoading(true);
     try {
       await authService.resetPassword(token, password);
-      setMessage('Пароль успішно змінено. Тепер ви можете увійти.');
+      setMessage(t('auth.resetSuccess'));
       setTimeout(() => (window.location.hash = '#/login'), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Помилка скидання');
+      setError(err instanceof Error ? err.message : t('auth.resetError'));
     } finally {
       setLoading(false);
     }
@@ -54,14 +56,14 @@ export function ResetPasswordPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Недійсне посилання</CardTitle>
+            <CardTitle>{t('auth.invalidTokenTitle')}</CardTitle>
             <CardDescription>
-              Посилання для скидання пароля недійсне або прострочене. Запитайте новий лист.
+              {t('auth.invalidTokenDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => (window.location.hash = '#/forgot-password')}>
-              Запитати новий лист
+              {t('auth.requestNewToken')}
             </Button>
           </CardContent>
         </Card>
@@ -73,15 +75,15 @@ export function ResetPasswordPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Новий пароль</CardTitle>
+          <CardTitle>{t('auth.newPassword')}</CardTitle>
           <CardDescription>
-            Введіть новий пароль для вашого акаунту
+            {t('auth.newPasswordDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">Новий пароль</Label>
+              <Label htmlFor="password">{t('auth.newPassword')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -93,7 +95,7 @@ export function ResetPasswordPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirm">Підтвердіть пароль</Label>
+              <Label htmlFor="confirm">{t('auth.confirmPassword')}</Label>
               <Input
                 id="confirm"
                 type="password"
@@ -114,7 +116,7 @@ export function ResetPasswordPage() {
               </Alert>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Збереження...' : 'Змінити пароль'}
+              {loading ? t('common.saving') : t('auth.resetPassword')}
             </Button>
           </form>
         </CardContent>

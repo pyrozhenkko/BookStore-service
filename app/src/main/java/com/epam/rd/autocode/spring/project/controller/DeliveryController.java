@@ -18,14 +18,15 @@ public class DeliveryController {
     // Пошук міста (вводжу "Льв" -> отримую список міст)
     // GET /api/delivery/cities?name=Льв
     @GetMapping("/cities")
-    public ResponseEntity<List<CityDTO>> searchCities(@RequestParam String name) {
+    public ResponseEntity<List<CityDTO>> searchCities(@RequestParam("name") String name) {
         return ResponseEntity.ok(novaPoshtaService.searchCities(name));
     }
 
-    // Отримання відділень (вибрав місто -> відправив його Ref -> отримав список відділень)
+    // Отримання відділень (вибрав місто -> відправив його Ref -> отримав список
+    // відділень)
     // GET /api/delivery/branches?cityRef=8d5a980d-391c-11dd-90d9-001a92567626
     @GetMapping("/branches")
-    public ResponseEntity<List<BranchDTO>> getBranches(@RequestParam String cityRef) {
+    public ResponseEntity<List<BranchDTO>> getBranches(@RequestParam("cityRef") String cityRef) {
         return ResponseEntity.ok(novaPoshtaService.getBranches(cityRef));
     }
 }

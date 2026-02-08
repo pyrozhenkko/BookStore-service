@@ -28,7 +28,7 @@ public class ClientController {
     }
 
     @DeleteMapping("/favorites/{bookId}")
-    public ResponseEntity<Void> removeFromFavorites(@PathVariable Long bookId) {
+    public ResponseEntity<Void> removeFromFavorites(@PathVariable("bookId") Long bookId) {
         clientService.removeBookFromFavorites(bookId);
         return ResponseEntity.noContent().build();
     }
@@ -45,9 +45,10 @@ public class ClientController {
 
     @GetMapping("/search")
     public ResponseEntity<Page<ClientDTO>> searchClients(
-            @RequestParam(required = false) String keyword,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "isBlocked", required = false) Boolean isBlocked,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
-        return ResponseEntity.ok(clientService.searchClients(keyword, pageable));
+        return ResponseEntity.ok(clientService.searchClients(keyword, isBlocked, pageable));
     }
 
     @GetMapping
@@ -57,29 +58,29 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
+    public ResponseEntity<ClientDTO> getClientById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(clientService.getClientById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClientDTO> updateClient(@PathVariable Long id, @RequestBody ClientDTO clientDTO) {
+    public ResponseEntity<ClientDTO> updateClient(@PathVariable("id") Long id, @RequestBody ClientDTO clientDTO) {
         return ResponseEntity.ok(clientService.updateClientById(id, clientDTO));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteClient(@PathVariable("id") Long id) {
         clientService.deleteClientById(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/block")
-    public ResponseEntity<Void> blockClient(@PathVariable Long id) {
+    public ResponseEntity<Void> blockClient(@PathVariable("id") Long id) {
         clientService.blockClient(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/unblock")
-    public ResponseEntity<Void> unblockClient(@PathVariable Long id) {
+    public ResponseEntity<Void> unblockClient(@PathVariable("id") Long id) {
         clientService.unblockClient(id);
         return ResponseEntity.ok().build();
     }

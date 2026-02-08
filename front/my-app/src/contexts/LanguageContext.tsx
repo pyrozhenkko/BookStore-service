@@ -1,12 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import ukTranslations from '../locales/uk.json';
-import enTranslations from '../locales/en.json';
 import i18n from '../i18n';
+import { useTranslation } from 'react-i18next';
 
 type Language = 'uk' | 'en';
-
-type TranslationValue = string | { [key: string]: TranslationValue };
-type Translations = { [key: string]: TranslationValue };
 
 interface LanguageContextType {
     language: Language;
@@ -14,37 +10,17 @@ interface LanguageContextType {
     t: (key: string, params?: Record<string, string | number>) => string;
 }
 
-const translations: Record<Language, Translations> = {
-    uk: ukTranslations,
-    en: enTranslations,
-};
-
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-// Context for language management
 
 const STORAGE_KEY = 'bookstore_language';
 
-function getNestedValue(obj: Translations, path: string): string {
-    const keys = path.split('.');
-    let current: TranslationValue = obj;
-
-    for (const key of keys) {
-        if (current && typeof current === 'object' && key in current) {
-            current = current[key];
-        } else {
-            return path; // Return key if not found
-        }
-    }
-
-    return typeof current === 'string' ? current : path;
-}
-
 export function LanguageProvider({ children }: { children: ReactNode }) {
+    const { t: i18nT } = useTranslation();
     const [language, setLanguageState] = useState<Language>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved === 'uk' || saved === 'en') {
-                return saved;
+                return saved as Language;
             }
         }
         return 'uk'; // Default to Ukrainian
@@ -61,14 +37,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const t = useCallback((key: string, params?: Record<string, string | number>): string => {
-        let text = getNestedValue(translations[language], key);
-        if (params) {
-            Object.entries(params).forEach(([paramKey, paramValue]) => {
-                text = text.replace(new RegExp(`{{${paramKey}}}`, 'g'), String(paramValue));
-            });
-        }
-        return text;
-    }, [language]);
+        return i18nT(key, params);
+    }, [i18nT]);
 
     return (
         <LanguageContext.Provider value={{ language, setLanguage, t }}>

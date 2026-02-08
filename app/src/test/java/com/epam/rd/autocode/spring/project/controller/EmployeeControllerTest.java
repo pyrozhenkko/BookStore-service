@@ -80,7 +80,7 @@ class EmployeeControllerTest {
         employee.setEmail("emp@test.com");
         Page<EmployeeDTO> page = new PageImpl<>(List.of(employee), PageRequest.of(0, 10), 1);
 
-        when(employeeService.searchEmployees(anyString(), any(Pageable.class))).thenReturn(page);
+        when(employeeService.searchEmployees(anyString(), any(), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/employees/search").param("keyword", "emp"))
                 .andExpect(status().isOk())

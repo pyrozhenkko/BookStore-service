@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -7,6 +8,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { authService } from '../services/authService';
 
 export function ForgotPasswordPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -19,9 +21,9 @@ export function ForgotPasswordPage() {
     setLoading(true);
     try {
       await authService.forgotPassword(email);
-      setMessage('Якщо акаунт існує, ви отримаєте лист з посиланням для скидання пароля.');
+      setMessage(t('auth.forgotPasswordMessage'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Помилка відправки');
+      setError(err instanceof Error ? err.message : t('auth.sendResetLinkError'));
     } finally {
       setLoading(false);
     }
@@ -31,9 +33,9 @@ export function ForgotPasswordPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Скидання пароля</CardTitle>
+          <CardTitle>{t('auth.resetPassword')}</CardTitle>
           <CardDescription>
-            Введіть email вашого акаунту. Ми надішлемо вам посилання для скидання пароля.
+            {t('auth.forgotPasswordDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -60,7 +62,7 @@ export function ForgotPasswordPage() {
               </Alert>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Надсилання...' : 'Надіслати'}
+              {loading ? t('common.sending') : t('auth.sendResetLink')}
             </Button>
             <Button
               type="button"
@@ -68,7 +70,7 @@ export function ForgotPasswordPage() {
               className="w-full"
               onClick={() => (window.location.hash = '#/login')}
             >
-              Назад до входу
+              {t('auth.backToLogin')}
             </Button>
           </form>
         </CardContent>

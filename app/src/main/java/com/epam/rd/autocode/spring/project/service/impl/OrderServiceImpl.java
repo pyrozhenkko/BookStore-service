@@ -6,6 +6,8 @@ import com.epam.rd.autocode.spring.project.mapper.OrderMapper;
 import com.epam.rd.autocode.spring.project.model.*;
 import com.epam.rd.autocode.spring.project.repo.*;
 import com.epam.rd.autocode.spring.project.repo.specification.OrderSpecification;
+import com.epam.rd.autocode.spring.project.exception.InsufficientStockException;
+import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,10 +33,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderDTO> searchOrders(String clientEmail, String city, BigDecimal minPrice, BigDecimal maxPrice,
+    public Page<OrderDTO> searchOrders(String clientEmail, String city, String status, BigDecimal minPrice,
+            BigDecimal maxPrice,
             LocalDateTime dateFrom, Pageable pageable) {
         Specification<Order> spec = Specification.where(OrderSpecification.hasClientEmail(clientEmail))
                 .and(OrderSpecification.hasDeliveryCity(city))
+                .and(OrderSpecification.hasStatus(status))
                 .and(OrderSpecification.priceGreaterOrEqual(minPrice))
                 .and(OrderSpecification.priceLessOrEqual(maxPrice))
                 .and(OrderSpecification.dateAfter(dateFrom));
@@ -61,12 +65,12 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderDate(LocalDateTime.now());
 
         Client client = clientRepository.findByEmail(orderDTO.getClientEmail())
-                .orElseThrow(() -> new RuntimeException("Client not found: " + orderDTO.getClientEmail()));
+                .orElseThrow(() -> new NotFoundException("Client not found: " + orderDTO.getClientEmail()));
         order.setClient(client);
 
         if (orderDTO.getEmployeeEmail() != null) {
             Employee employee = employeeRepository.findByEmail(orderDTO.getEmployeeEmail())
-                    .orElseThrow(() -> new RuntimeException("Employee not found: " + orderDTO.getEmployeeEmail()));
+                    .orElseThrow(() -> new NotFoundException("Employee not found: " + orderDTO.getEmployeeEmail()));
             order.setEmployee(employee);
         }
 
@@ -79,10 +83,10 @@ public class OrderServiceImpl implements OrderService {
         if (orderDTO.getBookItems() != null) {
             for (BookItemDTO itemDto : orderDTO.getBookItems()) {
                 Book book = bookRepository.findByName(itemDto.getBookName())
-                        .orElseThrow(() -> new RuntimeException("Book not found: " + itemDto.getBookName()));
+                        .orElseThrow(() -> new NotFoundException("Book not found: " + itemDto.getBookName()));
 
                 if (book.getQuantity() < itemDto.getQuantity()) {
-                    throw new RuntimeException("Not enough stock for: " + book.getName());
+                    throw new InsufficientStockException("Not enough stock for: " + book.getName());
                 }
                 book.setQuantity(book.getQuantity() - itemDto.getQuantity());
                 bookRepository.save(book);
@@ -107,7 +111,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDTO confirmOrder(Long id) {
-        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+        Order order = orderRepository.findById(id).orElseThrow(() -> new NotFoundException("Order not found"));
         order.setStatus("confirmed");
         return orderMapper.toDto(orderRepository.save(order));
     }
@@ -115,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDTO cancelOrder(Long id) {
-        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+        Order order = orderRepository.findById(id).orElseThrow(() -> new NotFoundException("Order not found"));
         order.setStatus("cancelled");
         // Optional: Restore stock? For now just cancel.
         return orderMapper.toDto(orderRepository.save(order));

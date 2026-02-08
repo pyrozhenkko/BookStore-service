@@ -11,7 +11,7 @@ public interface EmployeeService {
     Page<EmployeeDTO> getAllEmployees(Pageable pageable);
 
     @PreAuthorize("hasRole('ADMIN')")
-    Page<EmployeeDTO> searchEmployees(String keyword, Pageable pageable);
+    Page<EmployeeDTO> searchEmployees(String keyword, Boolean isBlocked, Pageable pageable);
 
     @PreAuthorize("hasRole('ADMIN') or @customSecurity.isEmployeeOwner(#id)")
     EmployeeDTO getEmployeeById(Long id);

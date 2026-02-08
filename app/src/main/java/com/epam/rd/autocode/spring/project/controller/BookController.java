@@ -29,13 +29,15 @@ public class BookController {
 
     @GetMapping("/search")
     public ResponseEntity<Page<BookDTO>> searchBooks(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String genre,
-            @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "genre", required = false) String genre,
+            @RequestParam(name = "stockStatus", required = false) String stockStatus,
+            @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
             @PageableDefault(sort = "id", direction = Sort.Direction.DESC, size = 10) Pageable pageable,
             @RequestHeader(value = "Accept-Language", defaultValue = "uk") String locale) {
-        return ResponseEntity.ok(bookService.searchBooks(keyword, genre, minPrice, maxPrice, pageable, locale));
+        return ResponseEntity
+                .ok(bookService.searchBooks(keyword, genre, stockStatus, minPrice, maxPrice, pageable, locale));
     }
 
     @GetMapping
@@ -46,13 +48,13 @@ public class BookController {
 
     @GetMapping("/{name}")
     public ResponseEntity<BookDTO> getBookByName(
-            @PathVariable String name,
+            @PathVariable("name") String name,
             @RequestHeader(value = "Accept-Language", defaultValue = "uk") String locale) {
         return ResponseEntity.ok(bookService.getBookByName(name, locale));
     }
 
     @GetMapping("/{name}/quantity")
-    public ResponseEntity<Map<String, Integer>> getBookQuantity(@PathVariable String name) {
+    public ResponseEntity<Map<String, Integer>> getBookQuantity(@PathVariable("name") String name) {
         Integer qty = bookService.getBookQuantity(name);
         return ResponseEntity.ok(Map.of("quantity", qty));
     }
@@ -66,7 +68,7 @@ public class BookController {
     @PostMapping(value = "/{name}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<BookDTO> uploadBookImage(
-            @PathVariable String name,
+            @PathVariable("name") String name,
             @RequestParam("file") MultipartFile file) {
 
         String imageUrl = fileStorageService.storeFile(file);
@@ -77,7 +79,7 @@ public class BookController {
     @DeleteMapping("/{name}/images")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<BookDTO> deleteBookImage(
-            @PathVariable String name,
+            @PathVariable("name") String name,
             @RequestParam("imageUrl") String imageUrl) {
 
         return ResponseEntity.ok(bookService.removeImageFromBook(name, imageUrl));
@@ -92,7 +94,7 @@ public class BookController {
     @PutMapping("/{name}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<BookDTO> updateBook(
-            @PathVariable String name,
+            @PathVariable("name") String name,
             @RequestBody BookDTO bookDTO,
             @RequestHeader(value = "Accept-Language", defaultValue = "uk") String locale) {
         return ResponseEntity.ok(bookService.updateBookByName(name, bookDTO, locale));
@@ -100,7 +102,7 @@ public class BookController {
 
     @DeleteMapping("/{name}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    public ResponseEntity<Void> deleteBook(@PathVariable String name) {
+    public ResponseEntity<Void> deleteBook(@PathVariable("name") String name) {
         bookService.deleteBookByName(name);
         return ResponseEntity.noContent().build();
     }

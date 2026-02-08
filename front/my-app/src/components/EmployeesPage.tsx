@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { Employee } from '../types';
 import { employeeService } from '../services/employeeService';
@@ -16,7 +16,7 @@ import { Badge } from './ui/badge';
 const ITEMS_PER_PAGE = 10;
 
 export function EmployeesPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -26,6 +26,8 @@ export function EmployeesPage() {
   const [sortBy, setSortBy] = useState<'name' | 'email' | 'position' | 'hiredDate'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const [formData, setFormData] = useState({
     email: '',
     name: '',
@@ -37,13 +39,24 @@ export function EmployeesPage() {
 
   useEffect(() => {
     loadEmployees();
-  }, []);
+  }, [searchQuery, statusFilter, sortBy, sortOrder, currentPage]);
 
   const loadEmployees = async () => {
     try {
       setLoading(true);
-      const data = await employeeService.getAllEmployees();
-      setEmployees(data);
+      const active = statusFilter === 'all' ? undefined : statusFilter === 'active';
+      const sortParam = `${sortBy},${sortOrder}`;
+
+      const data = await employeeService.searchEmployees({
+        keyword: searchQuery,
+        active,
+        page: currentPage - 1,
+        size: ITEMS_PER_PAGE,
+        sort: sortParam
+      });
+
+      setEmployees(data.content);
+      setTotalPages(data.totalPages);
     } catch (error) {
       toast.error(t('employees.toasts.loadError'));
     } finally {
@@ -51,59 +64,7 @@ export function EmployeesPage() {
     }
   };
 
-  // Фільтрація, сортування та пагінація
-  const filteredAndSortedEmployees = useMemo(() => {
-    let result = [...employees];
-
-    // Пошук
-    if (searchQuery) {
-      result = result.filter(emp =>
-        emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        emp.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        emp.position.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Фільтр за статусом
-    if (statusFilter === 'active') {
-      result = result.filter(emp => emp.active);
-    } else if (statusFilter === 'inactive') {
-      result = result.filter(emp => !emp.active);
-    }
-
-    // Сортування
-    result.sort((a, b) => {
-      let compareValue = 0;
-
-      switch (sortBy) {
-        case 'name':
-          compareValue = a.name.localeCompare(b.name);
-          break;
-        case 'email':
-          compareValue = a.email.localeCompare(b.email);
-          break;
-        case 'position':
-          compareValue = a.position.localeCompare(b.position);
-          break;
-        case 'hiredDate':
-          compareValue = new Date(a.hiredDate).getTime() - new Date(b.hiredDate).getTime();
-          break;
-      }
-
-      return sortOrder === 'asc' ? compareValue : -compareValue;
-    });
-
-    return result;
-  }, [employees, searchQuery, statusFilter, sortBy, sortOrder]);
-
-  // Пагінація
-  const totalPages = Math.ceil(filteredAndSortedEmployees.length / ITEMS_PER_PAGE);
-  const paginatedEmployees = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedEmployees.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredAndSortedEmployees, currentPage]);
-
-  // Скидання сторінки при зміні фільтрів
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, sortBy, sortOrder]);
@@ -128,7 +89,7 @@ export function EmployeesPage() {
       name: employee.name,
       position: employee.position,
       phone: employee.phone || '',
-      password: '', // Пароль не відображаємо
+      password: '', // Do not display password
       hiredDate: employee.hiredDate,
     });
     setIsDialogOpen(true);
@@ -163,7 +124,7 @@ export function EmployeesPage() {
   const handleBlockToggle = async (employee: Employee) => {
     const newStatus = !employee.active;
     const confirmMsg = newStatus
-      ? "Розблокувати працівника?"
+      ? t('employees.actions.unblockConfirm', { name: employee.name })
       : t('employees.actions.terminateConfirm', { name: employee.name });
 
     if (!confirm(confirmMsg)) return;
@@ -195,7 +156,7 @@ export function EmployeesPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(t('language.currrent') === 'English' ? 'en-US' : 'uk-UA');
+    return new Date(dateString).toLocaleDateString(language === 'en' ? 'en-US' : 'uk-UA');
   };
 
   return (
@@ -208,7 +169,7 @@ export function EmployeesPage() {
         </Button>
       </div>
 
-      {/* Пошук та фільтри */}
+      {/* Search and filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -258,15 +219,12 @@ export function EmployeesPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>{t('employees.listTitle')}</CardTitle>
-            <div className="text-sm text-gray-600">
-              {t('employees.showing', { current: paginatedEmployees.length, total: filteredAndSortedEmployees.length })}
-            </div>
           </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-8">{t('common.loading')}</div>
-          ) : filteredAndSortedEmployees.length === 0 ? (
+          ) : employees.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {searchQuery || statusFilter !== 'all' ? t('employees.notFound') : t('employees.noEmployees')}
             </div>
@@ -284,7 +242,7 @@ export function EmployeesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedEmployees.map((employee) => (
+                {employees.map((employee) => (
                   <TableRow key={employee.id} className={!employee.active ? "opacity-60 bg-gray-50/50" : ""}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
@@ -351,7 +309,7 @@ export function EmployeesPage() {
         </CardContent>
       </Card>
 
-      {/* Пагінація */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
@@ -444,7 +402,7 @@ export function EmployeesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="password">
-                  {t('auth.password')} {editingEmployee ? '(залиште порожнім, щоб не змінювати)' : '*'}
+                  {t('auth.password')} {editingEmployee ? t('employees.form.passwordHint') : '*'}
                 </Label>
                 <Input
                   id="password"

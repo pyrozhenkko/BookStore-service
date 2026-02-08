@@ -4,6 +4,9 @@ import com.epam.rd.autocode.spring.project.dto.BookDTO;
 import com.epam.rd.autocode.spring.project.mapper.BookMapper;
 import com.epam.rd.autocode.spring.project.model.Book;
 import com.epam.rd.autocode.spring.project.model.BookTranslation;
+import com.epam.rd.autocode.spring.project.exception.AlreadyExistException;
+import com.epam.rd.autocode.spring.project.exception.InvalidOperationException;
+import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.repo.*;
 import com.epam.rd.autocode.spring.project.repo.specification.BookSpecification;
 import com.epam.rd.autocode.spring.project.service.BookService;
@@ -46,11 +49,13 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public Page<BookDTO> searchBooks(String keyword, String genre, BigDecimal minPrice, BigDecimal maxPrice,
+    public Page<BookDTO> searchBooks(String keyword, String genre, String stockStatus, BigDecimal minPrice,
+            BigDecimal maxPrice,
             Pageable pageable, String locale) {
         String effectiveLocale = normalizeLocale(locale);
         Specification<Book> spec = Specification.where(BookSpecification.hasKeyword(keyword))
                 .and(BookSpecification.hasGenre(genre))
+                .and(BookSpecification.hasStockStatus(stockStatus))
                 .and(BookSpecification.priceGreaterOrEqual(minPrice))
                 .and(BookSpecification.priceLessOrEqual(maxPrice));
 
@@ -146,10 +151,10 @@ public class BookServiceImpl implements BookService {
         Long bookId = book.getId();
 
         if (bookItemRepository.existsByBookId(bookId)) {
-            throw new RuntimeException("Cannot delete book that has been purchased");
+            throw new InvalidOperationException("Cannot delete book that has been purchased");
         }
 
-        //  Delete uploaded physical files
+        // Delete uploaded physical files
         book.getImageUrls().forEach(url -> {
             if (url != null && url.startsWith("/uploads/")) {
                 fileStorageService.deleteFile(url);
@@ -167,7 +172,7 @@ public class BookServiceImpl implements BookService {
         bookItemRepository.deleteByBookId(bookId);
         bookTranslationRepository.deleteByBookId(bookId);
 
-        //  Finally, delete the book itself
+        // Finally, delete the book itself
         bookRepository.delete(book);
     }
 
@@ -179,7 +184,7 @@ public class BookServiceImpl implements BookService {
 
         return bookTranslationRepository.findByName(name)
                 .map(BookTranslation::getBook)
-                .orElseThrow(() -> new com.epam.rd.autocode.spring.project.exception.NotFoundException(
+                .orElseThrow(() -> new NotFoundException(
                         "Book not found: " + name));
     }
 
@@ -187,7 +192,7 @@ public class BookServiceImpl implements BookService {
     @Transactional
     public BookDTO addBook(BookDTO bookDTO) {
         if (bookRepository.findByName(bookDTO.getName()).isPresent())
-            throw new RuntimeException("Exists");
+            throw new AlreadyExistException("Book already exists");
         Book book = bookMapper.toEntity(bookDTO);
         if (book.getQuantity() == null)
             book.setQuantity(0);

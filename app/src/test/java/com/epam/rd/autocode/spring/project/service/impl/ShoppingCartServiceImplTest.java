@@ -94,6 +94,8 @@ class ShoppingCartServiceImplTest {
         cart.getItems().add(item);
 
         when(cartRepository.findByClient_Email("user@example.com")).thenReturn(Optional.of(cart));
+        when(clientRepository.findByEmail("user@example.com")).thenReturn(Optional.of(client));
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
 
         CheckoutRequest request = new CheckoutRequest();
         request.setDeliveryCity("Kyiv");

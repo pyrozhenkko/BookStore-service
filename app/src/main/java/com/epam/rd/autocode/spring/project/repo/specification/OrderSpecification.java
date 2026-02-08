@@ -10,14 +10,16 @@ public class OrderSpecification {
 
     public static Specification<Order> hasClientEmail(String email) {
         return (root, query, cb) -> {
-            if (email == null || email.trim().isEmpty()) return null;
+            if (email == null || email.trim().isEmpty())
+                return null;
             return cb.like(cb.lower(root.get("client").get("email")), "%" + email.toLowerCase() + "%");
         };
     }
 
     public static Specification<Order> hasDeliveryCity(String city) {
         return (root, query, cb) -> {
-            if (city == null || city.trim().isEmpty()) return null;
+            if (city == null || city.trim().isEmpty())
+                return null;
             return cb.like(cb.lower(root.get("deliveryCity")), "%" + city.toLowerCase() + "%");
         };
     }
@@ -32,5 +34,14 @@ public class OrderSpecification {
 
     public static Specification<Order> dateAfter(LocalDateTime date) {
         return (root, query, cb) -> date == null ? null : cb.greaterThanOrEqualTo(root.get("orderDate"), date);
+    }
+
+    public static Specification<Order> hasStatus(String status) {
+        return (root, query, cb) -> {
+            if (status == null || status.trim().isEmpty() || status.equalsIgnoreCase("all")) {
+                return null;
+            }
+            return cb.equal(cb.lower(root.get("status")), status.toLowerCase());
+        };
     }
 }

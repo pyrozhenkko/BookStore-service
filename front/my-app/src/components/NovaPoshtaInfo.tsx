@@ -1,13 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Package, MapPin, TruckIcon } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export function NovaPoshtaInfo() {
+  const { t } = useLanguage();
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-sm">
           <Package className="size-4" />
-          Інформація про доставку
+          {t('novaposhta.infoTitle')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -15,9 +17,9 @@ export function NovaPoshtaInfo() {
           <div className="flex items-start gap-2">
             <MapPin className="size-4 text-blue-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-semibold text-gray-700">Вибір міста</p>
+              <p className="font-semibold text-gray-700">{t('novaposhta.citySelection')}</p>
               <p className="text-gray-600">
-                Почніть вводити назву міста для пошуку. API автоматично знайде відповідні населені пункти України.
+                {t('novaposhta.citySelectionDesc')}
               </p>
             </div>
           </div>
@@ -25,18 +27,18 @@ export function NovaPoshtaInfo() {
           <div className="flex items-start gap-2">
             <TruckIcon className="size-4 text-green-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-semibold text-gray-700">Відділення</p>
+              <p className="font-semibold text-gray-700">{t('novaposhta.branch')}</p>
               <p className="text-gray-600">
-                Після вибору міста автоматично завантажаться всі відділення Нової Пошти в цьому місті.
+                {t('novaposhta.branchDesc')}
               </p>
             </div>
           </div>
         </div>
 
         <div className="pt-2 border-t text-xs text-gray-500">
-          <p><strong>Терміни доставки:</strong> 1-3 робочі дні</p>
-          <p><strong>Вартість:</strong> за тарифами Нової Пошти</p>
-          <p><strong>Оплата доставки:</strong> при отриманні на відділенні</p>
+          <p><strong>{t('novaposhta.deliveryTerms')}</strong> {t('novaposhta.deliveryTermsValue')}</p>
+          <p><strong>{t('novaposhta.cost')}</strong> {t('novaposhta.costValue')}</p>
+          <p><strong>{t('novaposhta.paymentAtBranch')}</strong></p>
         </div>
       </CardContent>
     </Card>

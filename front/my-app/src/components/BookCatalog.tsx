@@ -1,6 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { Book } from '../types';
-import { mockBooks } from '../services/mockData';
 import { bookApiService } from '../services/bookApiService';
 import { BookCard } from './BookCard';
 import { Input } from './ui/input';
@@ -22,65 +21,55 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [currentPage, setCurrentPage] = useState(1);
-  const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [categories, setCategories] = useState<string[]>(['all']);
   const [loading, setLoading] = useState(true);
+  const [totalElements, setTotalElements] = useState(0);
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    bookApiService
-      .getAllBooks()
-      .then((list) => {
-        if (!cancelled) setAllBooks(list);
-      })
-      .catch(() => {
-        if (!cancelled) setAllBooks(mockBooks);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [language]); // Refetch when language changes
-
-  const categories = useMemo(() => {
-    const cats = Array.from(new Set(allBooks.map((book) => book.category)));
-    return ['all', ...cats];
-  }, [allBooks]);
-
-  const filteredAndSortedBooks = useMemo(() => {
-    let list = [...allBooks];
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(
-        (book) =>
-          book.name.toLowerCase().includes(q) ||
-          book.author.toLowerCase().includes(q) ||
-          book.description.toLowerCase().includes(q)
-      );
-    }
-    if (categoryFilter !== 'all') {
-      list = list.filter((book) => book.category === categoryFilter);
-    }
-    list.sort((a, b) => {
-      switch (sortBy) {
-        case 'price-asc':
-          return a.price - b.price;
-        case 'price-desc':
-          return b.price - a.price;
-        case 'author':
-          return a.author.localeCompare(b.author);
-        default:
-          return a.name.localeCompare(b.name);
+    const fetchGenres = async () => {
+      try {
+        const genres = await bookApiService.getGenres();
+        setCategories(['all', ...genres]);
+      } catch (error) {
+        console.error('Error fetching genres:', error);
       }
-    });
-    return list;
-  }, [allBooks, searchQuery, categoryFilter, sortBy]);
+    };
+    fetchGenres();
+  }, []);
 
-  const totalPages = Math.ceil(filteredAndSortedBooks.length / ITEMS_PER_PAGE) || 1;
-  const paginatedBooks = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedBooks.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredAndSortedBooks, currentPage]);
+  useEffect(() => {
+    const loadBooks = async () => {
+      try {
+        setLoading(true);
+        // Map frontend sort names to backend field names
+        const sortMap: Record<string, string> = {
+          'name': 'name,asc',
+          'author': 'author,asc',
+          'price-asc': 'price,asc',
+          'price-desc': 'price,desc'
+        };
+
+        const data = await bookApiService.searchBooks({
+          keyword: searchQuery,
+          genre: categoryFilter === 'all' ? undefined : categoryFilter,
+          page: currentPage - 1,
+          size: ITEMS_PER_PAGE,
+          sort: sortMap[sortBy] || 'name,asc'
+        });
+
+        setBooks(data.content);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalPages * ITEMS_PER_PAGE); // We don't have totalElements in searchBooks response, but that's okay for now
+      } catch (error) {
+        console.error('Error loading books:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadBooks();
+  }, [searchQuery, categoryFilter, sortBy, currentPage, language]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -146,7 +135,7 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
       <div>
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-gray-600">
-            {paginatedBooks.length} {t('common.of')} {filteredAndSortedBooks.length}
+            {t('manageBooks.showing', { current: books.length, total: totalElements })}
           </p>
           {totalPages > 1 && (
             <div className="text-sm text-gray-600">
@@ -159,14 +148,14 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
           <div className="text-center py-12 text-gray-500">
             <p className="text-lg">{t('common.loading')}</p>
           </div>
-        ) : paginatedBooks.length === 0 ? (
+        ) : books.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <p className="text-lg">{t('catalog.noBooksFound')}</p>
             <p className="text-sm mt-2">{t('catalog.tryDifferentSearch')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedBooks.map(book => (
+            {books.map(book => (
               <BookCard
                 key={book.id}
                 book={book}
@@ -177,7 +166,7 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
         )}
       </div>
 
-      {/* Пагінація */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-8">
           <Button

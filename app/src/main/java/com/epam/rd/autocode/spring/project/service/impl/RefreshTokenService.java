@@ -1,5 +1,6 @@
 package com.epam.rd.autocode.spring.project.service.impl;
 
+import com.epam.rd.autocode.spring.project.exception.AuthException;
 import com.epam.rd.autocode.spring.project.model.RefreshToken;
 import com.epam.rd.autocode.spring.project.repo.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,6 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
 
-
     @Transactional
     public RefreshToken createRefreshToken(String email) {
         // одна сесія = один токен
@@ -33,27 +33,23 @@ public class RefreshTokenService {
         return refreshTokenRepository.save(refreshToken);
     }
 
-
     public RefreshToken findByToken(String token) {
         return refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
+                .orElseThrow(() -> new AuthException("Refresh token is not in database!"));
     }
-
 
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
             refreshTokenRepository.delete(token);
-            throw new RuntimeException("Refresh token was expired. Please make a new signin request");
+            throw new AuthException("Refresh token was expired. Please make a new signin request");
         }
         return token;
     }
-
 
     @Transactional
     public void deleteByToken(String token) {
         refreshTokenRepository.findByToken(token).ifPresent(refreshTokenRepository::delete);
     }
-
 
     @Transactional
     public void deleteByEmail(String email) {

@@ -20,21 +20,22 @@ public class ReviewController {
 
     @PostMapping("/book/{bookId}/rate")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<String> rateBook(@PathVariable Long bookId, @RequestBody RatingRequest request) {
+    public ResponseEntity<String> rateBook(@PathVariable("bookId") Long bookId, @RequestBody RatingRequest request) {
         reviewService.setRating(bookId, request.getRating());
         return ResponseEntity.ok("Rating saved");
     }
 
     @PostMapping("/book/{bookId}/comment")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<String> commentBook(@PathVariable Long bookId, @RequestBody CommentRequest request) {
+    public ResponseEntity<String> commentBook(@PathVariable("bookId") Long bookId,
+            @RequestBody CommentRequest request) {
         reviewService.addComment(bookId, request.getComment(), request.getRating());
         return ResponseEntity.ok("Comment added");
     }
 
     @GetMapping("/book/{bookId}")
     public ResponseEntity<Page<CommentResponse>> getComments(
-            @PathVariable Long bookId,
+            @PathVariable("bookId") Long bookId,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(reviewService.getComments(bookId, pageable));
     }

@@ -73,8 +73,8 @@ class OrderControllerTest {
         order.setClientEmail("test@test.com");
         Page<OrderDTO> page = new PageImpl<>(List.of(order), PageRequest.of(0, 10), 1);
 
-        when(orderService.searchOrders(nullable(String.class), nullable(String.class), nullable(BigDecimal.class),
-                nullable(BigDecimal.class),
+        when(orderService.searchOrders(nullable(String.class), nullable(String.class), nullable(String.class),
+                nullable(BigDecimal.class), nullable(BigDecimal.class),
                 nullable(LocalDateTime.class), any(Pageable.class)))
                 .thenReturn(page);
 

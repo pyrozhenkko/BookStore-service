@@ -283,98 +283,92 @@ export function EmployeeDashboard() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('uk-UA', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return date.toLocaleString();
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold mb-2">Панель керування</h1>
-        <p className="text-gray-600">Управління книгами, замовленнями та клієнтами</p>
+        <h1 className="text-3xl font-semibold mb-2">{t('admin.controlPanel')}</h1>
+        <p className="text-gray-600">{t('admin.controlPanelSub')}</p>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Загальний дохід</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.totalRevenue')}</CardTitle>
             <DollarSign className="size-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalRevenue} ₴</div>
-            <p className="text-xs text-gray-600 mt-1">Підтверджені замовлення</p>
+            <div className="text-2xl font-bold">{stats.totalRevenue} {t('common.currency')}</div>
+            <p className="text-xs text-gray-600 mt-1">{t('admin.totalRevenueSub')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Замовлення в обробці</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.pendingOrders')}</CardTitle>
             <Package className="size-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.pendingOrders}</div>
-            <p className="text-xs text-gray-600 mt-1">Очікують підтвердження</p>
+            <p className="text-xs text-gray-600 mt-1">{t('admin.pendingOrdersSub')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Мало на складі</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.lowStock')}</CardTitle>
             <TrendingUp className="size-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.lowStockBooks}</div>
-            <p className="text-xs text-gray-600 mt-1">Книг {'<'} 10 шт</p>
+            <p className="text-xs text-gray-600 mt-1">{t('admin.lowStockSub')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Активні клієнти</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.activeClients')}</CardTitle>
             <Users className="size-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.activeClients}</div>
-            <p className="text-xs text-gray-600 mt-1">Незаблоковані акаунти</p>
+            <p className="text-xs text-gray-600 mt-1">{t('admin.activeClientsSub')}</p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="books" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 max-w-md">
-          <TabsTrigger value="books">Книги ({filteredBooks.length})</TabsTrigger>
-          <TabsTrigger value="orders">Замовлення ({filteredOrders.length})</TabsTrigger>
-          <TabsTrigger value="clients">Клієнти ({filteredClients.length})</TabsTrigger>
+          <TabsTrigger value="books">{t('header.books')} ({filteredBooks.length})</TabsTrigger>
+          <TabsTrigger value="orders">{t('header.orders')} ({filteredOrders.length})</TabsTrigger>
+          <TabsTrigger value="clients">{t('header.clients')} ({filteredClients.length})</TabsTrigger>
         </TabsList>
 
         {/* Books Tab */}
         <TabsContent value="books" className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Управління книгами</h2>
+            <h2 className="text-xl font-semibold">{t('manageBooks.title')}</h2>
             <Dialog open={isAddBookOpen} onOpenChange={setIsAddBookOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="size-4 mr-2" />
-                  Додати книгу
+                  {t('manageBooks.addBook')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Додати нову книгу</DialogTitle>
+                  <DialogTitle>{t('manageBooks.form.addTitle')}</DialogTitle>
                   <DialogDescription>
-                    Заповніть дані для додавання книги в каталог
+                    {t('manageBooks.form.description')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Назва</Label>
+                      <Label htmlFor="name">{t('manageBooks.form.name')}</Label>
                       <Input
                         id="name"
                         value={newBook.name}
@@ -382,7 +376,7 @@ export function EmployeeDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="author">Автор</Label>
+                      <Label htmlFor="author">{t('manageBooks.form.author')}</Label>
                       <Input
                         id="author"
                         value={newBook.author}
@@ -391,7 +385,7 @@ export function EmployeeDashboard() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="description">Опис</Label>
+                    <Label htmlFor="description">{t('manageBooks.form.description')}</Label>
                     <Textarea
                       id="description"
                       value={newBook.description}
@@ -400,7 +394,7 @@ export function EmployeeDashboard() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="category">Категорія</Label>
+                      <Label htmlFor="category">{t('manageBooks.form.category')}</Label>
                       <Input
                         id="category"
                         value={newBook.category}
@@ -418,7 +412,7 @@ export function EmployeeDashboard() {
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="price">Ціна (₴)</Label>
+                      <Label htmlFor="price">{t('manageBooks.form.price')} ({t('common.currency')})</Label>
                       <Input
                         id="price"
                         type="number"
@@ -427,7 +421,7 @@ export function EmployeeDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="stock">Кількість</Label>
+                      <Label htmlFor="stock">{t('manageBooks.form.stock')}</Label>
                       <Input
                         id="stock"
                         type="number"
@@ -436,7 +430,7 @@ export function EmployeeDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="year">Рік</Label>
+                      <Label htmlFor="year">{t('manageBooks.form.year')}</Label>
                       <Input
                         id="year"
                         type="number"
@@ -447,7 +441,7 @@ export function EmployeeDashboard() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleAddBook}>Додати книгу</Button>
+                  <Button onClick={handleAddBook}>{t('manageBooks.form.add')}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -459,12 +453,12 @@ export function EmployeeDashboard() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Filter className="size-4" />
-                  Фільтри пошуку
+                  {t('common.searchFilters')}
                 </CardTitle>
                 {(bookSearch || bookCategory !== 'all' || bookStockFilter !== 'all' || bookSortBy !== 'name') && (
                   <Button variant="ghost" size="sm" onClick={clearBookFilters}>
                     <X className="size-4 mr-2" />
-                    Скинути
+                    {t('common.reset')}
                   </Button>
                 )}
               </div>
@@ -472,12 +466,12 @@ export function EmployeeDashboard() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="book-search">Пошук</Label>
+                  <Label htmlFor="book-search">{t('common.search')}</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
                     <Input
                       id="book-search"
-                      placeholder="Назва, автор, ISBN..."
+                      placeholder={t('manageBooks.searchPlaceholder')}
                       value={bookSearch}
                       onChange={(e) => setBookSearch(e.target.value)}
                       className="pl-9"
@@ -485,13 +479,13 @@ export function EmployeeDashboard() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="book-category">Категорія</Label>
+                  <Label htmlFor="book-category">{t('manageBooks.form.category')}</Label>
                   <Select value={bookCategory} onValueChange={setBookCategory}>
                     <SelectTrigger id="book-category">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Всі категорії</SelectItem>
+                      <SelectItem value="all">{t('manageBooks.categories.all')}</SelectItem>
                       {categories.map(cat => (
                         <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                       ))}
@@ -499,32 +493,32 @@ export function EmployeeDashboard() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="book-stock">Наявність</Label>
+                  <Label htmlFor="book-stock">{t('stockStatus.availability')}</Label>
                   <Select value={bookStockFilter} onValueChange={setBookStockFilter}>
                     <SelectTrigger id="book-stock">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Всі книги</SelectItem>
+                      <SelectItem value="all">{t('manageBooks.stock.all')}</SelectItem>
                       <SelectItem value="in-stock">{t('stockStatus.inStock')}</SelectItem>
-                      <SelectItem value="low-stock">Мало ({"<"}10)</SelectItem>
+                      <SelectItem value="low-stock">{t('manageBooks.stock.lowStock')} ({"<"}10)</SelectItem>
                       <SelectItem value="out-of-stock">{t('stockStatus.outOfStock')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="book-sort">Сортування</Label>
+                  <Label htmlFor="book-sort">{t('catalog.sortBy')}</Label>
                   <Select value={bookSortBy} onValueChange={setBookSortBy}>
                     <SelectTrigger id="book-sort">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="name">За назвою</SelectItem>
-                      <SelectItem value="author">За автором</SelectItem>
-                      <SelectItem value="price-asc">Ціна: за зростанням</SelectItem>
-                      <SelectItem value="price-desc">Ціна: за спаданням</SelectItem>
-                      <SelectItem value="stock-asc">Наявність: за зростанням</SelectItem>
-                      <SelectItem value="stock-desc">Наявність: за спаданням</SelectItem>
+                      <SelectItem value="name">{t('manageBooks.sort.nameAsc')}</SelectItem>
+                      <SelectItem value="author">{t('manageBooks.sort.authorAsc')}</SelectItem>
+                      <SelectItem value="price-asc">{t('manageBooks.sort.priceAsc')}</SelectItem>
+                      <SelectItem value="price-desc">{t('manageBooks.sort.priceDesc')}</SelectItem>
+                      <SelectItem value="stock-asc">{t('manageBooks.sort.stockAsc')}</SelectItem>
+                      <SelectItem value="stock-desc">{t('manageBooks.sort.stockDesc')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -537,12 +531,12 @@ export function EmployeeDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Назва</TableHead>
-                    <TableHead>Автор</TableHead>
-                    <TableHead>Категорія</TableHead>
-                    <TableHead className="text-right">Ціна</TableHead>
+                    <TableHead>{t('manageBooks.form.name')}</TableHead>
+                    <TableHead>{t('manageBooks.form.author')}</TableHead>
+                    <TableHead>{t('manageBooks.form.category')}</TableHead>
+                    <TableHead className="text-right">{t('book.price')}</TableHead>
                     <TableHead className="text-center">{t('stockStatus.availability')}</TableHead>
-                    <TableHead className="text-right">Дії</TableHead>
+                    <TableHead className="text-right">{t('admin.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -551,7 +545,7 @@ export function EmployeeDashboard() {
                       <TableCell className="font-medium">{book.name}</TableCell>
                       <TableCell>{book.author}</TableCell>
                       <TableCell>{book.category}</TableCell>
-                      <TableCell className="text-right">{book.price} ₴</TableCell>
+                      <TableCell className="text-right">{book.price} {t('common.currency')}</TableCell>
                       <TableCell className="text-center">{book.stock}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
@@ -585,20 +579,20 @@ export function EmployeeDashboard() {
           <Dialog open={isEditBookOpen} onOpenChange={setIsEditBookOpen}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Редагувати книгу</DialogTitle>
+                <DialogTitle>{t('manageBooks.form.editTitle')}</DialogTitle>
               </DialogHeader>
               {editingBook && (
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Назва</Label>
+                      <Label>{t('manageBooks.form.name')}</Label>
                       <Input
                         value={editingBook.name}
                         onChange={(e) => setEditingBook({ ...editingBook, name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Автор</Label>
+                      <Label>{t('manageBooks.form.author')}</Label>
                       <Input
                         value={editingBook.author}
                         onChange={(e) => setEditingBook({ ...editingBook, author: e.target.value })}
@@ -606,7 +600,7 @@ export function EmployeeDashboard() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Опис</Label>
+                    <Label>{t('manageBooks.form.description')}</Label>
                     <Textarea
                       value={editingBook.description}
                       onChange={(e) => setEditingBook({ ...editingBook, description: e.target.value })}
@@ -614,7 +608,7 @@ export function EmployeeDashboard() {
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label>Ціна (₴)</Label>
+                      <Label>{t('manageBooks.form.price')} ({t('common.currency')})</Label>
                       <Input
                         type="number"
                         value={editingBook.price}
@@ -622,7 +616,7 @@ export function EmployeeDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Кількість</Label>
+                      <Label>{t('manageBooks.form.stock')}</Label>
                       <Input
                         type="number"
                         value={editingBook.stock}
@@ -630,7 +624,7 @@ export function EmployeeDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Категорія</Label>
+                      <Label>{t('manageBooks.form.category')}</Label>
                       <Input
                         value={editingBook.category}
                         onChange={(e) => setEditingBook({ ...editingBook, category: e.target.value })}
@@ -640,7 +634,7 @@ export function EmployeeDashboard() {
                 </div>
               )}
               <DialogFooter>
-                <Button onClick={handleEditBook}>Зберегти зміни</Button>
+                <Button onClick={handleEditBook}>{t('manageBooks.form.save')}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -648,7 +642,7 @@ export function EmployeeDashboard() {
 
         {/* Orders Tab */}
         <TabsContent value="orders" className="space-y-4">
-          <h2 className="text-xl font-semibold">Управління замовленнями</h2>
+          <h2 className="text-xl font-semibold">{t('allOrders.title')}</h2>
 
           {/* Orders Filters */}
           <Card>
@@ -656,12 +650,12 @@ export function EmployeeDashboard() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Filter className="size-4" />
-                  Фільтри пошуку
+                  {t('common.searchFilters')}
                 </CardTitle>
                 {(orderSearch || orderStatusFilter !== 'all' || orderDateFilter !== 'all' || orderSortBy !== 'date-desc') && (
                   <Button variant="ghost" size="sm" onClick={clearOrderFilters}>
                     <X className="size-4 mr-2" />
-                    Скинути
+                    {t('common.reset')}
                   </Button>
                 )}
               </div>
@@ -669,7 +663,7 @@ export function EmployeeDashboard() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="order-search">Пошук</Label>
+                  <Label htmlFor="order-search">{t('admin.search')}</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
                     <Input
@@ -682,44 +676,44 @@ export function EmployeeDashboard() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="order-status">Статус</Label>
+                  <Label htmlFor="order-status">{t('allOrders.status.placeholder')}</Label>
                   <Select value={orderStatusFilter} onValueChange={setOrderStatusFilter}>
                     <SelectTrigger id="order-status">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Всі замовлення</SelectItem>
-                      <SelectItem value="pending">В обробці</SelectItem>
-                      <SelectItem value="confirmed">Підтверджено</SelectItem>
-                      <SelectItem value="cancelled">Скасовано</SelectItem>
+                      <SelectItem value="all">{t('allOrders.status.all')}</SelectItem>
+                      <SelectItem value="pending">{t('allOrders.status.pending')}</SelectItem>
+                      <SelectItem value="confirmed">{t('allOrders.status.confirmed')}</SelectItem>
+                      <SelectItem value="cancelled">{t('allOrders.status.cancelled')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="order-date">Період</Label>
+                  <Label htmlFor="order-date">{t('admin.period')}</Label>
                   <Select value={orderDateFilter} onValueChange={setOrderDateFilter}>
                     <SelectTrigger id="order-date">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Весь час</SelectItem>
-                      <SelectItem value="today">Сьогодні</SelectItem>
-                      <SelectItem value="week">Останній тиждень</SelectItem>
-                      <SelectItem value="month">Останній місяць</SelectItem>
+                      <SelectItem value="all">{t('admin.period.all')}</SelectItem>
+                      <SelectItem value="today">{t('admin.period.today')}</SelectItem>
+                      <SelectItem value="week">{t('admin.period.week')}</SelectItem>
+                      <SelectItem value="month">{t('admin.period.month')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="order-sort">Сортування</Label>
+                  <Label htmlFor="order-sort">{t('allOrders.sort.placeholder')}</Label>
                   <Select value={orderSortBy} onValueChange={setOrderSortBy}>
                     <SelectTrigger id="order-sort">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="date-desc">Дата: нові першими</SelectItem>
-                      <SelectItem value="date-asc">Дата: старі першими</SelectItem>
-                      <SelectItem value="price-desc">Сума: за спаданням</SelectItem>
-                      <SelectItem value="price-asc">Сума: за зростанням</SelectItem>
+                      <SelectItem value="date-desc">{t('allOrders.sort.dateDesc')}</SelectItem>
+                      <SelectItem value="date-asc">{t('allOrders.sort.dateAsc')}</SelectItem>
+                      <SelectItem value="price-desc">{t('allOrders.sort.priceDesc')}</SelectItem>
+                      <SelectItem value="price-asc">{t('allOrders.sort.priceAsc')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -731,7 +725,7 @@ export function EmployeeDashboard() {
             {filteredOrders.length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center text-gray-500">
-                  Замовлення не знайдено
+                  {t('allOrders.notFound')}
                 </CardContent>
               </Card>
             ) : (
@@ -741,24 +735,24 @@ export function EmployeeDashboard() {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="flex items-center gap-2">
-                          Замовлення #{order.id}
+                          {t('orders.orderNumber')}{order.id}
                           <Badge variant={
                             order.status === 'confirmed' ? 'default' :
                               order.status === 'cancelled' ? 'destructive' :
                                 'secondary'
                           }>
-                            {order.status === 'pending' ? 'В обробці' :
-                              order.status === 'cancelled' ? 'Скасовано' :
-                                'Підтверджено'}
+                            {order.status === 'pending' ? t('orders.pending') :
+                              order.status === 'cancelled' ? t('orders.cancelled') :
+                                t('orders.confirmed')}
                           </Badge>
                         </CardTitle>
                         <CardDescription>
-                          Клієнт: {order.customerEmail}<br />
+                          {t('allOrders.fields.client')}: {order.customerEmail}<br />
                           {formatDate(order.createdAt)}
                         </CardDescription>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-semibold">{order.totalPrice} ₴</p>
+                        <p className="text-2xl font-semibold">{order.totalPrice} {t('common.currency')}</p>
                         {order.status === 'pending' && (
                           <div className="flex gap-2 mt-2">
                             <Button
@@ -766,7 +760,7 @@ export function EmployeeDashboard() {
                               onClick={() => handleConfirmOrder(order.id)}
                             >
                               <CheckCircle className="size-4 mr-2" />
-                              Підтвердити
+                              {t('allOrders.actions.confirm')}
                             </Button>
                             <Button
                               size="sm"
@@ -774,7 +768,7 @@ export function EmployeeDashboard() {
                               onClick={() => handleCancelOrder(order.id)}
                             >
                               <X className="size-4 mr-2" />
-                              Скасувати
+                              {t('allOrders.actions.cancel')}
                             </Button>
                           </div>
                         )}
@@ -785,10 +779,10 @@ export function EmployeeDashboard() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Книга</TableHead>
-                          <TableHead className="text-center">Кількість</TableHead>
-                          <TableHead className="text-right">Ціна</TableHead>
-                          <TableHead className="text-right">Підсумок</TableHead>
+                          <TableHead>{t('manageBooks.form.name')}</TableHead>
+                          <TableHead className="text-center">{t('book.quantity')}</TableHead>
+                          <TableHead className="text-right">{t('book.price')}</TableHead>
+                          <TableHead className="text-right">{t('admin.total')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -796,8 +790,8 @@ export function EmployeeDashboard() {
                           <TableRow key={index}>
                             <TableCell>{item.bookName}</TableCell>
                             <TableCell className="text-center">{item.quantity}</TableCell>
-                            <TableCell className="text-right">{item.price} ₴</TableCell>
-                            <TableCell className="text-right">{item.quantity * item.price} ₴</TableCell>
+                            <TableCell className="text-right">{item.price} {t('common.currency')}</TableCell>
+                            <TableCell className="text-right">{item.quantity * item.price} {t('common.currency')}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -815,7 +809,7 @@ export function EmployeeDashboard() {
 
         {/* Clients Tab */}
         <TabsContent value="clients" className="space-y-4">
-          <h2 className="text-xl font-semibold">Управління клієнтами</h2>
+          <h2 className="text-xl font-semibold">{t('clients.title')}</h2>
 
           {/* Clients Filters */}
           <Card>
@@ -836,12 +830,12 @@ export function EmployeeDashboard() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="client-search">Пошук</Label>
+                  <Label htmlFor="client-search">{t('admin.search')}</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
                     <Input
                       id="client-search"
-                      placeholder="Ім'я або email..."
+                      placeholder={t('clients.searchPlaceholder')}
                       value={clientSearch}
                       onChange={(e) => setClientSearch(e.target.value)}
                       className="pl-9"
@@ -849,27 +843,27 @@ export function EmployeeDashboard() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="client-status">Статус</Label>
+                  <Label htmlFor="client-status">{t('clients.status.placeholder')}</Label>
                   <Select value={clientStatusFilter} onValueChange={setClientStatusFilter}>
                     <SelectTrigger id="client-status">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Всі клієнти</SelectItem>
-                      <SelectItem value="active">Активні</SelectItem>
-                      <SelectItem value="blocked">Заблоковані</SelectItem>
+                      <SelectItem value="all">{t('clients.status.all')}</SelectItem>
+                      <SelectItem value="active">{t('clients.status.active')}</SelectItem>
+                      <SelectItem value="blocked">{t('clients.status.blocked')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="client-sort">Сортування</Label>
+                  <Label htmlFor="client-sort">{t('clients.sort.placeholder')}</Label>
                   <Select value={clientSortBy} onValueChange={setClientSortBy}>
                     <SelectTrigger id="client-sort">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="name">За ім'ям</SelectItem>
-                      <SelectItem value="email">За email</SelectItem>
+                      <SelectItem value="name">{t('clients.sort.nameAsc')}</SelectItem>
+                      <SelectItem value="email">{t('clients.sort.emailAsc')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -882,19 +876,19 @@ export function EmployeeDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Ім'я</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Статус</TableHead>
-                    <TableHead className="text-center">Замовлень</TableHead>
-                    <TableHead className="text-right">Загалом витрачено</TableHead>
-                    <TableHead className="text-right">Дії</TableHead>
+                    <TableHead>{t('auth.name')}</TableHead>
+                    <TableHead>{t('auth.email')}</TableHead>
+                    <TableHead>{t('orders.status')}</TableHead>
+                    <TableHead className="text-center">{t('header.orders')}</TableHead>
+                    <TableHead className="text-right">{t('allOrders.fields.total')}</TableHead>
+                    <TableHead className="text-right">{t('admin.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredClients.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                        Клієнти не знайдені
+                        {t('clients.notFound')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -906,11 +900,11 @@ export function EmployeeDashboard() {
                           <TableCell>{client.email}</TableCell>
                           <TableCell>
                             <Badge variant={client.isBlocked ? 'destructive' : 'default'}>
-                              {client.isBlocked ? 'Заблоковано' : 'Активний'}
+                              {client.isBlocked ? t('admin.blocked') : t('admin.active')}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">{stats.ordersCount}</TableCell>
-                          <TableCell className="text-right">{stats.totalSpent} ₴</TableCell>
+                          <TableCell className="text-right">{stats.totalSpent} {t('common.currency')}</TableCell>
                           <TableCell className="text-right">
                             <Button
                               variant="outline"
@@ -920,12 +914,12 @@ export function EmployeeDashboard() {
                               {client.isBlocked ? (
                                 <>
                                   <UserCheck className="size-4 mr-2" />
-                                  Розблокувати
+                                  {t('admin.unblockClient')}
                                 </>
                               ) : (
                                 <>
                                   <UserX className="size-4 mr-2" />
-                                  Заблокувати
+                                  {t('admin.blockClient')}
                                 </>
                               )}
                             </Button>

@@ -14,7 +14,7 @@ public interface ClientService {
     Page<ClientDTO> getAllClients(Pageable pageable);
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    Page<ClientDTO> searchClients(String keyword, Pageable pageable);
+    Page<ClientDTO> searchClients(String keyword, Boolean isBlocked, Pageable pageable);
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE') or @customSecurity.isClientOwner(#id)")
     ClientDTO getClientById(Long id);

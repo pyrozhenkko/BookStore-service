@@ -2,6 +2,7 @@ package com.epam.rd.autocode.spring.project.service.impl;
 
 import com.epam.rd.autocode.spring.project.conf.I18nConfig;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class I18nService {
@@ -30,19 +32,58 @@ public class I18nService {
         return messageSource.getMessage(key, null, key, locale);
     }
 
-    public Map<String, String> getAllMessages() {
+    public Map<String, Object> getAllMessages() {
         return getAllMessages(LocaleContextHolder.getLocale());
     }
 
-    public Map<String, String> getAllMessages(Locale locale) {
-        ResourceBundle bundle = ResourceBundle.getBundle("i18n/messages", locale);
-        Map<String, String> messages = new HashMap<>();
-        Enumeration<String> keys = bundle.getKeys();
-        while (keys.hasMoreElements()) {
-            String key = keys.nextElement();
-            messages.put(key, bundle.getString(key));
+    public Map<String, Object> getAllMessages(Locale locale) {
+        String baseName = "i18n/messages";
+        String language = locale.getLanguage();
+        String resourceName = "/" + baseName + (language.isEmpty() ? "" : "_" + language) + ".properties";
+
+        log.info("Loading i18n messages from: {} for locale: {}", resourceName, locale);
+        Map<String, Object> result = new HashMap<>();
+
+        try (InputStream is = getClass().getResourceAsStream(resourceName)) {
+            if (is != null) {
+                log.info("Found resource: {}. Loading as UTF-8.", resourceName);
+                Properties props = new Properties();
+                props.load(new InputStreamReader(is, StandardCharsets.UTF_8));
+                for (String key : props.stringPropertyNames()) {
+                    unflatten(result, key, props.getProperty(key));
+                }
+            } else {
+                log.warn("Resource {} not found via getResourceAsStream. Falling back to ResourceBundle.",
+                        resourceName);
+                ResourceBundle bundle = ResourceBundle.getBundle(baseName, locale);
+                Enumeration<String> keys = bundle.getKeys();
+                while (keys.hasMoreElements()) {
+                    String key = keys.nextElement();
+                    String value = bundle.getString(key);
+                    unflatten(result, key, value);
+                }
+            }
+        } catch (IOException e) {
+            log.error("Error loading i18n messages from {}: {}", resourceName, e.getMessage());
         }
-        return messages;
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void unflatten(Map<String, Object> map, String key, String value) {
+        String[] parts = key.split("\\.");
+        Map<String, Object> current = map;
+        for (int i = 0; i < parts.length - 1; i++) {
+            Object next = current.get(parts[i]);
+            if (next instanceof Map) {
+                current = (Map<String, Object>) next;
+            } else {
+                Map<String, Object> nextMap = new HashMap<>();
+                current.put(parts[i], nextMap);
+                current = nextMap;
+            }
+        }
+        current.put(parts[parts.length - 1], value);
     }
 
     public List<Map<String, String>> getSupportedLanguages() {
@@ -51,7 +92,7 @@ public class I18nService {
         for (Locale locale : I18nConfig.SUPPORTED_LOCALES) {
             Map<String, String> lang = new LinkedHashMap<>();
             lang.put("code", locale.getLanguage());
-            lang.put("name", getMessage("app.language." + locale.getLanguage(), locale));
+            lang.put("name", getMessage("language." + locale.getLanguage(), locale));
             languages.add(lang);
         }
 

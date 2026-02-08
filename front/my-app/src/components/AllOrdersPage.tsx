@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { Order } from '../types';
 import { orderService } from '../services/orderService';
@@ -8,13 +8,13 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Input } from './ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { CheckCircle, XCircle, Clock, Search, ChevronLeft, ChevronRight, Package, Calendar, MapPin } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Search, ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ITEMS_PER_PAGE = 5;
 
 export function AllOrdersPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,16 +22,27 @@ export function AllOrdersPage() {
   const [sortBy, setSortBy] = useState<'date' | 'price' | 'customer'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [searchQuery, statusFilter, sortBy, sortOrder, currentPage]);
 
   const loadOrders = async () => {
     try {
       setLoading(true);
-      const data = await orderService.getAllOrders();
-      setOrders(data);
+      const sortParam = `${sortBy === 'date' ? 'orderDate' : sortBy === 'customer' ? 'clientEmail' : sortBy},${sortOrder}`;
+
+      const data = await orderService.searchOrders({
+        clientEmail: searchQuery, // Using searchQuery for clientEmail as a simple search
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        page: currentPage - 1,
+        size: ITEMS_PER_PAGE,
+        sort: sortParam
+      });
+
+      setOrders(data.content);
+      setTotalPages(data.totalPages);
     } catch (error) {
       toast.error(t('allOrders.toasts.loadError'));
     } finally {
@@ -94,58 +105,10 @@ export function AllOrdersPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString(t('language.currrent') === 'English' ? 'en-US' : 'uk-UA'); // Simplistic approach, or use useLanguage to get locale code
+    return new Date(dateString).toLocaleString(language === 'en' ? 'en-US' : 'uk-UA');
   };
 
-  // Фільтрація та сортування
-  const filteredAndSortedOrders = useMemo(() => {
-    let result = [...orders];
-
-    // Пошук
-    if (searchQuery) {
-      result = result.filter(order =>
-        order.id.toString().includes(searchQuery.toLowerCase()) ||
-        order.clientEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.bookItems.some(item => item.bookName.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    // Фільтр за статусом
-    if (statusFilter !== 'all') {
-      result = result.filter(order => order.status === statusFilter);
-    }
-
-    // Сортування
-    result.sort((a, b) => {
-      let compareValue = 0;
-
-      switch (sortBy) {
-        case 'date':
-          compareValue = new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime();
-          break;
-        case 'price':
-          compareValue = a.price - b.price;
-          break;
-        case 'customer':
-          compareValue = (a.clientName || a.clientEmail).localeCompare(b.clientName || b.clientEmail);
-          break;
-      }
-
-      return sortOrder === 'asc' ? compareValue : -compareValue;
-    });
-
-    return result;
-  }, [orders, searchQuery, statusFilter, sortBy, sortOrder]);
-
-  // Пагінація
-  const totalPages = Math.ceil(filteredAndSortedOrders.length / ITEMS_PER_PAGE);
-  const paginatedOrders = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedOrders.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredAndSortedOrders, currentPage]);
-
-  // Скидання сторінки при зміні фільтрів
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, sortBy, sortOrder]);
@@ -208,21 +171,18 @@ export function AllOrdersPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>{t('allOrders.globalList')}</CardTitle>
-            <div className="text-sm text-gray-600">
-              {t('allOrders.showing', { current: paginatedOrders.length, total: filteredAndSortedOrders.length })}
-            </div>
           </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-8">{t('common.loading')}</div>
-          ) : filteredAndSortedOrders.length === 0 ? (
+          ) : orders.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {searchQuery || statusFilter !== 'all' ? t('allOrders.notFound') : t('allOrders.noOrders')}
             </div>
           ) : (
             <div className="space-y-4">
-              {paginatedOrders.map((order) => (
+              {orders.map((order) => (
                 <Card key={order.id}>
                   <CardContent className="pt-6">
                     <div className="grid md:grid-cols-2 gap-4">
@@ -249,7 +209,7 @@ export function AllOrdersPage() {
                           </div>
                           <div className="text-right">
                             <div className="text-sm text-muted-foreground mb-1">{t('allOrders.fields.total')}</div>
-                            <div className="text-2xl font-bold text-primary">{order.price.toLocaleString()} ₴</div>
+                            <div className="text-2xl font-bold text-primary">{order.price.toLocaleString()} {t('common.currency')}</div>
                           </div>
                         </div>
 
@@ -269,10 +229,10 @@ export function AllOrdersPage() {
                                   <TableCell className="font-medium pl-0">{item.bookName}</TableCell>
                                   <TableCell className="text-center">{item.quantity}</TableCell>
                                   <TableCell className="text-right text-muted-foreground">
-                                    {item.price ? `${item.price.toLocaleString()} ₴` : '-'}
+                                    {item.price ? `${item.price.toLocaleString()} ${t('common.currency')}` : '-'}
                                   </TableCell>
                                   <TableCell className="text-right font-semibold pr-0">
-                                    {item.price ? `${(item.price * item.quantity).toLocaleString()} ₴` : '-'}
+                                    {item.price ? `${(item.price * item.quantity).toLocaleString()} ${t('common.currency')}` : '-'}
                                   </TableCell>
                                 </TableRow>
                               ))}
@@ -325,7 +285,7 @@ export function AllOrdersPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            Сторінка {currentPage} з {totalPages}
+            {t('book.page')} {currentPage} {t('common.of')} {totalPages}
           </div>
           <div className="flex gap-2">
             <Button

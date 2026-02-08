@@ -27,13 +27,15 @@ public class OrderController {
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<Page<OrderDTO>> searchOrders(
-            @RequestParam(required = false) String clientEmail,
-            @RequestParam(required = false) String city,
-            @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
+            @RequestParam(name = "clientEmail", required = false) String clientEmail,
+            @RequestParam(name = "city", required = false) String city,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(name = "dateFrom", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
             @PageableDefault(sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(orderService.searchOrders(clientEmail, city, minPrice, maxPrice, dateFrom, pageable));
+        return ResponseEntity
+                .ok(orderService.searchOrders(clientEmail, city, status, minPrice, maxPrice, dateFrom, pageable));
     }
 
     @PostMapping
@@ -45,7 +47,7 @@ public class OrderController {
     @GetMapping("/client/{email}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE') or authentication.name == #email")
     public ResponseEntity<Page<OrderDTO>> getOrdersByClient(
-            @PathVariable String email,
+            @PathVariable("email") String email,
             @PageableDefault(sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(orderService.getOrdersByClient(email, pageable));
     }
@@ -53,20 +55,20 @@ public class OrderController {
     @GetMapping("/employee/{email}")
     @PreAuthorize("hasRole('ADMIN') or authentication.name == #email")
     public ResponseEntity<Page<OrderDTO>> getOrdersByEmployee(
-            @PathVariable String email,
+            @PathVariable("email") String email,
             @PageableDefault(sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(orderService.getOrdersByEmployee(email, pageable));
     }
 
     @PostMapping("/{id}/confirm")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    public ResponseEntity<OrderDTO> confirmOrder(@PathVariable Long id) {
+    public ResponseEntity<OrderDTO> confirmOrder(@PathVariable("id") Long id) {
         return ResponseEntity.ok(orderService.confirmOrder(id));
     }
 
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id) {
+    public ResponseEntity<OrderDTO> cancelOrder(@PathVariable("id") Long id) {
         return ResponseEntity.ok(orderService.cancelOrder(id));
     }
 }

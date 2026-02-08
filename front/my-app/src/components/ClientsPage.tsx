@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { Client } from '../types';
 import { clientService } from '../services/clientService';
@@ -22,7 +22,7 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 export function ClientsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,6 +30,8 @@ export function ClientsPage() {
   const [sortBy, setSortBy] = useState<'name' | 'email' | 'totalOrders' | 'registeredDate'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Form state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -43,13 +45,25 @@ export function ClientsPage() {
 
   useEffect(() => {
     loadClients();
-  }, []);
+  }, [searchQuery, statusFilter, sortBy, sortOrder, currentPage]);
 
   const loadClients = async () => {
     try {
       setLoading(true);
-      const data = await clientService.getAllClients();
-      setClients(data);
+      const isBlocked = statusFilter === 'all' ? undefined : statusFilter === 'blocked';
+      const sortParam = `${sortBy},${sortOrder}`;
+
+      const data = await clientService.searchClients({
+        keyword: searchQuery,
+        isBlocked,
+        page: currentPage - 1, // Spring is 0-indexed
+        size: ITEMS_PER_PAGE,
+        sort: sortParam
+      });
+
+      setClients(data.content);
+      setTotalPages(data.totalPages);
+      setTotalItems(data.totalElements);
     } catch (error) {
       toast.error(t('clients.toasts.loadError'));
     } finally {
@@ -134,61 +148,10 @@ export function ClientsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(t('language.currrent') === 'English' ? 'en-US' : 'uk-UA');
+    return new Date(dateString).toLocaleDateString(language === 'en' ? 'en-US' : 'uk-UA');
   };
 
-  // Фільтрація та сортування
-  const filteredAndSortedClients = useMemo(() => {
-    let result = [...clients];
-
-    // Пошук
-    if (searchQuery) {
-      result = result.filter(client =>
-        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Фільтр за статусом
-    if (statusFilter === 'active') {
-      result = result.filter(client => !client.isBlocked);
-    } else if (statusFilter === 'blocked') {
-      result = result.filter(client => client.isBlocked);
-    }
-
-    // Сортування
-    result.sort((a, b) => {
-      let compareValue = 0;
-
-      switch (sortBy) {
-        case 'name':
-          compareValue = (a.name || '').localeCompare(b.name || '');
-          break;
-        case 'email':
-          compareValue = (a.email || '').localeCompare(b.email || '');
-          break;
-        case 'totalOrders':
-          compareValue = (a.totalOrders || 0) - (b.totalOrders || 0);
-          break;
-        case 'registeredDate':
-          compareValue = new Date(a.registeredDate).getTime() - new Date(b.registeredDate).getTime();
-          break;
-      }
-
-      return sortOrder === 'asc' ? compareValue : -compareValue;
-    });
-
-    return result;
-  }, [clients, searchQuery, statusFilter, sortBy, sortOrder]);
-
-  // Пагінація
-  const totalPages = Math.ceil(filteredAndSortedClients.length / ITEMS_PER_PAGE);
-  const paginatedClients = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedClients.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredAndSortedClients, currentPage]);
-
-  // Скидання сторінки при зміні фільтрів
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, sortBy, sortOrder]);
@@ -203,7 +166,7 @@ export function ClientsPage() {
         </Button>
       </div>
 
-      {/* Пошук та фільтри */}
+      {/* Search and filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -253,15 +216,12 @@ export function ClientsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>{t('clients.listTitle')}</CardTitle>
-            <div className="text-sm text-gray-600">
-              {t('clients.showing', { current: paginatedClients.length, total: filteredAndSortedClients.length })}
-            </div>
           </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-8">{t('common.loading')}</div>
-          ) : filteredAndSortedClients.length === 0 ? (
+          ) : clients.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {searchQuery || statusFilter !== 'all' ? t('clients.notFound') : t('clients.noClients')}
             </div>
@@ -279,7 +239,7 @@ export function ClientsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedClients.map((client) => (
+                {clients.map((client) => (
                   <TableRow key={client.id} className={client.isBlocked ? "opacity-60 bg-gray-50/50" : ""}>
                     <TableCell className="font-medium">{client.name}</TableCell>
                     <TableCell>{client.email}</TableCell>
@@ -337,7 +297,7 @@ export function ClientsPage() {
         </CardContent>
       </Card>
 
-      {/* Пагінація */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">

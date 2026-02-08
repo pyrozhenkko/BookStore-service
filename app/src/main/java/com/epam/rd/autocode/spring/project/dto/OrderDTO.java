@@ -19,6 +19,7 @@ public class OrderDTO {
     private String employeeEmail;
     private LocalDateTime orderDate;
     private BigDecimal price;
+    private BigDecimal usedBonuses;
     private String status;
     private List<BookItemDTO> bookItems;
     private String deliveryCity;

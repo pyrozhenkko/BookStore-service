@@ -39,6 +39,9 @@ public class Order {
 
     private BigDecimal price;
 
+    @Column(name = "used_bonuses")
+    private BigDecimal usedBonuses;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<BookItem> bookItems = new ArrayList<>();
 
