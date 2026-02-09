@@ -19,6 +19,8 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
   const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [languageFilter, setLanguageFilter] = useState('all');
+  const [ageGroupFilter, setAgeGroupFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -54,6 +56,8 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
         const data = await bookApiService.searchBooks({
           keyword: searchQuery,
           genre: categoryFilter === 'all' ? undefined : categoryFilter,
+          language: languageFilter === 'all' ? undefined : languageFilter,
+          ageGroup: ageGroupFilter === 'all' ? undefined : ageGroupFilter,
           page: currentPage - 1,
           size: ITEMS_PER_PAGE,
           sort: sortMap[sortBy] || 'name,asc'
@@ -69,11 +73,11 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
       }
     };
     loadBooks();
-  }, [searchQuery, categoryFilter, sortBy, currentPage, language]);
+  }, [searchQuery, categoryFilter, languageFilter, ageGroupFilter, sortBy, currentPage, language]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, categoryFilter, sortBy]);
+  }, [searchQuery, categoryFilter, languageFilter, ageGroupFilter, sortBy]);
 
   return (
     <div className="space-y-6">
@@ -83,7 +87,7 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white rounded-lg border">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 p-4 bg-white rounded-lg border">
         <div className="space-y-2">
           <Label htmlFor="search">{t('common.search')}</Label>
           <div className="relative">
@@ -111,6 +115,41 @@ export function BookCatalog({ onViewDetails }: BookCatalogProps) {
                   {category}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="language">{t('book.language')}</Label>
+          <Select value={languageFilter} onValueChange={setLanguageFilter}>
+            <SelectTrigger id="language">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('catalog.allLanguages')}</SelectItem>
+              <SelectItem value="ENGLISH">English</SelectItem>
+              <SelectItem value="SPANISH">Spanish</SelectItem>
+              <SelectItem value="FRENCH">French</SelectItem>
+              <SelectItem value="GERMAN">German</SelectItem>
+              <SelectItem value="JAPANESE">Japanese</SelectItem>
+              <SelectItem value="UKRAINIAN">Ukrainian</SelectItem>
+              <SelectItem value="OTHER">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="ageGroup">{t('book.ageGroup')}</Label>
+          <Select value={ageGroupFilter} onValueChange={setAgeGroupFilter}>
+            <SelectTrigger id="ageGroup">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('catalog.allAgeGroups')}</SelectItem>
+              <SelectItem value="CHILD">Child</SelectItem>
+              <SelectItem value="TEEN">Teen</SelectItem>
+              <SelectItem value="ADULT">Adult</SelectItem>
+              <SelectItem value="OTHER">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>

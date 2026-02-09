@@ -8,6 +8,7 @@ export default defineConfig({
     proxy: {
       '/api': { target: 'http://localhost:8084', changeOrigin: true },
       '/oauth2': { target: 'http://localhost:8084', changeOrigin: true },
+      '/uploads': { target: 'http://localhost:8084', changeOrigin: true },
     },
   },
 })

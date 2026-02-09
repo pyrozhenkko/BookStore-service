@@ -25,8 +25,15 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+
+import org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenDecoderFactory;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.JwtDecoderFactory;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 
 @Configuration
 @EnableWebSecurity
@@ -47,7 +54,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(clientUrl, "http://localhost:5173", "http://127.0.0.1:5173"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(true);// кікі до ю лав мі, токени
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
@@ -68,16 +75,25 @@ public class SecurityConfig {
                         .requestMatchers("/api/payment/webhook").permitAll()
                         .requestMatchers("/api/payment/success", "/api/payment/cancel").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/login/**", "/oauth2/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(e -> e.authenticationEntryPoint(
                         new org.springframework.security.web.authentication.HttpStatusEntryPoint(
                                 org.springframework.http.HttpStatus.UNAUTHORIZED)))
                 .oauth2Login(oauth2 -> oauth2
-                        .successHandler(oAuth2LoginSuccessHandler));
+                        .successHandler(oAuth2LoginSuccessHandler)
+                        .failureHandler((request, response, exception) -> {
+                            System.err.println("=== OAuth2 Login FAILED ===");
+                            System.err.println("Exception type: " + exception.getClass().getName());
+                            System.err.println("Message: " + exception.getMessage());
+                            exception.printStackTrace(System.err);
+                            String redirectUrl = clientUrl + "/#/login?error=oauth2";
+                            response.sendRedirect(redirectUrl);
+                        }));
 
         return http.build();
     }
@@ -98,5 +114,20 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
+    }
+
+    @Bean
+    public JwtDecoderFactory<ClientRegistration> idTokenDecoderFactory() {
+        OidcIdTokenDecoderFactory factory = new OidcIdTokenDecoderFactory();
+        factory.setJwsAlgorithmResolver(reg -> SignatureAlgorithm.RS256);
+        factory.setJwtValidatorFactory(clientRegistration -> {
+            JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ofHours(48));
+            org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenValidator oidcValidator = new org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenValidator(
+                    clientRegistration);
+            oidcValidator.setClockSkew(Duration.ofHours(48));
+            return new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
+                    timestampValidator, oidcValidator);
+        });
+        return factory;
     }
 }

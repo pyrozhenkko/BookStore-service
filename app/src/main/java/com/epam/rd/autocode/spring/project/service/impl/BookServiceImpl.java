@@ -4,6 +4,8 @@ import com.epam.rd.autocode.spring.project.dto.BookDTO;
 import com.epam.rd.autocode.spring.project.mapper.BookMapper;
 import com.epam.rd.autocode.spring.project.model.Book;
 import com.epam.rd.autocode.spring.project.model.BookTranslation;
+import com.epam.rd.autocode.spring.project.model.enums.AgeGroup;
+import com.epam.rd.autocode.spring.project.model.enums.Language;
 import com.epam.rd.autocode.spring.project.exception.AlreadyExistException;
 import com.epam.rd.autocode.spring.project.exception.InvalidOperationException;
 import com.epam.rd.autocode.spring.project.exception.NotFoundException;
@@ -50,14 +52,16 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Page<BookDTO> searchBooks(String keyword, String genre, String stockStatus, BigDecimal minPrice,
-            BigDecimal maxPrice,
+            BigDecimal maxPrice, Language language, AgeGroup ageGroup,
             Pageable pageable, String locale) {
         String effectiveLocale = normalizeLocale(locale);
         Specification<Book> spec = Specification.where(BookSpecification.hasKeyword(keyword))
                 .and(BookSpecification.hasGenre(genre))
                 .and(BookSpecification.hasStockStatus(stockStatus))
                 .and(BookSpecification.priceGreaterOrEqual(minPrice))
-                .and(BookSpecification.priceLessOrEqual(maxPrice));
+                .and(BookSpecification.priceLessOrEqual(maxPrice))
+                .and(BookSpecification.hasLanguage(language))
+                .and(BookSpecification.hasAgeGroup(ageGroup));
 
         return bookRepository
                 .findAll(spec, pageable)

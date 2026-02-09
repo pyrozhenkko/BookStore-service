@@ -188,7 +188,6 @@ public class ShoppingCartServiceImpl {
             BigDecimal currentBalance = client.getBalance() != null ? client.getBalance() : BigDecimal.ZERO;
             BigDecimal newBalance = currentBalance.subtract(bonusDiscount).max(BigDecimal.ZERO);
             client.setBalance(newBalance);
-            System.out.println("🔥 Bonuses used: " + bonusDiscount + ". New Balance: " + newBalance);
         }
 
         BigDecimal cashbackRate = new BigDecimal("0.05");
@@ -197,7 +196,6 @@ public class ShoppingCartServiceImpl {
         if (cashbackEarned.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal currentBalance = client.getBalance() != null ? client.getBalance() : BigDecimal.ZERO;
             client.setBalance(currentBalance.add(cashbackEarned));
-            System.out.println("💰 Cashback earned: " + cashbackEarned);
         }
 
         clientRepository.save(client);
@@ -207,14 +205,12 @@ public class ShoppingCartServiceImpl {
         cartRepository.findByClient_Email(email).ifPresent(cart -> {
             cart.getItems().clear();
             cartRepository.save(cart);
-            System.out.println("🛒 Shopping cart cleared for: " + email);
         });
 
         try {
-            System.out.println("📧 Sending confirmation email to " + client.getEmail());
             emailService.sendOrderConfirmationEmail(client.getEmail(), order);
         } catch (Exception e) {
-            System.err.println(" Failed to send order confirmation email: " + e.getMessage());
+            // Log the error but do not fail the checkout process
         }
     }
 

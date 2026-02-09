@@ -1,6 +1,8 @@
 package com.epam.rd.autocode.spring.project.controller;
 
 import com.epam.rd.autocode.spring.project.dto.BookDTO;
+import com.epam.rd.autocode.spring.project.model.enums.AgeGroup;
+import com.epam.rd.autocode.spring.project.model.enums.Language;
 import com.epam.rd.autocode.spring.project.service.impl.BookServiceImpl;
 import com.epam.rd.autocode.spring.project.service.impl.FileStorageService;
 import lombok.RequiredArgsConstructor;
@@ -34,10 +36,13 @@ public class BookController {
             @RequestParam(name = "stockStatus", required = false) String stockStatus,
             @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
             @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(name = "language", required = false) Language language,
+            @RequestParam(name = "ageGroup", required = false) AgeGroup ageGroup,
             @PageableDefault(sort = "id", direction = Sort.Direction.DESC, size = 10) Pageable pageable,
             @RequestHeader(value = "Accept-Language", defaultValue = "uk") String locale) {
         return ResponseEntity
-                .ok(bookService.searchBooks(keyword, genre, stockStatus, minPrice, maxPrice, pageable, locale));
+                .ok(bookService.searchBooks(keyword, genre, stockStatus, minPrice, maxPrice, language, ageGroup,
+                        pageable, locale));
     }
 
     @GetMapping

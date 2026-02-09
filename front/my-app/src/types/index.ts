@@ -10,6 +10,8 @@ export interface Book {
   imageUrls?: string[];
   isbn: string;
   publishedYear: number;
+  language?: string;
+  ageGroup?: string;
   averageRating?: number;
   totalReviews?: number;
 }

@@ -78,7 +78,7 @@ public class ReviewServiceImpl {
                             comment.getClient().getName(),
                             comment.getComment(),
                             comment.getCreatedAt(),
-                            comment.getRating(), // Тепер рейтинг береться напряму з коментаря
+                            comment.getRating(),
                             isVerified);
                 });
     }

@@ -217,6 +217,18 @@ export function BookDetails({ book, onBack }: BookDetailsProps) {
                   <p className="text-sm text-gray-600">{t('book.publishedYear')}</p>
                   <p className="font-semibold">{book.publishedYear}</p>
                 </div>
+                {book.language && (
+                  <div>
+                    <p className="text-sm text-gray-600">{t('manageBooks.form.language')}</p>
+                    <p className="font-semibold">{t(`manageBooks.languages.${book.language}`)}</p>
+                  </div>
+                )}
+                {book.ageGroup && (
+                  <div>
+                    <p className="text-sm text-gray-600">{t('manageBooks.form.ageGroup')}</p>
+                    <p className="font-semibold">{t(`manageBooks.ageGroups.${book.ageGroup}`)}</p>
+                  </div>
+                )}
               </div>
 
               <div className="border-t pt-6 space-y-4">

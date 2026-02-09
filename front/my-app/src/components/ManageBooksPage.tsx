@@ -37,6 +37,8 @@ export function ManageBooksPage() {
     imageUrl: '',
     isbn: '',
     publishedYear: '',
+    language: '',
+    ageGroup: '',
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -80,6 +82,8 @@ export function ManageBooksPage() {
       imageUrl: '',
       isbn: '',
       publishedYear: '',
+      language: 'UKRAINIAN',
+      ageGroup: 'ADULT',
     });
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -98,6 +102,8 @@ export function ManageBooksPage() {
       imageUrl: book.imageUrl,
       isbn: book.isbn,
       publishedYear: book.publishedYear.toString(),
+      language: book.language || 'UKRAINIAN',
+      ageGroup: book.ageGroup || 'ADULT',
     });
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -126,6 +132,8 @@ export function ManageBooksPage() {
       imageUrl: formData.imageUrl,
       isbn: formData.isbn,
       publishedYear: publishedYear,
+      language: formData.language,
+      ageGroup: formData.ageGroup,
       imageUrls: editingBook?.imageUrls || [],
     };
 
@@ -479,6 +487,45 @@ export function ManageBooksPage() {
                 onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
                 required
               />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="language">{t('manageBooks.form.language')} *</Label>
+                <Select
+                  value={formData.language}
+                  onValueChange={(value) => setFormData({ ...formData, language: value })}
+                >
+                  <SelectTrigger id="language">
+                    <SelectValue placeholder={t('manageBooks.form.language')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['ENGLISH', 'SPANISH', 'FRENCH', 'GERMAN', 'JAPANESE', 'UKRAINIAN', 'OTHER'].map((lang) => (
+                      <SelectItem key={lang} value={lang}>
+                        {t(`manageBooks.languages.${lang}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ageGroup">{t('manageBooks.form.ageGroup')} *</Label>
+                <Select
+                  value={formData.ageGroup}
+                  onValueChange={(value) => setFormData({ ...formData, ageGroup: value })}
+                >
+                  <SelectTrigger id="ageGroup">
+                    <SelectValue placeholder={t('manageBooks.form.ageGroup')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['CHILD', 'TEEN', 'ADULT', 'OTHER'].map((age) => (
+                      <SelectItem key={age} value={age}>
+                        {t(`manageBooks.ageGroups.${age}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-4">

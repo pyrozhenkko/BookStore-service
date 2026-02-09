@@ -12,6 +12,8 @@ interface BackendBookDTO {
   description?: string;
   imageUrls?: string[];
   isbn?: string;
+  language?: string;
+  ageGroup?: string;
   averageRating?: number;
   totalReviews?: number;
 }
@@ -49,6 +51,8 @@ function mapBackendToBook(dto: BackendBookDTO): Book {
     imageUrls,
     isbn: dto.isbn ?? '',
     publishedYear: dto.publicationDate ? parseInt(dto.publicationDate.split('-')[0]) : 0,
+    language: dto.language,
+    ageGroup: dto.ageGroup,
     averageRating: dto.averageRating ?? 0,
     totalReviews: dto.totalReviews ?? 0,
   };
@@ -68,11 +72,15 @@ export const bookApiService = {
     page?: number;
     size?: number;
     sort?: string;
+    language?: string;
+    ageGroup?: string;
   }): Promise<{ content: Book[]; totalPages: number }> {
     const search = new URLSearchParams();
     if (params.keyword) search.set('keyword', params.keyword);
     if (params.genre && params.genre !== 'all') search.set('genre', params.genre);
     if (params.stockStatus && params.stockStatus !== 'all') search.set('stockStatus', params.stockStatus);
+    if (params.language && params.language !== 'all') search.set('language', params.language);
+    if (params.ageGroup && params.ageGroup !== 'all') search.set('ageGroup', params.ageGroup);
     if (params.page != null) search.set('page', String(params.page));
     if (params.size != null) search.set('size', String(params.size));
     if (params.sort) search.set('sort', params.sort);
@@ -112,6 +120,8 @@ export const bookApiService = {
       quantity: book.stock,
       isbn: book.isbn,
       publicationDate: `${book.publishedYear}-01-01`,
+      language: book.language,
+      ageGroup: book.ageGroup,
       imageUrls: book.imageUrls?.map(stripApiBaseUrl)
     };
     const response = await apiRequest<BackendBookDTO>('/api/books', {
@@ -131,6 +141,8 @@ export const bookApiService = {
       quantity: book.stock,
       isbn: book.isbn,
       publicationDate: `${book.publishedYear}-01-01`,
+      language: book.language,
+      ageGroup: book.ageGroup,
       imageUrls: book.imageUrls?.map(stripApiBaseUrl)
     };
     const response = await apiRequest<BackendBookDTO>(`/api/books/${encodeURIComponent(oldName)}`, {

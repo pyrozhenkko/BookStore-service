@@ -39,7 +39,6 @@ public class LoggingAspect {
     // тех  логи
     @AfterThrowing(pointcut = "allServiceMethods() || loginMethod()", throwing = "ex")
     public void logTechnicalError(JoinPoint joinPoint, Throwable ex) {
-        System.out.println("[ASPECT] Catching exception in: " + joinPoint.getSignature().getName()); // DEBUG
 
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getTarget().getClass().getSimpleName();
