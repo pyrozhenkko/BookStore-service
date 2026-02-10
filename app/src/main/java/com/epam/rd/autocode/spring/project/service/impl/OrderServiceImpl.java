@@ -121,7 +121,6 @@ public class OrderServiceImpl implements OrderService {
     public OrderDTO cancelOrder(Long id) {
         Order order = orderRepository.findById(id).orElseThrow(() -> new NotFoundException("Order not found"));
         order.setStatus("cancelled");
-        // Optional: Restore stock? For now just cancel.
         return orderMapper.toDto(orderRepository.save(order));
     }
 }

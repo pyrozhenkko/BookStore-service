@@ -17,7 +17,6 @@ public class I18nController {
     private final I18nService i18nService;
 
     /**
-     * Get all translations for current locale (from Accept-Language header)
      * GET /api/i18n
      */
     @GetMapping
@@ -26,7 +25,6 @@ public class I18nController {
     }
 
     /**
-     * Get all translations for a specific language
      * GET /api/i18n?lang=en
      */
     @GetMapping(params = "lang")
@@ -36,7 +34,6 @@ public class I18nController {
     }
 
     /**
-     * Get a specific translation by key
      * GET /api/i18n/{key}
      */
     @GetMapping("/{key}")
@@ -46,7 +43,6 @@ public class I18nController {
     }
 
     /**
-     * Get list of supported languages
      * GET /api/i18n/languages
      */
     @GetMapping("/languages")
@@ -55,7 +51,6 @@ public class I18nController {
     }
 
     /**
-     * Get current locale info
      * GET /api/i18n/current
      */
     @GetMapping("/current")

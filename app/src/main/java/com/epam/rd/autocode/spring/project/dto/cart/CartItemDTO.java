@@ -11,5 +11,6 @@ public class CartItemDTO {
     private String isbn;
     private BigDecimal price;
     private Integer quantity;
+    private String author;
     private String imageUrl; // Посилання на фото (перше зі списку)
 }

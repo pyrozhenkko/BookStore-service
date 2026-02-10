@@ -20,6 +20,7 @@ public interface ShoppingCartMapper {
     @Mapping(source = "book.name", target = "bookName")
     @Mapping(source = "book.isbn", target = "isbn")
     @Mapping(source = "book.price", target = "price")
+    @Mapping(source = "book.author", target = "author")
     @Mapping(source = "book", target = "imageUrl", qualifiedByName = "mapFirstImage")
     CartItemDTO toItemDto(CartItem item);
 

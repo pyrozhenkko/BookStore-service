@@ -25,15 +25,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-
-import org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenDecoderFactory;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoderFactory;
-import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 
 @Configuration
 @EnableWebSecurity
@@ -54,7 +47,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(clientUrl, "http://localhost:5173", "http://127.0.0.1:5173"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);// кікі до ю лав мі, токени
+        config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
@@ -114,20 +107,5 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
-    }
-
-    @Bean
-    public JwtDecoderFactory<ClientRegistration> idTokenDecoderFactory() {
-        OidcIdTokenDecoderFactory factory = new OidcIdTokenDecoderFactory();
-        factory.setJwsAlgorithmResolver(reg -> SignatureAlgorithm.RS256);
-        factory.setJwtValidatorFactory(clientRegistration -> {
-            JwtTimestampValidator timestampValidator = new JwtTimestampValidator(Duration.ofHours(48));
-            org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenValidator oidcValidator = new org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenValidator(
-                    clientRegistration);
-            oidcValidator.setClockSkew(Duration.ofHours(48));
-            return new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
-                    timestampValidator, oidcValidator);
-        });
-        return factory;
     }
 }

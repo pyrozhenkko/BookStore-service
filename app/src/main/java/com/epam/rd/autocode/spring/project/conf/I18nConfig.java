@@ -21,7 +21,9 @@ public class I18nConfig implements WebMvcConfigurer {
             new Locale("uk"),
             new Locale("en"));
 
+
     @Bean
+    //активна мова
     public LocaleResolver localeResolver() {
         org.springframework.web.servlet.i18n.CookieLocaleResolver resolver = new org.springframework.web.servlet.i18n.CookieLocaleResolver();
         resolver.setDefaultLocale(new Locale("uk"));

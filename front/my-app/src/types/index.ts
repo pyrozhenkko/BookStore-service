@@ -68,6 +68,7 @@ export interface Order {
 }
 
 export interface CartItem {
+  id?: number | string;
   book: Book;
   quantity: number;
 }

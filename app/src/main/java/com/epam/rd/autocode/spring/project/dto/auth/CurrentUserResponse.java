@@ -13,6 +13,6 @@ public class CurrentUserResponse {
     private Long id;
     private String email;
     private String name;
-    private String role; // CUSTOMER, EMPLOYEE, ADMIN
+    private String role;
     private BigDecimal balance; // null for employees/admins
 }
